@@ -82,4 +82,11 @@ def update_macronutrients(macro_id):
         response = make_response(jsonify({"error": "No fields to update"}))
         response.status_code = 400
         return response
+    
+    cursor = db.get_db().cursor()
+    cursor.execute('SELECT * FROM Macronutrients WHERE macro_id = %s', (macro_id,))
+    if not cursor.fetchone():
+        response = make_response(jsonify({"error": "Macronutrients not found"}))
+        response.status_code = 404
+        return response
         
