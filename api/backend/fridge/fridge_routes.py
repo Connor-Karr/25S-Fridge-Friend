@@ -3,6 +3,10 @@ from backend.db_connection import db
 
 fridge = Blueprint('fridge', __name__)
 
+@fridge.route('/', methods=['GET'])
+def get_fridge_inventory():
+    """Get current fridge inventory"""
+
 @fridge.route('/<int:ingredient_id>', methods=['GET'])
 def get_fridge_ingredient(ingredient_id):
     """Get details for a specific ingredient"""
