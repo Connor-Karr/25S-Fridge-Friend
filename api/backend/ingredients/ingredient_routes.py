@@ -86,6 +86,16 @@ def add_ingredient():
                 )
             )
 
+            db.get_db().commit()
+        
+        response = make_response(jsonify({
+            "message": "Ingredient added successfully", 
+            "ingredient_id": ingredient_id
+        }))
+        response.status_code = 201
+        return response
+
+
 
 
 
