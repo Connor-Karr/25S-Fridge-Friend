@@ -98,7 +98,10 @@ def update_user(user_id):
         update_fields.append('username = %s')
         params.append(user_data['username'])
     
-
+    if not update_fields:
+        response = make_response(jsonify({"error": "No fields to update"}))
+        response.status_code = 400
+        return response
         
     query = f"UPDATE User SET {', '.join(update_fields)} WHERE user_id = %s"
     params.append(user_id)
