@@ -114,6 +114,21 @@ def update_ingredient(ingredient_id):
         response = make_response(jsonify({"error": "Ingredient not found"}))
         response.status_code = 404
         return response
+    
+    name = data.get('name')
+    expiration_date = data.get('expiration_date')
+    
+    update_fields = []
+    params = []
+    
+    if name:
+        update_fields.append('name = %s')
+        params.append(name)
+    
+    if expiration_date:
+        update_fields.append('expiration_date = %s')
+        params.append(expiration_date)
+
 
 
 
