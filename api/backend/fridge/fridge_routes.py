@@ -13,3 +13,9 @@ def get_fridge_inventory(client_id):
         JOIN Ingredient i ON fi.ingredient_id = i.ingredient_id
         WHERE c.client_id = %s
     '''
+    cursor.execute(query, (client_id,))
+    inventory = cursor.fetchall()
+    
+    response = make_response(jsonify(inventory))
+    response.status_code = 200
+    return response
