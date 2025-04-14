@@ -5,3 +5,11 @@ fridge = Blueprint('fridge', __name__)
 
 @fridge.route('/inventory/<client_id>', methods=['GET'])
 def get_fridge_inventory(client_id):
+    cursor = db.get_db().cursor()
+    query = '''
+        SELECT fi.fridge_id, i.name, fi.quantity, i.expiration_date, fi.is_expired
+        FROM Fridge_Inventory fi
+        JOIN Client c ON c.fridge_id = fi.fridge_id
+        JOIN Ingredient i ON fi.ingredient_id = i.ingredient_id
+        WHERE c.client_id = %s
+    '''
