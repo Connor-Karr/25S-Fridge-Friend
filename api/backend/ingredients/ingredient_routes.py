@@ -149,6 +149,13 @@ def update_ingredient(ingredient_id):
         response = make_response(jsonify({"error": "Could not update ingredient"}))
         response.status_code = 500
         return response
+    
+
+@ingredients.route('/<int:ingredient_id>', methods=['DELETE'])
+def delete_ingredient(ingredient_id):
+    """Delete unused/expired ingredient"""
+    cursor = db.get_db().cursor()
+
 
 
 
