@@ -63,3 +63,58 @@ def create_user():
         response = make_response(jsonify({"error": "Could not create user"}))
         response.status_code = 500
         return response
+    
+@users.route('/<int:user_id>', methods=['PUT'])
+def update_user(user_id):
+    """Update user profile or mark user as inactive"""
+    user_data = request.json
+    
+    cursor = db.get_db().cursor()
+    
+    # Check if user exists
+    cursor.execute('SELECT * FROM User WHERE user_id = %s', (user_id,))
+    if not cursor.fetchone():
+        response = make_response(jsonify({"error": "User not found"}))
+        response.status_code = 404
+        return response
+        
+    # Build update query dynamically based on provided fields
+    update_fields = []
+    params = []
+    
+    if 'f_name' in user_data:
+        update_fields.append('f_name = %s')
+        params.append(user_data['f_name'])
+        
+    if 'l_name' in user_data:
+        update_fields.append('l_name = %s')
+        params.append(user_data['l_name'])
+        
+    if 'email' in user_data:
+        update_fields.append('email = %s')
+        params.append(user_data['email'])
+        
+    if 'username' in user_data:
+        update_fields.append('username = %s')
+        params.append(user_data['username'])
+    
+    if not update_fields:
+        response = make_response(jsonify({"error": "No fields to update"}))
+        response.status_code = 400
+        return response
+        
+    query = f"UPDATE User SET {', '.join(update_fields)} WHERE user_id = %s"
+    params.append(user_id)
+    
+    try:
+        cursor.execute(query, params)
+        db.get_db().commit()
+        
+        response = make_response(jsonify({"message": "User updated successfully"}))
+        response.status_code = 200
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error updating user: {str(e)}")
+        response = make_response(jsonify({"error": "Could not update user"}))
+        response.status_code = 500
+        return response
