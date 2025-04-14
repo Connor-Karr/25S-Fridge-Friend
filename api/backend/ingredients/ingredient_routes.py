@@ -129,6 +129,12 @@ def update_ingredient(ingredient_id):
         update_fields.append('expiration_date = %s')
         params.append(expiration_date)
 
+     if not update_fields:
+        response = make_response(jsonify({"error": "No fields to update"}))
+        response.status_code = 400
+        return response
+
+
 
 
 
