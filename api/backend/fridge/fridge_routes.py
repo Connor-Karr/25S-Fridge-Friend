@@ -6,6 +6,12 @@ fridge = Blueprint('fridge', __name__)
 @fridge.route('/', methods=['GET'])
 def get_fridge_inventory():
     """Get current fridge inventory"""
+    client_id = request.args.get('client_id')
+    
+    if not client_id:
+        response = make_response(jsonify({"error": "Client ID is required"}))
+        response.status_code = 400
+        return response
 
     cursor = db.get_db().cursor()
     query = '''
