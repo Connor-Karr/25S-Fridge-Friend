@@ -112,3 +112,18 @@ def log_error():
         response = make_response(jsonify({"error": "Client ID and message are required"}))
         response.status_code = 400
         return response
+    
+    cursor = db.get_db().cursor()
+    
+    cursor.execute(
+        'INSERT INTO Error_Log (client_id, log_id, message, timestamp) VALUES (%s, %s, %s, %s)',
+        (client_id, log_id, message, datetime.now())
+    )
+    db.get_db().commit()
+    
+    response = make_response(jsonify({
+        "message": "Error logged successfully", 
+        "error_id": cursor.lastrowid
+    }))
+    response.status_code = 201
+    return response
