@@ -124,3 +124,7 @@ def update_expired_status():
         response = make_response(jsonify({"error": "Could not update expired status"}))
         response.status_code = 500
         return response
+    
+@fridge.route('/', methods=['DELETE'])
+def remove_expired_ingredients():
+    """Remove all expired ingredients"""
