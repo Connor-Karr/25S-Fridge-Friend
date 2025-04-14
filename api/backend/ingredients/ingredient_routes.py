@@ -101,6 +101,14 @@ def add_ingredient():
         return response
 
 
+@ingredients.route('/<int:ingredient_id>', methods=['PUT'])
+def update_ingredient(ingredient_id):
+    """Update ingredient details or category"""
+    data = request.json
+    
+    cursor = db.get_db().cursor()
+
+
 
 
 
