@@ -69,6 +69,24 @@ def add_ingredient():
         )
         ingredient_id = cursor.lastrowid
 
+        if macros:
+            cursor.execute(
+                '''INSERT INTO Macronutrients (
+                    ingredient_id, protein, fat, fiber, vitamin, sodium, calories, carbs
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)''',
+                (
+                    ingredient_id, 
+                    macros.get('protein', 0), 
+                    macros.get('fat', 0), 
+                    macros.get('fiber', 0),
+                    macros.get('vitamin', 0),
+                    macros.get('sodium', 0),
+                    macros.get('calories', 0),
+                    macros.get('carbs', 0)
+                )
+            )
+
+
 
 
 
