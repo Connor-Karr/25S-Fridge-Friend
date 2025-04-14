@@ -27,6 +27,19 @@ def get_ingredient(ingredient_id):
         response = make_response(jsonify({"error": "Ingredient not found"}))
         response.status_code = 404
         return response
+    
+     # Get macronutrients
+    cursor.execute('''
+        SELECT m.* 
+        FROM Macronutrients m
+        WHERE m.ingredient_id = %s
+    ''', (ingredient_id,))
+    macros = cursor.fetchone()
+    
+    result = {
+        "ingredient": ingredient,
+        "macronutrients": macros
+    }
 
 
 
