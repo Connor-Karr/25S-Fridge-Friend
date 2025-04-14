@@ -108,6 +108,14 @@ def update_ingredient(ingredient_id):
     
     cursor = db.get_db().cursor()
 
+    # Check if ingredient exists
+    cursor.execute('SELECT * FROM Ingredient WHERE ingredient_id = %s', (ingredient_id,))
+    if not cursor.fetchone():
+        response = make_response(jsonify({"error": "Ingredient not found"}))
+        response.status_code = 404
+        return response
+
+
 
 
 
