@@ -9,17 +9,26 @@ def get_macronutrients():
     ingredient_id = request.args.get('ingredient_id')
     
     cursor = db.get_db().cursor()
-    cursor.execute('''
+    
+    if ingredient_id:
+        cursor.execute('''
             SELECT * 
             FROM Macronutrients 
             WHERE ingredient_id = %s
         ''', (ingredient_id,))
-    macros = cursor.fetchone()
-    
-    if not macros:
-        response = make_response(jsonify({"error": "Macronutrients not found for this ingredient"}))
-        response.status_code = 404
-        return response
+        macros = cursor.fetchone()
+        
+        if not macros:
+            response = make_response(jsonify({"error": "Macronutrients not found for this ingredient"}))
+            response.status_code = 404
+            return response
+    else:
+        cursor.execute('''
+            SELECT m.*, i.name as ingredient_name
+            FROM Macronutrients m
+            JOIN Ingredient i ON m.ingredient_id = i.ingredient_id
+        ''')
+        macros = cursor.fetchall()
     
     response = make_response(jsonify(macros))
     response.status_code = 200
