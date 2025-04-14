@@ -107,3 +107,8 @@ def log_error():
     client_id = data.get('client_id')
     log_id = data.get('log_id')
     message = data.get('message')
+
+    if not all([client_id, message]):
+        response = make_response(jsonify({"error": "Client ID and message are required"}))
+        response.status_code = 400
+        return response
