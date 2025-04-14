@@ -59,6 +59,16 @@ def add_ingredient():
         response = make_response(jsonify({"error": "Ingredient name is required"}))
         response.status_code = 400
         return response
+    
+    cursor = db.get_db().cursor()
+    try:
+        # Insert ingredient
+        cursor.execute(
+            'INSERT INTO Ingredient (name, expiration_date) VALUES (%s, %s)',
+            (name, expiration_date)
+        )
+        ingredient_id = cursor.lastrowid
+
 
 
 
