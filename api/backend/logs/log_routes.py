@@ -9,8 +9,8 @@ def get_scan_history():
     """Get scan history"""
     client_id = request.args.get('client_id')
     
-    cursor = db.get_db().cursor()
-    query = '''
+    if client_id:
+        query = '''
             SELECT fsl.*, i.name as ingredient_name
             FROM Food_Scan_Log fsl
             JOIN Ingredient i ON fsl.ingredient_id = i.ingredient_id
@@ -18,8 +18,15 @@ def get_scan_history():
             WHERE c.client_id = %s
             ORDER BY fsl.timestamp DESC
         '''
-    cursor.execute(query, (client_id,))
-    scans = cursor.fetchall()
+        cursor.execute(query, (client_id,))
+    else:
+        query = '''
+            SELECT fsl.*, i.name as ingredient_name
+            FROM Food_Scan_Log fsl
+            JOIN Ingredient i ON fsl.ingredient_id = i.ingredient_id
+            ORDER BY fsl.timestamp DESC
+        '''
+        cursor.execute(query)
     
     response = make_response(jsonify(scans))
     response.status_code = 200
