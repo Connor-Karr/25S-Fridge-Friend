@@ -1,5 +1,5 @@
 ###
-# Main application interface
+# Main application interface to create app
 ###
 
 # import the create app function 
