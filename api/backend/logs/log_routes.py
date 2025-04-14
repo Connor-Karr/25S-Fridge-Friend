@@ -56,7 +56,6 @@ def log_food_scan():
     
     log_id = cursor.lastrowid
     
-    # Log error if scan failed
     if status == 'FAILED':
         message = data.get('message', 'Unknown error during scan')
         client_id = data.get('client_id')
