@@ -5,6 +5,7 @@ fridge = Blueprint('fridge', __name__)
 
 @fridge.route('/inventory/<client_id>', methods=['GET'])
 def get_fridge_inventory(client_id):
+    """Get current fridge inventory"""
     cursor = db.get_db().cursor()
     query = '''
         SELECT fi.fridge_id, i.name, fi.quantity, i.expiration_date, fi.is_expired
@@ -16,6 +17,11 @@ def get_fridge_inventory(client_id):
     cursor.execute(query, (client_id,))
     inventory = cursor.fetchall()
     
+    if not ingredient:
+        response = make_response(jsonify({"error": "Ingredient not found in fridge"}))
+        response.status_code = 404
+        return response
+
     response = make_response(jsonify(inventory))
     response.status_code = 200
     return response
