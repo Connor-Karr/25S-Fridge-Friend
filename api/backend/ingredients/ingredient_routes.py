@@ -156,6 +156,11 @@ def delete_ingredient(ingredient_id):
     """Delete unused/expired ingredient"""
     cursor = db.get_db().cursor()
 
+    try:
+        # Delete from fridge inventory first (foreign key constraint)
+        cursor.execute('DELETE FROM Fridge_Inventory WHERE ingredient_id = %s', (ingredient_id,))
+
+
 
 
 
