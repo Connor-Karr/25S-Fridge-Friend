@@ -46,3 +46,6 @@ def update_macronutrients(macro_id):
     sodium = data.get('sodium')
     calories = data.get('calories')
     carbs = data.get('carbs')
+
+    update_fields = []
+    params = []
