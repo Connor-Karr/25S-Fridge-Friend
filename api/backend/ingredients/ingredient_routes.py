@@ -7,4 +7,7 @@ ingredients = Blueprint('ingredients', __name__)
 def get_ingredient(ingredient_id):
     """Get ingredient details"""
     cursor = db.get_db().cursor()
+    cursor.execute('SELECT * FROM Ingredient WHERE ingredient_id = %s', (ingredient_id,))
+    ingredient = cursor.fetchone()
+
 
