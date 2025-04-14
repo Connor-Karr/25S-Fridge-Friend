@@ -58,3 +58,36 @@ def get_meal_plan(meal_id):
 
 
 
+@meal_plans.route('/', methods=['POST'])
+def create_meal_plan():
+    """Create new meal plan"""
+    data = request.json
+    
+    pc_id = data.get('pc_id')
+    recipe_id = data.get('recipe_id')
+    quantity = data.get('quantity', 1)
+    
+    if not all([pc_id, recipe_id]):
+        response = make_response(jsonify({"error": "Personal constraint ID and recipe ID are required"}))
+        response.status_code = 400
+        return response
+    
+    cursor = db.get_db().cursor()
+    try:
+        cursor.execute(
+            'INSERT INTO Meal_Plan (pc_id, recipe_id, quantity) VALUES (%s, %s, %s)',
+            (pc_id, recipe_id, quantity)
+        )
+        db.get_db().commit()
+        
+        response = make_response(jsonify({
+            "message": "Meal plan created successfully", 
+            "meal_id": cursor.lastrowid
+        }))
+        response.status_code = 201
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error creating meal plan: {str(e)}")
+        response = make_response(jsonify({"error": "Could not create meal plan"}))
+        response.status_code = 500
+        return response
