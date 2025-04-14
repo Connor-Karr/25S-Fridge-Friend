@@ -23,6 +23,12 @@ def get_ingredient(ingredient_id):
     cursor.execute('SELECT * FROM Ingredient WHERE ingredient_id = %s', (ingredient_id,))
     ingredient = cursor.fetchone()
 
+    if not ingredient:
+        response = make_response(jsonify({"error": "Ingredient not found"}))
+        response.status_code = 404
+        return response
+
+
 
 
 
