@@ -90,12 +90,18 @@ def update_macronutrients(macro_id):
         response.status_code = 404
         return response
     
-    query = f"UPDATE Macronutrients SET {', '.join(update_fields)} WHERE macro_id = %s"
-    params.append(macro_id)
-    cursor.execute(query, params)
-    db.get_db().commit()
-    
-    response = make_response(jsonify({"message": "Macronutrients updated successfully"}))
-    response.status_code = 200
-    return response
+    try:
+        query = f"UPDATE Macronutrients SET {', '.join(update_fields)} WHERE macro_id = %s"
+        params.append(macro_id)
+        cursor.execute(query, params)
+        db.get_db().commit()
+        
+        response = make_response(jsonify({"message": "Macronutrients updated successfully"}))
+        response.status_code = 200
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error updating macronutrients: {str(e)}")
+        response = make_response(jsonify({"error": "Could not update macronutrients"}))
+        response.status_code = 500
+        return response
         
