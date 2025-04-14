@@ -106,4 +106,14 @@ def add_ingredient_to_fridge(ingredient_id):
 def update_expired_status():
     """Update expired status of ingredients"""
     cursor = db.get_db().cursor()
+    cursor.execute('''
+            UPDATE Fridge_Inventory fi
+            JOIN Ingredient i ON fi.ingredient_id = i.ingredient_id
+            SET fi.is_expired = TRUE
+            WHERE i.expiration_date < CURDATE()
+        ''')
+    db.get_db().commit()
     
+    response = make_response(jsonify({"message": "Expired ingredients updated"}))
+    response.status_code = 200
+    return response
