@@ -91,3 +91,40 @@ def create_meal_plan():
         response = make_response(jsonify({"error": "Could not create meal plan"}))
         response.status_code = 500
         return response
+
+@meal_plans.route('/<int:meal_id>', methods=['PUT'])
+def update_meal_plan(meal_id):
+    """Update meal plan details"""
+    data = request.json
+    
+    quantity = data.get('quantity')
+    
+    if not quantity:
+        response = make_response(jsonify({"error": "No fields to update"}))
+        response.status_code = 400
+        return response
+    
+    cursor = db.get_db().cursor()
+    
+    # Check if meal plan exists
+    cursor.execute('SELECT * FROM Meal_Plan WHERE meal_id = %s', (meal_id,))
+    if not cursor.fetchone():
+        response = make_response(jsonify({"error": "Meal plan not found"}))
+        response.status_code = 404
+        return response
+    
+    try:
+        cursor.execute(
+            'UPDATE Meal_Plan SET quantity = %s WHERE meal_id = %s',
+            (quantity, meal_id)
+        )
+        db.get_db().commit()
+        
+        response = make_response(jsonify({"message": "Meal plan updated successfully"}))
+        response.status_code = 200
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error updating meal plan: {str(e)}")
+        response = make_response(jsonify({"error": "Could not update meal plan"}))
+        response.status_code = 500
+        return response
