@@ -46,3 +46,19 @@ def log_food_scan():
         response = make_response(jsonify({"error": "Ingredient ID and status are required"}))
         response.status_code = 400
         return response
+    
+    cursor = db.get_db().cursor()
+    cursor.execute(
+        'INSERT INTO Food_Scan_Log (ingredient_id, status, timestamp) VALUES (%s, %s, %s)',
+        (ingredient_id, status, datetime.now())
+    )
+    db.get_db().commit()
+    
+    log_id = cursor.lastrowid
+    
+    response = make_response(jsonify({
+        "message": "Food scan logged successfully", 
+        "log_id": log_id
+    }))
+    response.status_code = 201
+    return response
