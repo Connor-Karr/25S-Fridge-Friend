@@ -167,6 +167,16 @@ def delete_ingredient(ingredient_id):
         cursor.execute('DELETE FROM Ingredient WHERE ingredient_id = %s', (ingredient_id,))
         db.get_db().commit()
 
+        if cursor.rowcount == 0:
+            response = make_response(jsonify({"error": "Ingredient not found"}))
+            response.status_code = 404
+            return response
+        
+        response = make_response(jsonify({"message": "Ingredient deleted successfully"}))
+        response.status_code = 200
+        return response
+
+
 
 
 
