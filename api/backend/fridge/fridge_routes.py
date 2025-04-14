@@ -60,3 +60,10 @@ def get_fridge_ingredient(ingredient_id):
 @fridge.route('/<int:ingredient_id>', methods=['POST'])
 def add_ingredient_to_fridge(ingredient_id):
     """Add new ingredient to fridge"""
+    cursor = db.get_db().cursor()
+    cursor.execute('SELECT ingredient_id, name, expiration_date FROM Ingredient')
+    ingredients_data = cursor.fetchall()
+    
+    response = make_response(jsonify(ingredients_data))
+    response.status_code = 200
+    return response
