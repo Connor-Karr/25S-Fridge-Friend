@@ -94,6 +94,12 @@ def add_ingredient():
         }))
         response.status_code = 201
         return response
+    except Exception as e:
+        current_app.logger.error(f"Error adding ingredient: {str(e)}")
+        response = make_response(jsonify({"error": "Could not add ingredient"}))
+        response.status_code = 500
+        return response
+
 
 
 
