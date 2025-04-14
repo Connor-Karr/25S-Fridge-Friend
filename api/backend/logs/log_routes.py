@@ -48,28 +48,35 @@ def log_food_scan():
         return response
     
     cursor = db.get_db().cursor()
-    cursor.execute(
-        'INSERT INTO Food_Scan_Log (ingredient_id, status, timestamp) VALUES (%s, %s, %s)',
-        (ingredient_id, status, datetime.now())
-    )
-    db.get_db().commit()
-    
-    log_id = cursor.lastrowid
-    
-    if status == 'FAILED':
-        message = data.get('message', 'Unknown error during scan')
-        client_id = data.get('client_id')
+    try:
+        cursor.execute(
+            'INSERT INTO Food_Scan_Log (ingredient_id, status, timestamp) VALUES (%s, %s, %s)',
+            (ingredient_id, status, datetime.now())
+        )
+        db.get_db().commit()
         
-        if client_id:
-            cursor.execute(
-                'INSERT INTO Error_Log (client_id, log_id, message, timestamp) VALUES (%s, %s, %s, %s)',
-                (client_id, log_id, message, datetime.now())
-            )
-            db.get_db().commit()
-    
-    response = make_response(jsonify({
-        "message": "Food scan logged successfully", 
-        "log_id": log_id
-    }))
-    response.status_code = 201
+        log_id = cursor.lastrowid
+        
+        if status == 'FAILED':
+            message = data.get('message', 'Unknown error during scan')
+            client_id = data.get('client_id')
+            
+            if client_id:
+                cursor.execute(
+                    'INSERT INTO Error_Log (client_id, log_id, message, timestamp) VALUES (%s, %s, %s, %s)',
+                    (client_id, log_id, message, datetime.now())
+                )
+                db.get_db().commit()
+        
+        response = make_response(jsonify({
+            "message": "Food scan logged successfully", 
+            "log_id": log_id
+        }))
+        response.status_code = 201
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error logging food scan: {str(e)}")
+        response = make_response(jsonify({"error": "Could not log food scan"}))
+        response.status_code = 500
+        return responsee = 201
     return response
