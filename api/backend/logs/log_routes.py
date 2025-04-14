@@ -78,5 +78,4 @@ def log_food_scan():
         current_app.logger.error(f"Error logging food scan: {str(e)}")
         response = make_response(jsonify({"error": "Could not log food scan"}))
         response.status_code = 500
-        return responsee = 201
-    return response
+        return response
