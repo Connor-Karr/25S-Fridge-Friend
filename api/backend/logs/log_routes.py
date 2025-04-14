@@ -83,3 +83,18 @@ def log_food_scan():
 @logs.route('/errors', methods=['GET'])
 def get_error_logs():
     """Get error logs"""
+    cursor = db.get_db().cursor()
+    
+    cursor.execute('''
+        SELECT el.*, fsl.status as scan_status, i.name as ingredient_name
+        FROM Error_Log el
+        JOIN Food_Scan_Log fsl ON el.log_id = fsl.log_id
+        JOIN Ingredient i ON fsl.ingredient_id = i.ingredient_id
+        ORDER BY el.timestamp DESC
+    ''')
+    
+    errors = cursor.fetchall()
+    
+    response = make_response(jsonify(errors))
+    response.status_code = 200
+    return response
