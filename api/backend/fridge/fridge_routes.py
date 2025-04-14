@@ -60,3 +60,12 @@ def get_fridge_ingredient(ingredient_id):
 @fridge.route('/<int:ingredient_id>', methods=['POST'])
 def add_ingredient_to_fridge(ingredient_id):
     """Add new ingredient to fridge"""
+    data = request.json
+    
+    fridge_id = data.get('fridge_id')
+    quantity = data.get('quantity', 1)
+    
+    if not fridge_id:
+        response = make_response(jsonify({"error": "Fridge ID is required"}))
+        response.status_code = 400
+        return response
