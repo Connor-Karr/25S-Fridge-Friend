@@ -77,4 +77,9 @@ def update_macronutrients(macro_id):
     if carbs is not None:
         update_fields.append('carbs = %s')
         params.append(carbs)
+
+    if not update_fields:
+        response = make_response(jsonify({"error": "No fields to update"}))
+        response.status_code = 400
+        return response
         
