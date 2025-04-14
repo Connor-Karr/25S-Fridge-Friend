@@ -79,3 +79,7 @@ def log_food_scan():
         response = make_response(jsonify({"error": "Could not log food scan"}))
         response.status_code = 500
         return response
+
+@logs.route('/errors', methods=['GET'])
+def get_error_logs():
+    """Get error logs"""
