@@ -7,7 +7,8 @@ from backend.ingredients.ingredient_routes import ingredients
 from backend.meal_plans.meal_plan_routes import meal_plans
 from backend.macros.macros_routes import macros
 from backend.logs.log_routes import logs
-from backend.simple.simple_routes import simple_routesimport os
+from backend.simple.simple_routes import simple_routes
+import os
 from dotenv import load_dotenv
 
 def create_app():
