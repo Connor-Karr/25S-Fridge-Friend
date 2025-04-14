@@ -37,3 +37,12 @@ def get_macronutrients():
 @macros.route('/<int:macro_id>', methods=['PUT'])
 def update_macronutrients(macro_id):
     """Update macronutrient values"""
+    data = request.json
+    
+    protein = data.get('protein')
+    fat = data.get('fat')
+    fiber = data.get('fiber')
+    vitamin = data.get('vitamin')
+    sodium = data.get('sodium')
+    calories = data.get('calories')
+    carbs = data.get('carbs')
