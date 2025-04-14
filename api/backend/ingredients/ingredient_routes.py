@@ -175,6 +175,12 @@ def delete_ingredient(ingredient_id):
         response = make_response(jsonify({"message": "Ingredient deleted successfully"}))
         response.status_code = 200
         return response
+    except Exception as e:
+        current_app.logger.error(f"Error deleting ingredient: {str(e)}")
+        response = make_response(jsonify({"error": "Could not delete ingredient"}))
+        response.status_code = 500
+        return response
+
 
 
 
