@@ -128,3 +128,11 @@ def update_expired_status():
 @fridge.route('/', methods=['DELETE'])
 def remove_expired_ingredients():
     """Remove all expired ingredients"""
+    cursor = db.get_db().cursor()
+    cursor.execute('DELETE FROM Fridge_Inventory WHERE is_expired = TRUE')
+    db.get_db().commit()
+    
+    count = cursor.rowcount
+    response = make_response(jsonify({"message": f"{count} expired ingredients removed"}))
+    response.status_code = 200
+    return response
