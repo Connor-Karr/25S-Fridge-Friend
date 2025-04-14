@@ -41,3 +41,8 @@ def log_food_scan():
     
     ingredient_id = data.get('ingredient_id')
     status = data.get('status')
+
+    if not all([ingredient_id, status]):
+        response = make_response(jsonify({"error": "Ingredient ID and status are required"}))
+        response.status_code = 400
+        return response
