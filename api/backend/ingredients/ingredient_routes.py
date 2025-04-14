@@ -160,6 +160,14 @@ def delete_ingredient(ingredient_id):
         # Delete from fridge inventory first (foreign key constraint)
         cursor.execute('DELETE FROM Fridge_Inventory WHERE ingredient_id = %s', (ingredient_id,))
 
+         # Delete from macronutrients
+        cursor.execute('DELETE FROM Macronutrients WHERE ingredient_id = %s', (ingredient_id,))
+        
+        # Delete the ingredient
+        cursor.execute('DELETE FROM Ingredient WHERE ingredient_id = %s', (ingredient_id,))
+        db.get_db().commit()
+
+
 
 
 
