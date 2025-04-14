@@ -46,6 +46,17 @@ def get_ingredient(ingredient_id):
     return response
 
 
+@ingredients.route('/', methods=['POST'])
+def add_ingredient():
+    """Add new trusted ingredient with macros"""
+    data = request.json
+
+    name = data.get('name')
+    expiration_date = data.get('expiration_date')
+    macros = data.get('macros', {})
+
+
+
 
 
 
