@@ -55,6 +55,12 @@ def add_ingredient():
     expiration_date = data.get('expiration_date')
     macros = data.get('macros', {})
 
+    if not name:
+        response = make_response(jsonify({"error": "Ingredient name is required"}))
+        response.status_code = 400
+        return response
+
+
 
 
 
