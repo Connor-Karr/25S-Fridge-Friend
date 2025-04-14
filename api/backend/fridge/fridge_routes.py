@@ -101,3 +101,9 @@ def add_ingredient_to_fridge(ingredient_id):
         response = make_response(jsonify({"error": "Could not add ingredient"}))
         response.status_code = 500
         return response
+    
+@fridge.route('/', methods=['PUT'])
+def update_expired_status():
+    """Update expired status of ingredients"""
+    cursor = db.get_db().cursor()
+    
