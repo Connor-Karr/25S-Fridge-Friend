@@ -129,10 +129,16 @@ def update_expired_status():
 def remove_expired_ingredients():
     """Remove all expired ingredients"""
     cursor = db.get_db().cursor()
-    cursor.execute('DELETE FROM Fridge_Inventory WHERE is_expired = TRUE')
-    db.get_db().commit()
-    
-    count = cursor.rowcount
-    response = make_response(jsonify({"message": f"{count} expired ingredients removed"}))
-    response.status_code = 200
-    return response
+    try:
+        cursor.execute('DELETE FROM Fridge_Inventory WHERE is_expired = TRUE')
+        db.get_db().commit()
+        
+        count = cursor.rowcount
+        response = make_response(jsonify({"message": f"{count} expired ingredients removed"}))
+        response.status_code = 200
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error removing expired ingredients: {str(e)}")
+        response = make_response(jsonify({"error": "Could not remove expired ingredients"}))
+        response.status_code = 500
+        return response
