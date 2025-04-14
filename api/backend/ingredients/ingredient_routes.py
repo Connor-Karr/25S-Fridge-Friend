@@ -41,6 +41,10 @@ def get_ingredient(ingredient_id):
         "macronutrients": macros
     }
 
+    response = make_response(jsonify(result))
+    response.status_code = 200
+    return response
+
 
 
 
