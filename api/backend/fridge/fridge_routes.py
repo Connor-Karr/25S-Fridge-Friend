@@ -56,3 +56,7 @@ def get_fridge_ingredient(ingredient_id):
     response = make_response(jsonify(ingredient))
     response.status_code = 200
     return response
+
+@fridge.route('/<int:ingredient_id>', methods=['POST'])
+def add_ingredient_to_fridge(ingredient_id):
+    """Add new ingredient to fridge"""
