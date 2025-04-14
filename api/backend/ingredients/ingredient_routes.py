@@ -19,6 +19,11 @@ def get_ingredient(ingredient_id):
     """Get ingredient details"""
     cursor = db.get_db().cursor()
 
+    # Get ingredient basic info
+    cursor.execute('SELECT * FROM Ingredient WHERE ingredient_id = %s', (ingredient_id,))
+    ingredient = cursor.fetchone()
+
+
 
 
 
