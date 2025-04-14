@@ -57,3 +57,7 @@ def update_macronutrients(macro_id):
     if fat is not None:
         update_fields.append('fat = %s')
         params.append(fat)
+
+    if fiber is not None:
+        update_fields.append('fiber = %s')
+        params.append(fiber)
