@@ -33,3 +33,28 @@ def get_all_meal_plans():
     response.status_code = 200
     return response
 
+@meal_plans.route('/<int:meal_id>', methods=['GET'])
+def get_meal_plan(meal_id):
+    """Get specific meal plan details"""
+    cursor = db.get_db().cursor()
+    
+    query = '''
+        SELECT mp.meal_id, mp.pc_id, mp.recipe_id, mp.quantity, r.name AS recipe_name, r.instructions
+        FROM Meal_Plan mp
+        JOIN Recipe r ON mp.recipe_id = r.recipe_id
+        WHERE mp.meal_id = %s
+    '''
+    cursor.execute(query, (meal_id,))
+    meal_plan = cursor.fetchone()
+    
+    if not meal_plan:
+        response = make_response(jsonify({"error": "Meal plan not found"}))
+        response.status_code = 404
+        return response
+    
+    response = make_response(jsonify(meal_plan))
+    response.status_code = 200
+    return response
+
+
+
