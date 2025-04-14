@@ -77,22 +77,27 @@ def add_ingredient_to_fridge(ingredient_id):
         (fridge_id, ingredient_id)
     )
     existing = cursor.fetchone()
-    
-    if existing:
-        # Update quantity
-        cursor.execute(
-            'UPDATE Fridge_Inventory SET quantity = quantity + %s WHERE fridge_id = %s AND ingredient_id = %s',
-            (quantity, fridge_id, ingredient_id)
-        )
-    else:
-        # Insert new entry
-        cursor.execute(
-            'INSERT INTO Fridge_Inventory (fridge_id, ingredient_id, quantity, is_expired) VALUES (%s, %s, %s, FALSE)',
-            (fridge_id, ingredient_id, quantity)
-        )
-    
-    db.get_db().commit()
-    
-    response = make_response(jsonify({"message": "Ingredient added to fridge"}))
-    response.status_code = 201
-    return response
+    try:
+        if existing:
+            # Update quantity
+            cursor.execute(
+                'UPDATE Fridge_Inventory SET quantity = quantity + %s WHERE fridge_id = %s AND ingredient_id = %s',
+                (quantity, fridge_id, ingredient_id)
+            )
+        else:
+            # Insert new entry
+            cursor.execute(
+                'INSERT INTO Fridge_Inventory (fridge_id, ingredient_id, quantity, is_expired) VALUES (%s, %s, %s, FALSE)',
+                (fridge_id, ingredient_id, quantity)
+            )
+        
+        db.get_db().commit()
+        
+        response = make_response(jsonify({"message": "Ingredient added to fridge"}))
+        response.status_code = 201
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error adding ingredient to fridge: {str(e)}")
+        response = make_response(jsonify({"error": "Could not add ingredient"}))
+        response.status_code = 500
+        return response
