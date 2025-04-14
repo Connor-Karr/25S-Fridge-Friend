@@ -133,6 +133,17 @@ def update_ingredient(ingredient_id):
         response = make_response(jsonify({"error": "No fields to update"}))
         response.status_code = 400
         return response
+    
+    try:
+        query = f"UPDATE Ingredient SET {', '.join(update_fields)} WHERE ingredient_id = %s"
+        params.append(ingredient_id)
+        cursor.execute(query, params)
+        db.get_db().commit()
+        
+        response = make_response(jsonify({"message": "Ingredient updated successfully"}))
+        response.status_code = 200
+        return response
+
 
 
 
