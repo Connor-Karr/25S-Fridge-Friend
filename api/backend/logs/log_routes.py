@@ -56,6 +56,18 @@ def log_food_scan():
     
     log_id = cursor.lastrowid
     
+    # Log error if scan failed
+    if status == 'FAILED':
+        message = data.get('message', 'Unknown error during scan')
+        client_id = data.get('client_id')
+        
+        if client_id:
+            cursor.execute(
+                'INSERT INTO Error_Log (client_id, log_id, message, timestamp) VALUES (%s, %s, %s, %s)',
+                (client_id, log_id, message, datetime.now())
+            )
+            db.get_db().commit()
+    
     response = make_response(jsonify({
         "message": "Food scan logged successfully", 
         "log_id": log_id
