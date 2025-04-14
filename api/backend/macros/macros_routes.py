@@ -33,3 +33,7 @@ def get_macronutrients():
     response = make_response(jsonify(macros))
     response.status_code = 200
     return response
+
+@macros.route('/<int:macro_id>', methods=['PUT'])
+def update_macronutrients(macro_id):
+    """Update macronutrient values"""
