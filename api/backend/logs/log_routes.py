@@ -27,7 +27,9 @@ def get_scan_history():
             ORDER BY fsl.timestamp DESC
         '''
         cursor.execute(query)
-    
+        
+    scans = cursor.fetchall()
+
     response = make_response(jsonify(scans))
     response.status_code = 200
     return response
