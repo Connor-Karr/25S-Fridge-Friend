@@ -98,3 +98,7 @@ def get_error_logs():
     response = make_response(jsonify(errors))
     response.status_code = 200
     return response
+
+@logs.route('/errors', methods=['POST'])
+def log_error():
+    """Create new error log entry"""
