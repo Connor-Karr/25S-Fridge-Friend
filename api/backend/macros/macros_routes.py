@@ -69,8 +69,12 @@ def update_macronutrients(macro_id):
     if sodium is not None:
         update_fields.append('sodium = %s')
         params.append(sodium)
-        
+
     if calories is not None:
         update_fields.append('calories = %s')
         params.append(calories)
+
+    if carbs is not None:
+        update_fields.append('carbs = %s')
+        params.append(carbs)
         
