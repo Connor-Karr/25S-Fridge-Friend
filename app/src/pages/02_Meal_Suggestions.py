@@ -153,3 +153,79 @@ recipes = [
         "fat": 6
     }
 ]
+
+# Quick Meals Tab
+with tab1:
+    st.subheader("Quick Meal Ideas (Under 15 Minutes)")
+    
+    # Filter recipes by prep time
+    quick_recipes = [recipe for recipe in recipes if recipe["prep_time"] <= 15]
+    
+    # Check which recipes can be made with available ingredients
+    available_quick_recipes = []
+    for recipe in quick_recipes:
+        # Get list of ingredient IDs in the fridge
+        fridge_ingredient_ids = [item["ingredient_id"] for item in inventory]
+        
+        # Check if all required ingredients are available
+        if all(ing_id in fridge_ingredient_ids for ing_id in recipe["ingredients"]):
+            available_quick_recipes.append(recipe)
+    
+    # Display available quick recipes
+    if available_quick_recipes:
+        for recipe in available_quick_recipes:
+            with st.expander(f"{recipe['name']} - {recipe['prep_time']} mins"):
+                st.write(f"**Description:** {recipe['description']}")
+                st.write(f"**Preparation Time:** {recipe['prep_time']} minutes")
+                st.write(f"**Cost Estimate:** ${recipe['cost']:.2f}")
+                st.write(f"**Calories:** {recipe['calories']} | **Protein:** {recipe['protein']}g | **Carbs:** {recipe['carbs']}g | **Fat:** {recipe['fat']}g")
+                
+                # Show ingredients
+                st.write("**Ingredients:**")
+                for ing_id in recipe["ingredients"]:
+                    for item in inventory:
+                        if item["ingredient_id"] == ing_id:
+                            st.write(f"- {item['name']} ({item['quantity']} available)")
+                
+                st.write("**Instructions:**")
+                st.write(recipe["instructions"])
+                
+                # Cook now or save as meal plan buttons
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    if st.button("Cook Now", key=f"cook_{recipe['id']}"):
+                        st.success(f"Preparing {recipe['name']}!")
+                        time.sleep(1)
+                        
+                        # Show step-by-step
+                        for i, step in enumerate(recipe["instructions"].split('\n')):
+                            st.write(f"Step {i+1}: {step}")
+                            time.sleep(0.5)
+                
+                with col2:
+                    if st.button("Add to Meal Plan", key=f"save_{recipe['id']}"):
+                        # Mock creating a meal plan
+                        with st.spinner("Adding to meal plan..."):
+                            time.sleep(1)
+                            st.success(f"Added {recipe['name']} to your meal plan!")
+    else:
+        st.info("No quick recipes available with your current ingredients.")
+        
+        # Show what's missing for quick recipes
+        st.subheader("What you're missing for quick meals:")
+        
+        for recipe in quick_recipes:
+            missing_ingredients = []
+            fridge_ingredient_ids = [item["ingredient_id"] for item in inventory]
+            
+            for ing_id in recipe["ingredients"]:
+                if ing_id not in fridge_ingredient_ids:
+                    # Find the ingredient name
+                    for rec in recipes:
+                        if rec["id"] == ing_id:
+                            missing_ingredients.append(rec["name"])
+                            break
+            
+            if missing_ingredients:
+                st.write(f"**{recipe['name']}** - Missing: {', '.join(missing_ingredients)}")
