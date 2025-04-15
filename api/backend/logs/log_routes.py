@@ -103,7 +103,7 @@ def get_error_logs():
 
 @logs.route('/errors', methods=['POST'])
 def log_error():
-    """Create new error log entry"""
+    """Create new error log entry - Used by Alvin to track system errors [Alvin-6]"""
     data = request.json
     
     client_id = data.get('client_id')
