@@ -38,7 +38,7 @@ def get_scan_history():
 
 @logs.route('/scans', methods=['POST'])
 def log_food_scan():
-    """Log new food scan - Used by Alvin to track scanning issues [Alvin-6]"""
+    """Log new food scan"""
     data = request.json
     
     ingredient_id = data.get('ingredient_id')
@@ -84,7 +84,7 @@ def log_food_scan():
 
 @logs.route('/errors', methods=['GET'])
 def get_error_logs():
-    """Get error logs - Used by Alvin to diagnose system issues [Alvin-6]"""
+    """Get error logs"""
     cursor = db.get_db().cursor()
     
     cursor.execute('''
@@ -103,7 +103,7 @@ def get_error_logs():
 
 @logs.route('/errors', methods=['POST'])
 def log_error():
-    """Create new error log entry - Used by Alvin to track system errors [Alvin-6]"""
+    """Create new error log entry"""
     data = request.json
     
     client_id = data.get('client_id')
@@ -135,3 +135,21 @@ def log_error():
         response = make_response(jsonify({"error": "Could not create error log"}))
         response.status_code = 500
         return response
+    
+@logs.route('/nutrition/<int:client_id>', methods=['GET'])
+def get_nutrition_logs(client_id):
+    """Get nutrition tracking logs"""
+    cursor = db.get_db().cursor()
+    
+    cursor.execute('''
+        SELECT nt.*
+        FROM Nutrition_Tracking nt
+        WHERE nt.client_id = %s
+        ORDER BY nt.tracking_id DESC
+    ''', (client_id,))
+    
+    nutrition_logs = cursor.fetchall()
+    
+    response = make_response(jsonify(nutrition_logs))
+    response.status_code = 200
+    return response
