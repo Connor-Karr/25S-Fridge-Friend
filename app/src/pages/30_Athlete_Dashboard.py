@@ -167,3 +167,46 @@ with col2:
             
             st.markdown("---")
 
+
+# Race/Performance Calendar
+st.markdown("---")
+st.subheader("🏆 Upcoming Events")
+
+# Mock race data
+races = [
+    {"date": "May 3, 2025", "name": "Spring Half Marathon", "distance": "21.1 km", "goal": "Sub 1:45", "training_phase": "Build"},
+    {"date": "June 21, 2025", "name": "Mountain Trail 10K", "distance": "10 km", "goal": "Top 15 finish", "training_phase": "Peak"},
+    {"date": "July 12, 2025", "name": "Independence Day 5K", "distance": "5 km", "goal": "Sub 20:00", "training_phase": "Race"},
+    {"date": "October 9, 2025", "name": "Fall Marathon", "distance": "42.2 km", "goal": "Sub 3:45", "training_phase": "Base"}
+]
+
+# Calculate days until event
+today = datetime.now().date()
+for race in races:
+    race_date = datetime.strptime(race["date"], "%B %d, %Y").date()
+    race["days_until"] = (race_date - today).days
+
+# Sort by days until race
+races.sort(key=lambda x: x["days_until"])
+
+# Create race calendar
+race_cols = st.columns(len(races))
+
+for i, race in enumerate(races):
+    with race_cols[i]:
+        # Set color based on proximity
+        if race["days_until"] < 14:
+            color = "#FFCDD2"  # Light red
+        elif race["days_until"] < 30:
+            color = "#FFF9C4"  # Light yellow
+        else:
+            color = "#C8E6C9"  # Light green
+        
+        # Display race card
+        with st.container(border=True):
+            st.markdown(f"#### {race['name']}")
+            st.write(f"**Date:** {race['date']}")
+            st.write(f"**Distance:** {race['distance']}")
+            st.write(f"**Goal:** {race['goal']}")
+            st.write(f"**Training Phase:** {race['training_phase']}")
+            st.write(f"**Days Until:** {race['days_until']}")
