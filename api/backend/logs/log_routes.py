@@ -153,3 +153,45 @@ def get_nutrition_logs(client_id):
     response = make_response(jsonify(nutrition_logs))
     response.status_code = 200
     return response
+
+@logs.route('/nutrition', methods=['POST'])
+def create_nutrition_log():
+    """Create nutrition tracking entry"""
+    data = request.json
+    
+    client_id = data.get('client_id')
+    protein = data.get('protein')
+    fat = data.get('fat')
+    fiber = data.get('fiber')
+    sodium = data.get('sodium')
+    vitamins = data.get('vitamins')
+    calories = data.get('calories')
+    carbs = data.get('carbs')
+    
+    if not client_id:
+        response = make_response(jsonify({"error": "Client ID is required"}))
+        response.status_code = 400
+        return response
+    
+    cursor = db.get_db().cursor()
+    
+    try:
+        cursor.execute(
+            '''INSERT INTO Nutrition_Tracking 
+               (client_id, protein, fat, fiber, sodium, vitamins, calories, carbs) 
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s)''',
+            (client_id, protein, fat, fiber, sodium, vitamins, calories, carbs)
+        )
+        db.get_db().commit()
+        
+        response = make_response(jsonify({
+            "message": "Nutrition log created successfully",
+            "tracking_id": cursor.lastrowid
+        }))
+        response.status_code = 201
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error creating nutrition log: {str(e)}")
+        response = make_response(jsonify({"error": "Could not create nutrition log"}))
+        response.status_code = 500
+        return response
