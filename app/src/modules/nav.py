@@ -67,4 +67,12 @@ def _add_nutritionist_links():
     st.sidebar.page_link("pages/22_Meal_Planning.py", label="🍽️ Meal Planning")
     st.sidebar.page_link("pages/23_Nutrition_Analytics.py", label="📈 Nutrition Analytics")
 
-        
+def _add_athlete_links():
+    """Add links for the Athlete role (Riley)"""
+    st.sidebar.markdown("### Athlete Navigation")
+    
+    st.sidebar.page_link("pages/30_Athlete_Dashboard.py", label="📊 Dashboard")
+    st.sidebar.page_link("pages/31_Nutrition_Tracking.py", label="🥗 Nutrition Tracking")
+    st.sidebar.page_link("pages/32_Meal_Plans.py", label="🍽️ Meal Plans")
+    st.sidebar.page_link("pages/33_Performance_Analytics.py", label="📈 Performance Analytics")
+       
