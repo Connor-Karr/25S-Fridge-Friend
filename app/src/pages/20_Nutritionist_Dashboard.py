@@ -202,5 +202,72 @@ with tab2:
 
     st.plotly_chart(fig, use_container_width=True)
 
+# Dietary Alerts section
+st.markdown("---")
+st.subheader("⚠️ Dietary Alerts")
+
+alerts = [
+    {"client": "John D.", "alert": "High sodium intake detected in last 3 days", "priority": "Medium"},
+    {"client": "Emma L.", "alert": "Consistent low protein intake (below 15% target)", "priority": "High"},
+    {"client": "Michael R.", "alert": "Possible food allergy reaction - review food diary", "priority": "High"},
+    {"client": "David W.", "alert": "Missing dinner logs for past 2 days", "priority": "Low"}
+]
+
+for alert in alerts:
+    if alert["priority"] == "High":
+        st.error(f"**{alert['client']}:** {alert['alert']} (Priority: {alert['priority']})")
+    elif alert["priority"] == "Medium":
+        st.warning(f"**{alert['client']}:** {alert['alert']} (Priority: {alert['priority']})")
+    else:
+        st.info(f"**{alert['client']}:** {alert['alert']} (Priority: {alert['priority']})")
+
+# Quick actions section
+st.markdown("---")
+st.subheader("⚡ Quick Actions")
+
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    if st.button("Create Meal Plan", use_container_width=True):
+        st.switch_page("pages/22_Meal_Planning.py")
+
+with col2:
+    if st.button("Generate Nutrition Report", use_container_width=True):
+        with st.spinner("Generating report..."):
+            time.sleep(2)
+            st.success("Report generated successfully!")
+            st.download_button(
+                label="Download Report",
+                data="This is a sample nutrition report for clients.",
+                file_name="nutrition_report.txt",
+                mime="text/plain"
+            )
+
+with col3:
+    if st.button("Schedule Check-in", use_container_width=True):
+        st.info("Redirecting to scheduling page...")
+        time.sleep(1)
+        st.success("Check-in scheduled successfully!")
+
+with col4:
+    if st.button("View Analytics", use_container_width=True):
+        st.switch_page("pages/23_Nutrition_Analytics.py")
+
+# Recent activities
+st.markdown("---")
+st.subheader("🔄 Recent Activities")
+
+activities = [
+    {"time": "10:23 AM", "activity": "Created new meal plan for Emma L."},
+    {"time": "Yesterday", "activity": "Updated dietary restrictions for John D."},
+    {"time": "Yesterday", "activity": "Added new client: David W."},
+    {"time": "2 days ago", "activity": "Generated nutrition report for Sarah M."},
+    {"time": "2 days ago", "activity": "Updated macronutrient goals for Michael R."}
+]
+
+for activity in activities:
+    st.write(f"**{activity['time']}:** {activity['activity']}")
+
+
 
 
