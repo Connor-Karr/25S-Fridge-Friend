@@ -164,3 +164,53 @@ with tab2:
         st.rerun()
 
 
+# Analytics Tab
+with tab3:
+    st.subheader("System Analytics")
+    time_periods = ["Last 7 Days", "Last 30 Days", "Last 90 Days", "Year to Date", "All Time"]
+    selected_period = st.selectbox("Select time period:", time_periods)
+
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Total Users", "158", delta="12" if selected_period == "Last 7 Days" else "27" if selected_period == "Last 30 Days" else "58")
+    with col2:
+        st.metric("Food Scans", "873" if selected_period == "Last 7 Days" else "3,241" if selected_period == "Last 30 Days" else "12,873", delta="124" if selected_period == "Last 7 Days" else "487" if selected_period == "Last 30 Days" else "1,842")
+    with col3:
+        st.metric("Success Rate", "84.2%" if selected_period == "Last 7 Days" else "82.7%" if selected_period == "Last 30 Days" else "81.9%", delta="1.5%" if selected_period == "Last 7 Days" else "0.8%" if selected_period == "Last 30 Days" else "-0.3%", delta_color="inverse" if selected_period == "All Time" else "normal")
+    with col4:
+        st.metric("Avg Response Time", "42ms" if selected_period == "Last 7 Days" else "47ms" if selected_period == "Last 30 Days" else "49ms", delta="-5ms" if selected_period == "Last 7 Days" else "-2ms" if selected_period == "Last 30 Days" else "3ms", delta_color="inverse")
+
+    st.subheader("Error Distribution by Type")
+    fig = px.pie(values=[42, 23, 17, 11, 5], names=["Barcode Unrecognized", "Network Error", "Database Timeout", "API Error", "Authentication Error"], title="Error Distribution", color_discrete_sequence=px.colors.qualitative.Set3)
+    fig.update_layout(height=350, margin=dict(l=20, r=20, t=40, b=20))
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.subheader("Daily Error Trend")
+    days = 14
+    dates = [(datetime.now() - timedelta(days=x)).strftime('%Y-%m-%d') for x in range(days)][::-1]
+    np.random.seed(45)
+    error_trend = np.clip(np.round(np.linspace(20, 10, days) + np.random.normal(0, 3, days)), 0, None).astype(int)
+    trend_df = pd.DataFrame({'Date': dates, 'Errors': error_trend})
+    fig = px.line(trend_df, x='Date', y='Errors', title='Daily Error Count', markers=True)
+    fig.add_trace(go.Scatter(x=trend_df['Date'], y=np.poly1d(np.polyfit(range(len(trend_df)), trend_df['Errors'], 1))(range(len(trend_df))), mode='lines', name='Trend', line=dict(color='red', dash='dash')))
+    fig.update_layout(height=350, margin=dict(l=20, r=20, t=40, b=20))
+    st.plotly_chart(fig, use_container_width=True)
+
+# Recommendations
+st.markdown("---")
+st.subheader("🔍 System Recommendations")
+recommendations = [
+    {"title": "Improve Barcode Recognition", "description": "Barcode recognition failures account for 42% of all errors. Consider upgrading the image processing algorithm.", "priority": "High"},
+    {"title": "Optimize Database Queries", "description": "Database timeouts have increased by 15% in the last 30 days. Review and optimize slow queries.", "priority": "Medium"},
+    {"title": "Update Error Logging", "description": "Add more detailed context to error logs to facilitate faster troubleshooting.", "priority": "Low"}
+]
+for i, rec in enumerate(recommendations):
+    with st.expander(f"{rec['title']} (Priority: {rec['priority']})", expanded=i==0):
+        st.write(rec['description'])
+        col1, col2 = st.columns([1, 4])
+        with col1:
+            if st.button("Implement", key=f"implement_{i}"):
+                st.info("This would initiate the implementation process in a real system.")
+        with col2:
+            if st.button("Dismiss", key=f"dismiss_{i}"):
+                st.info("Recommendation would be dismissed in a real system.")
