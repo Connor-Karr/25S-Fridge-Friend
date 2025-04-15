@@ -150,3 +150,26 @@ with tabs[1]:
     with col2:
         st.info("**Quick Stir Fry** (15 mins)\n\n✓ Uses items in your fridge\n✓ Under your calorie goal\n✓ High protein")
         st.success("**Protein Smoothie** (5 mins)\n\n✓ Uses expiring items\n✓ Matches your macros\n✓ Pre-workout friendly")
+
+    # Nutrition Tracking tab
+with tabs[2]:
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("### Personalized Nutrition Tracking")
+        st.markdown("""
+        **Meet your health goals!**
+        - Track macro and micronutrients
+        - Personalized targets based on goals
+        - Visual progress tracking
+        - Meal suggestions to meet targets
+        - Integration with workout data
+        """)
+    
+    with col2:
+        # Mock nutrition progress bars
+        st.write("**Daily Nutrition Progress**")
+        st.progress(0.75, text="Protein: 75%")
+        st.progress(0.60, text="Carbs: 60%")
+        st.progress(0.90, text="Fat: 90%")
+        st.progress(0.80, text="Calories: 80%")
