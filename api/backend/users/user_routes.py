@@ -39,7 +39,7 @@ def create_user():
     f_name = user_data.get('f_name')
     l_name = user_data.get('l_name')
     username = user_data.get('username')
-    password = user_data.get('password')  # In production, hash this password
+    password = user_data.get('password')
     email = user_data.get('email')
     
     if not all([f_name, l_name, username, password, email]):
