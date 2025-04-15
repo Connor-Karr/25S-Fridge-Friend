@@ -69,3 +69,57 @@ with col1:
                 st.error(f"Error updating expired status: {response.status_code}")
         except Exception as e:
             st.error(f"Error: {str(e)}")
+            
+with col2:
+    st.subheader("🍲 Quick Meal Ideas")
+
+    @st.cache_data(ttl=300)
+    def get_meal_suggestions():
+        try:
+            response = requests.get(f"{API_BASE_URL}/meal-plans?client_id=1")
+            if response.status_code != 200:
+                st.error(f"Error fetching meal suggestions: {response.status_code}")
+                return []
+            data = response.json()
+            return [
+                {
+                    'name': meal.get('recipe_name', 'Unknown Recipe'),
+                    'meal_id': meal.get('meal_id'),
+                    'quantity': meal.get('quantity', 1)
+                } for meal in data
+            ]
+        except Exception as e:
+            st.error(f"Error: {str(e)}")
+            return []
+
+    meal_suggestions = get_meal_suggestions()
+
+    if meal_suggestions:
+        for i, meal in enumerate(meal_suggestions[:3]):
+            st.write(f"**{meal['name']}** (makes {meal['quantity']} servings)")
+            col1a, col1b = st.columns([3, 1])
+
+            with col1a:
+                if st.button(f"See Recipe #{i+1}", key=f"recipe_{i}"):
+                    st.session_state.selected_meal_id = meal['meal_id']
+                    st.switch_page("pages/02_Meal_Suggestions.py")
+
+            with col1b:
+                if st.button(f"Save as Leftover #{i+1}", key=f"leftover_{i}"):
+                    try:
+                        leftover_data = {'recipe_id': meal['meal_id'], 'quantity': 1}
+                        response = requests.post(f"{API_BASE_URL}/leftovers", json=leftover_data)
+
+                        if response.status_code == 201:
+                            st.success(f"Saved {meal['name']} as leftover!")
+                            time.sleep(1)
+                            st.rerun()
+                        else:
+                            st.error(f"Error saving leftover: {response.status_code}")
+                    except Exception as e:
+                        st.error(f"Error: {str(e)}")
+    else:
+        st.info("No meal suggestions available. Add ingredients to your fridge!")
+
+    if st.button("See All Meal Suggestions"):
+        st.switch_page("pages/02_Meal_Suggestions.py")
