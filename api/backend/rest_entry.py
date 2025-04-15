@@ -7,8 +7,7 @@ from backend.ingredients.ingredient_routes import ingredients
 from backend.meal_plans.meal_plan_routes import meal_plans
 from backend.macros.macros_routes import macros
 from backend.logs.log_routes import logs
-from backend.leftovers.leftovers_routes import leftovers
-from backend.simple.simple_routes import simple_routes
+from backend.leftovers.leftover_routes import leftovers
 import os
 from dotenv import load_dotenv
 
@@ -44,7 +43,6 @@ def create_app():
     # Register the routes from each Blueprint with the app object
     # and give a url prefix to each
     app.logger.info('current_app(): registering blueprints with Flask app object.')   
-    app.register_blueprint(simple_routes)
     app.register_blueprint(users, url_prefix='/users')
     app.register_blueprint(fridge, url_prefix='/fridge')
     app.register_blueprint(ingredients, url_prefix='/ingredients')

@@ -234,7 +234,7 @@ with cta_col2:
         st.session_state.authenticated = True
         st.session_state.role = "busy_student"  # Default to student role
         st.session_state.first_name = "New User"
-        st.switch_page("pages/00_Ben_Dashboard.py")
+        st.switch_page("pages/00_Fridge_Dashboard.py")
 
 # Footer
 st.markdown("---")
