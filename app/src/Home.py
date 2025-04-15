@@ -130,3 +130,23 @@ with tabs[0]:
         
         st.bar_chart(inventory_df.set_index('Category'))
         st.caption("Example of your inventory breakdown by category")
+
+
+# Recipe Suggestions tab
+with tabs[1]:
+    col1, col2 = st.columns([3, 2])
+    
+    with col1:
+        st.markdown("### Intelligent Recipe Suggestions")
+        st.markdown("""
+        **Cook with what you have!**
+        - Recipes based on available ingredients
+        - Personalized to your dietary preferences
+        - Quick-filter by prep time and difficulty
+        - Budget-friendly options
+        - Save favorite recipes for later
+        """)
+    
+    with col2:
+        st.info("**Quick Stir Fry** (15 mins)\n\n✓ Uses items in your fridge\n✓ Under your calorie goal\n✓ High protein")
+        st.success("**Protein Smoothie** (5 mins)\n\n✓ Uses expiring items\n✓ Matches your macros\n✓ Pre-workout friendly")
