@@ -101,10 +101,9 @@ def add_ingredient():
         response.status_code = 500
         return response
 
-
 @ingredients.route('/<int:ingredient_id>', methods=['PUT'])
 def update_ingredient(ingredient_id):
-    """Update ingredient details or category"""
+    """Update ingredient details - Used by Alvin to update ingredient categories [Alvin-2]"""
     data = request.json
     
     cursor = db.get_db().cursor()
@@ -130,7 +129,7 @@ def update_ingredient(ingredient_id):
         update_fields.append('expiration_date = %s')
         params.append(expiration_date)
 
-     if not update_fields:
+    if not update_fields:
         response = make_response(jsonify({"error": "No fields to update"}))
         response.status_code = 400
         return response
@@ -149,7 +148,6 @@ def update_ingredient(ingredient_id):
         current_app.logger.error(f"Error updating ingredient: {str(e)}")
         response = make_response(jsonify({"error": "Could not update ingredient"}))
         response.status_code = 500
-        return response
     
 
 @ingredients.route('/<int:ingredient_id>', methods=['DELETE'])
