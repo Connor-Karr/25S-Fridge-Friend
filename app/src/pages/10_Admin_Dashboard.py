@@ -185,3 +185,35 @@ if error_logs:
         )
 else:
     st.info("No error logs found. That's a good thing!")
+
+
+st.subheader("📈 System Monitoring")
+chart_tab1, chart_tab2 = st.tabs(["Server Performance", "User Activity"])
+
+with chart_tab1:
+    timestamps = [datetime.now() - timedelta(hours=x) for x in range(24)][::-1]
+    timestamp_strs = [ts.strftime('%H:%M') for ts in timestamps]
+    np.random.seed(43)
+    cpu = np.clip(20 + np.random.normal(0, 5, 24) + np.sin(np.linspace(0, 4*np.pi, 24))*10, 5, 90)
+    mem = np.clip(40 + np.random.normal(0, 3, 24) + np.cos(np.linspace(0, 2*np.pi, 24))*15, 20, 95)
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=timestamp_strs, y=cpu, mode='lines+markers', name='CPU Usage (%)', line=dict(color='#FF9800')))
+    fig.add_trace(go.Scatter(x=timestamp_strs, y=mem, mode='lines+markers', name='Memory Usage (%)', line=dict(color='#2196F3')))
+    fig.update_layout(title='Server Resource Usage (Last 24 Hours)', xaxis_title='Time', yaxis_title='Usage (%)', height=400, hovermode='x unified')
+    st.plotly_chart(fig, use_container_width=True)
+
+with chart_tab2:
+    days_back = 14
+    dates = [(datetime.now() - timedelta(days=x)).strftime('%Y-%m-%d') for x in range(days_back)][::-1]
+    np.random.seed(44)
+    logins = np.random.randint(80, 200, days_back)
+    food_scans = np.random.randint(100, 300, days_back)
+    recipe_views = np.random.randint(150, 400, days_back)
+    meal_plans = np.random.randint(30, 100, days_back)
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=dates, y=logins, mode='lines', name='Logins', line=dict(color='#673AB7')))
+    fig.add_trace(go.Scatter(x=dates, y=food_scans, mode='lines', name='Food Scans', line=dict(color='#4CAF50')))
+    fig.add_trace(go.Scatter(x=dates, y=recipe_views, mode='lines', name='Recipe Views', line=dict(color='#FF5722')))
+    fig.add_trace(go.Scatter(x=dates, y=meal_plans, mode='lines', name='Meal Plans Created', line=dict(color='#2196F3')))
+    fig.update_layout(title='User Activity (Last 14 Days)', xaxis_title='Date', yaxis_title='Number of Actions', height=400, hovermode='x unified')
+    st.plotly_chart(fig, use_container_width=True)
