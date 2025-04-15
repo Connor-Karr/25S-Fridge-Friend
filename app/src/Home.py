@@ -203,3 +203,21 @@ with tabs[3]:
         )
         
         st.plotly_chart(fig, use_container_width=True)
+
+# User testimonials
+st.markdown("---")
+st.markdown("## What Our Users Say")
+
+testimonial_col1, testimonial_col2, testimonial_col3 = st.columns(3)
+
+with testimonial_col1:
+    st.markdown("#### *\"FridgeFriend has saved me over $200 per month on groceries, and I'm eating healthier than ever!\"*")
+    st.markdown("**- Jamie, College Student**")
+
+with testimonial_col2:
+    st.markdown("#### *\"As a nutritionist, this app has revolutionized how I create meal plans for my clients. The data insights are invaluable.\"*")
+    st.markdown("**- Dr. Rachel, Registered Dietitian**")
+
+with testimonial_col3:
+    st.markdown("#### *\"Training for marathons requires precise nutrition. FridgeFriend helps me hit my macros perfectly every day.\"*")
+    st.markdown("**- Mark, Marathon Runner**")
