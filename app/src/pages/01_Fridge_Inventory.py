@@ -69,7 +69,7 @@ with col1:
                 st.error(f"Error updating expired status: {response.status_code}")
         except Exception as e:
             st.error(f"Error: {str(e)}")
-            
+
 with col2:
     st.subheader("🍲 Quick Meal Ideas")
 
@@ -123,3 +123,29 @@ with col2:
 
     if st.button("See All Meal Suggestions"):
         st.switch_page("pages/02_Meal_Suggestions.py")
+
+st.markdown("---")
+st.subheader("💰 Budget Overview")
+
+budget_total = 100
+budget_used = 62.35
+budget_remaining = budget_total - budget_used
+budget_percent = (budget_used / budget_total) * 100
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.metric("Total Budget", f"${budget_total:.2f}")
+with col2:
+    st.metric("Used", f"${budget_used:.2f}", f"-{budget_percent:.1f}%")
+with col3:
+    st.metric("Remaining", f"${budget_remaining:.2f}")
+
+st.progress(budget_percent / 100)
+
+if budget_percent > 100:
+    st.error("You've exceeded your budget for this period.")
+elif budget_percent > 80:
+    st.warning("You're near your budget limit! Consider budget-friendly recipes.")
+else:
+    st.info(f"You're on track with your budget! {budget_percent:.1f}% used so far.")
