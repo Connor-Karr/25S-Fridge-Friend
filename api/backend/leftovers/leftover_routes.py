@@ -53,3 +53,47 @@ def get_leftover(leftover_id):
     response = make_response(jsonify(leftover))
     response.status_code = 200
     return response
+
+@leftovers.route('/', methods=['POST'])
+def add_leftover():
+    """Add new leftover"""
+    data = request.json
+    
+    recipe_id = data.get('recipe_id')
+    quantity = data.get('quantity', 1)
+    
+    if not recipe_id:
+        response = make_response(jsonify({"error": "Recipe ID is required"}))
+        response.status_code = 400
+        return response
+    
+    cursor = db.get_db().cursor()
+    
+    # Check if recipe exists
+    cursor.execute('SELECT * FROM Recipe WHERE recipe_id = %s', (recipe_id,))
+    if not cursor.fetchone():
+        response = make_response(jsonify({"error": "Recipe not found"}))
+        response.status_code = 404
+        return response
+    
+    try:
+        # Calculate expiration date (e.g., 5 days from now)
+        expiration_date = datetime.now() + timedelta(days=5)
+        
+        cursor.execute(
+            'INSERT INTO Leftover (recipe_id, quantity, is_expired) VALUES (%s, %s, FALSE)',
+            (recipe_id, quantity)
+        )
+        db.get_db().commit()
+        
+        response = make_response(jsonify({
+            "message": "Leftover added successfully",
+            "leftover_id": cursor.lastrowid
+        }))
+        response.status_code = 201
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error adding leftover: {str(e)}")
+        response = make_response(jsonify({"error": "Could not add leftover"}))
+        response.status_code = 500
+        return response
