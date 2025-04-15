@@ -30,7 +30,7 @@ def get_fridge_inventory():
 
 @fridge.route('/<int:ingredient_id>', methods=['GET'])
 def get_fridge_ingredient(ingredient_id):
-    """Get details for a specific ingredient"""
+    """Get details for a specific ingredient - Used by Riley to check specific ingredients [Riley-3]"""
     fridge_id = request.args.get('fridge_id')
     
     if not fridge_id:
@@ -41,7 +41,7 @@ def get_fridge_ingredient(ingredient_id):
     cursor = db.get_db().cursor()
     query = '''
         SELECT fi.fridge_id, i.name, fi.quantity, i.expiration_date, fi.is_expired
-        FROM Fridge_Inventory fi
+        FROM Fridge_Ingredient fi
         JOIN Ingredient i ON fi.ingredient_id = i.ingredient_id
         WHERE fi.fridge_id = %s AND fi.ingredient_id = %s
     '''
