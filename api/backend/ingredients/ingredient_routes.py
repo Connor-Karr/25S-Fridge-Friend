@@ -16,7 +16,7 @@ def get_all_ingredients():
 
 @ingredients.route('/<int:ingredient_id>', methods=['GET'])
 def get_ingredient(ingredient_id):
-    """Get ingredient details"""
+    """Get ingredient details with macronutrients - Used by Nancy for nutritional tracking [Nancy-5]"""
     cursor = db.get_db().cursor()
 
     # Get ingredient basic info
@@ -28,7 +28,7 @@ def get_ingredient(ingredient_id):
         response.status_code = 404
         return response
     
-     # Get macronutrients
+    # Get macronutrients
     cursor.execute('''
         SELECT m.* 
         FROM Macronutrients m
@@ -46,9 +46,10 @@ def get_ingredient(ingredient_id):
     return response
 
 
+
 @ingredients.route('/', methods=['POST'])
 def add_ingredient():
-    """Add new trusted ingredient with macros"""
+    """Add new trusted ingredient with macros - Used by Alvin to add trusted food items [Alvin-5]"""
     data = request.json
 
     name = data.get('name')
