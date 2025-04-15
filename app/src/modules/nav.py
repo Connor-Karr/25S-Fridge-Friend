@@ -58,4 +58,13 @@ def _add_admin_links():
     st.sidebar.page_link("pages/12_System_Logs.py", label="📝 System Logs")
     st.sidebar.page_link("pages/13_User_Management.py", label="👤 User Management")
 
+def _add_nutritionist_links():
+    """Add links for the Nutritionist role (Nancy)"""
+    st.sidebar.markdown("### Nutritionist Navigation")
+    
+    st.sidebar.page_link("pages/20_Nutritionist_Dashboard.py", label="📊 Dashboard")
+    st.sidebar.page_link("pages/21_Client_Management.py", label="👥 Client Management")
+    st.sidebar.page_link("pages/22_Meal_Planning.py", label="🍽️ Meal Planning")
+    st.sidebar.page_link("pages/23_Nutrition_Analytics.py", label="📈 Nutrition Analytics")
+
         
