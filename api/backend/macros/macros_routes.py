@@ -36,7 +36,7 @@ def get_macronutrients():
 
 @macros.route('/<int:macro_id>', methods=['PUT'])
 def update_macronutrients(macro_id):
-    """Update macronutrient values"""
+    """Update macronutrient values - Used by Alvin to fix macro data [Alvin-1] and by Riley to adjust macro goals [Riley-5]"""
     data = request.json
     
     protein = data.get('protein')
@@ -104,4 +104,3 @@ def update_macronutrients(macro_id):
         response = make_response(jsonify({"error": "Could not update macronutrients"}))
         response.status_code = 500
         return response
-        
