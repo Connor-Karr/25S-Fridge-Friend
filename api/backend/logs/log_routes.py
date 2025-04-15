@@ -6,8 +6,10 @@ logs = Blueprint('logs', __name__)
 
 @logs.route('/scans', methods=['GET'])
 def get_scan_history():
-    """Get scan history"""
+    """Get scan history - Used by Alvin to track food scanning patterns [Alvin-6]"""
     client_id = request.args.get('client_id')
+    
+    cursor = db.get_db().cursor()
     
     if client_id:
         query = '''
