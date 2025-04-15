@@ -336,3 +336,183 @@ with tab2:
         4. **Reduce Food Waste:** Use leftovers creatively in new meals
         5. **Store Brands:** Choose store brands over name brands when possible
         """)
+# Using Expiring Items Tab
+with tab3:
+    st.subheader("Recipes Using Soon-to-Expire Items")
+    
+    # Filter inventory for items expiring soon (within 3 days)
+    today = datetime.now().date()
+    expiring_soon = []
+    
+    for item in inventory:
+        if item.get("expiration_date"):
+            exp_date = datetime.strptime(item["expiration_date"], '%Y-%m-%d').date()
+            days_left = (exp_date - today).days
+            
+            if 0 <= days_left <= 3 and not item.get("is_expired", False):
+                expiring_soon.append(item)
+    
+    # Display expiring items
+    if expiring_soon:
+        st.warning(f"You have {len(expiring_soon)} items expiring within the next 3 days.")
+        
+        # Display expiring items
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.write("**Expiring Soon:**")
+            for item in expiring_soon:
+                exp_date = datetime.strptime(item["expiration_date"], '%Y-%m-%d').date()
+                days_left = (exp_date - today).days
+                
+                if days_left == 0:
+                    st.write(f"- {item['name']} (Expires today!)")
+                else:
+                    st.write(f"- {item['name']} (Expires in {days_left} days)")
+        
+        # Find recipes that use expiring items
+        with col2:
+            expiring_ids = [item["ingredient_id"] for item in expiring_soon]
+            recipes_using_expiring = []
+            
+            for recipe in recipes:
+                if any(ing_id in expiring_ids for ing_id in recipe["ingredients"]):
+                    recipes_using_expiring.append(recipe)
+            
+            if recipes_using_expiring:
+                st.write("**Recommended Recipes:**")
+                for recipe in recipes_using_expiring:
+                    st.write(f"- {recipe['name']} ({recipe['prep_time']} mins)")
+            else:
+                st.write("No specific recipes found for expiring items.")
+        
+        # Display detailed recipes using expiring items
+        st.subheader("Recipe Details")
+        
+        if recipes_using_expiring:
+            for recipe in recipes_using_expiring:
+                # Highlight which ingredients are expiring
+                expiring_ingredients = []
+                for ing_id in recipe["ingredients"]:
+                    if ing_id in expiring_ids:
+                        for item in expiring_soon:
+                            if item["ingredient_id"] == ing_id:
+                                expiring_ingredients.append(item["name"])
+                
+                with st.expander(f"{recipe['name']} (Uses {', '.join(expiring_ingredients)})"):
+                    st.write(f"**Description:** {recipe['description']}")
+                    st.write(f"**Preparation Time:** {recipe['prep_time']} minutes")
+                    st.write(f"**Cost Estimate:** ${recipe['cost']:.2f}")
+                    st.write(f"**Calories:** {recipe['calories']} | **Protein:** {recipe['protein']}g | **Carbs:** {recipe['carbs']}g | **Fat:** {recipe['fat']}g")
+                    
+                    # Show ingredients
+                    st.write("**Ingredients:**")
+                    for ing_id in recipe["ingredients"]:
+                        for item in inventory:
+                            if item["ingredient_id"] == ing_id:
+                                if ing_id in expiring_ids:
+                                    st.markdown(f"- **{item['name']}** ({item['quantity']} available) - **EXPIRING SOON!**")
+                                else:
+                                    st.write(f"- {item['name']} ({item['quantity']} available)")
+                    
+                    st.write("**Instructions:**")
+                    st.write(recipe["instructions"])
+                    
+                    # Cook now button
+                    if st.button("Cook Now", key=f"cook_expiring_{recipe['id']}"):
+                        st.success(f"Preparing {recipe['name']}!")
+                        # Mock cooking steps
+        else:
+            st.info("No recipes found that use your expiring ingredients.")
+            
+            # Suggest creative uses
+            st.subheader("Creative Ways to Use Expiring Items")
+            
+            creative_uses = {
+                "Vegetables": "Make a quick stir-fry or soup",
+                "Fruits": "Blend into smoothies or freeze for later",
+                "Bread": "Make croutons or bread pudding",
+                "Milk": "Use in pancakes, baking, or make pudding",
+                "Eggs": "Hard boil for quick snacks",
+                "Meat": "Cook and freeze in portions for future meals"
+            }
+            
+            for item in expiring_soon:
+                item_type = None
+                item_name = item["name"].lower()
+                
+                if "chicken" in item_name or "beef" in item_name or "pork" in item_name:
+                    item_type = "Meat"
+                elif "bread" in item_name:
+                    item_type = "Bread"
+                elif "milk" in item_name:
+                    item_type = "Milk"
+                elif "egg" in item_name:
+                    item_type = "Eggs"
+                elif any(veggie in item_name for veggie in ["broccoli", "carrot", "spinach", "tomato"]):
+                    item_type = "Vegetables"
+                elif any(fruit in item_name for fruit in ["apple", "banana", "berry", "orange"]):
+                    item_type = "Fruits"
+                
+                if item_type and item_type in creative_uses:
+                    st.write(f"**{item['name']}**: {creative_uses[item_type]}")
+    else:
+        st.success("No items expiring soon. Your fridge is in good shape!")
+
+# Show more complex recipe ideas
+st.markdown("---")
+st.subheader("Weekend Cooking Projects")
+
+# Mock complex recipes
+complex_recipes = [
+    {
+        "name": "Homemade Pizza",
+        "description": "Make your own pizza from scratch with dough and toppings",
+        "time": "2 hours",
+        "difficulty": "Medium",
+        "cost": "$5.00"
+    },
+    {
+        "name": "Slow-Cooked Chili",
+        "description": "Rich and flavorful chili perfect for meal prep",
+        "time": "3 hours",
+        "difficulty": "Easy",
+        "cost": "$8.00"
+    },
+    {
+        "name": "Pasta Carbonara from Scratch",
+        "description": "Classic Italian pasta dish with egg, cheese, and bacon",
+        "time": "45 minutes",
+        "difficulty": "Medium",
+        "cost": "$6.50"
+    }
+]
+
+# Display complex recipes
+for recipe in complex_recipes:
+    st.write(f"**{recipe['name']}** - {recipe['description']}")
+    st.write(f"Time: {recipe['time']} | Difficulty: {recipe['difficulty']} | Cost: {recipe['cost']}")
+    
+    if st.button("View Recipe", key=f"view_{recipe['name']}"):
+        st.info(f"This would display the full recipe for {recipe['name']}.")
+
+# Tips section
+st.markdown("---")
+st.subheader("Student Cooking Tips")
+
+tips = [
+    "**Batch Cook**: Prepare large portions on weekends to eat throughout the week.",
+    "**One-Pot Meals**: Save on dishes and time with simple one-pot recipes.",
+    "**Learn 5 Basic Recipes**: Master a few versatile recipes you can modify with different ingredients.",
+    "**Use a Slow Cooker**: Prep in the morning for a ready meal when you return from classes.",
+    "**Frozen Vegetables**: Keep frozen vegetables on hand for quick nutrition when fresh produce runs out."
+]
+
+# Show random tip
+tip_index = datetime.now().day % len(tips)  # Changes daily
+st.info(f"Tip of the Day: {tips[tip_index]}")
+
+# Show all tips
+with st.expander("View All Tips"):
+    for tip in tips:
+        st.write(tip)
