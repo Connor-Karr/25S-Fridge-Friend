@@ -7,6 +7,11 @@ from modules.nav import SideBarLinks
 
 SideBarLinks(st.session_state.role)
 
+# Authentication check
+if not st.session_state.get('authenticated', False) or st.session_state.role != "busy_student":
+    st.warning("Please log in as Ben to access this page")
+    st.stop()
+    
 st.title(f"Welcome, {st.session_state.first_name}! 👋")
 st.write("Manage your fridge, plan meals, and stay on budget!")
 
