@@ -52,3 +52,20 @@ FridgeFriend is a data-driven application designed to streamline healthy eating 
 - **Budget Planning**: Stay within your grocery budget with smart planning
 - **Allergen Management**: Track dietary restrictions and allergies
 """)
+
+
+st.markdown("### Select Your Profile")
+st.write("Choose a profile to log in and access personalized features.")
+
+
+col1, col2, col3, col4 = st.columns(4)
+
+#Ben
+with col1:
+    st.markdown("#### 🧑‍🎓 Student")
+    st.write("Quick meals & budget tracking")
+    if st.button("Login as Ben", key="student"):
+        st.session_state.authenticated = True
+        st.session_state.role = "busy_student"
+        st.session_state.first_name = "Ben"
+        st.switch_page("pages/00_Ben_Dashboard.py")
