@@ -49,5 +49,13 @@ def _add_student_links():
     st.sidebar.page_link("pages/02_Meal_Suggestions.py", label="🍲 Meal Suggestions")
     st.sidebar.page_link("pages/03_Leftovers_Tracker.py", label="🥡 Leftovers Tracker")
 
+def _add_admin_links():
+    """Add links for the Admin role (Alvin)"""
+    st.sidebar.markdown("### Admin Navigation")
+    
+    st.sidebar.page_link("pages/10_Admin_Dashboard.py", label="📊 Admin Dashboard")
+    st.sidebar.page_link("pages/11_Ingredient_Management.py", label="🥕 Ingredient Management")
+    st.sidebar.page_link("pages/12_System_Logs.py", label="📝 System Logs")
+    st.sidebar.page_link("pages/13_User_Management.py", label="👤 User Management")
 
         
