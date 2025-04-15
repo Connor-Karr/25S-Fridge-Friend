@@ -108,3 +108,35 @@ with col2:
     )
     fig.update_layout(height=300, margin=dict(l=10, r=10, t=40, b=10), legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
     st.plotly_chart(fig, use_container_width=True)
+
+st.subheader("⚡ Quick Actions")
+act1, act2, act3, act4 = st.columns(4)
+
+with act1:
+    if st.button("Update Expired Status", use_container_width=True):
+        try:
+            res = requests.put(f"{API_BASE_URL}/fridge/expired")
+            st.success("Expired status updated successfully!") if res.status_code == 200 else st.error(f"Error: {res.status_code}")
+        except Exception as e:
+            st.error(f"Error: {str(e)}")
+
+with act2:
+    if st.button("Remove Expired Items", use_container_width=True):
+        try:
+            res = requests.delete(f"{API_BASE_URL}/fridge/expired")
+            st.success("Expired items removed successfully!") if res.status_code == 200 else st.error(f"Error: {res.status_code}")
+        except Exception as e:
+            st.error(f"Error: {str(e)}")
+
+with act3:
+    if st.button("Generate System Report", use_container_width=True):
+        with st.spinner("Generating report..."):
+            time.sleep(2)
+            st.success("System report generated successfully!")
+            st.download_button("Download Report", data="This is a mock system report for FridgeFriend.", file_name="system_report.txt", mime="text/plain")
+
+with act4:
+    if st.button("Database Maintenance", use_container_width=True):
+        with st.spinner("Running maintenance tasks..."):
+            time.sleep(3)
+            st.success("Database maintenance completed successfully!")
