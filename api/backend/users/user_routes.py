@@ -121,7 +121,7 @@ def update_user(user_id):
     
 @users.route('/constraints/<int:pc_id>', methods=['PUT'])
 def update_constraints(pc_id):
-    """Update user dietary constraints - Used by Nancy to manage client diets [Nancy-1, Nancy-4]"""
+    """Update user dietary constraints"""
     data = request.json
     
     cursor = db.get_db().cursor()
