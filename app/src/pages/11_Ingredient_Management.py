@@ -181,3 +181,43 @@ with tab1:
         st.info("No ingredients found in the database.")
         if st.button("Add New Ingredient"):
             tab2.set_active(True)
+
+# Add New Ingredient Tab
+with tab2:
+    st.subheader("Add New Ingredient")
+    with st.form("add_ingredient_form"):
+        ingredient_name = st.text_input("Ingredient Name:")
+        expiration_days = st.number_input("Default Shelf Life (days):", min_value=1, max_value=365, value=7)
+        expiration_date = (datetime.now() + timedelta(days=expiration_days)).strftime('%Y-%m-%d')
+        st.subheader("Macronutrient Information")
+        col1, col2 = st.columns(2)
+        with col1:
+            protein = st.number_input("Protein (g):", min_value=0.0, step=0.1)
+            fat = st.number_input("Fat (g):", min_value=0.0, step=0.1)
+            carbs = st.number_input("Carbs (g):", min_value=0.0, step=0.1)
+        with col2:
+            fiber = st.number_input("Fiber (g):", min_value=0.0, step=0.1)
+            sodium = st.number_input("Sodium (mg):", min_value=0.0, step=0.1)
+            calories = st.number_input("Calories:", min_value=0)
+        if st.form_submit_button("Add Ingredient") and ingredient_name:
+            try:
+                ingredient_data = {
+                    'name': ingredient_name,
+                    'expiration_date': expiration_date,
+                    'macros': {
+                        'protein': protein,
+                        'fat': fat,
+                        'carbs': carbs,
+                        'fiber': fiber,
+                        'sodium': sodium,
+                        'calories': calories
+                    }
+                }
+                response = requests.post(f"{API_BASE_URL}/ingredients", json=ingredient_data)
+                if response.status_code == 201:
+                    st.success(f"Added {ingredient_name} to the database!")
+                    st.cache_data.clear()
+                else:
+                    st.error(f"Error adding ingredient: {response.status_code}")
+            except Exception as e:
+                st.error(f"Error: {str(e)}")
