@@ -107,4 +107,60 @@ with tab1:
         st.cache_data.clear()
         st.rerun()
 
+# Food Scan Logs Tab
+with tab2:
+    st.subheader("Food Scan Logs")
+    scan_logs = get_scan_logs()
+    if not scan_logs:
+        ingredients = ["Apple", "Banana", "Milk", "Eggs", "Bread", "Chicken", "Rice", "Tomatoes", "Cheese", "Yogurt"]
+        scan_logs = [{
+            'log_id': i + 1,
+            'timestamp': (datetime.now() - timedelta(days=np.random.randint(0, 14), hours=np.random.randint(0, 24), minutes=np.random.randint(0, 60))).strftime('%Y-%m-%d %H:%M:%S'),
+            'status': 'SUCCESS' if np.random.random() > 0.2 else 'FAILED',
+            'ingredient': np.random.choice(ingredients)
+        } for i in range(20)]
+        scan_logs.sort(key=lambda x: x['timestamp'], reverse=True)
+
+    col1, col2, col3 = st.columns(3)
+    scan_date_range = st.date_input("Date range:", (datetime.now().date() - timedelta(days=7), datetime.now().date()), max_value=datetime.now().date(), key="scan_date_range")
+    scan_status_filter = st.selectbox("Filter by status:", ["All"] + list(set([log['status'] for log in scan_logs])))
+    ingredient_filter = st.selectbox("Filter by ingredient:", ["All"] + list(set([log['ingredient'] for log in scan_logs])))
+
+    filtered_scan_logs = scan_logs
+    if scan_date_range and len(scan_date_range) == 2:
+        start_date, end_date = scan_date_range
+        filtered_scan_logs = [log for log in filtered_scan_logs if start_date <= datetime.strptime(log['timestamp'].split()[0], '%Y-%m-%d').date() <= end_date]
+    if scan_status_filter != "All":
+        filtered_scan_logs = [log for log in filtered_scan_logs if log.get('status') == scan_status_filter]
+    if ingredient_filter != "All":
+        filtered_scan_logs = [log for log in filtered_scan_logs if log.get('ingredient') == ingredient_filter]
+
+    if filtered_scan_logs:
+        scan_df = pd.DataFrame(filtered_scan_logs)
+        def color_status(val): return 'background-color: #FFCCCC' if val == "FAILED" else 'background-color: #CCFFCC'
+        st.dataframe(scan_df.style.applymap(color_status, subset=['status']), column_config={"log_id": st.column_config.NumberColumn("ID"), "timestamp": "Timestamp", "status": "Status", "ingredient": "Ingredient"}, height=400)
+        st.subheader("Scan Statistics")
+        total_scans = len(filtered_scan_logs)
+        successful_scans = len([log for log in filtered_scan_logs if log['status'] == 'SUCCESS'])
+        success_rate = (successful_scans / total_scans) * 100 if total_scans > 0 else 0
+        st.metric("Total Scans", total_scans)
+        st.metric("Successful Scans", successful_scans)
+        st.metric("Success Rate", f"{success_rate:.1f}%")
+
+        if 'timestamp' in scan_df.columns:
+            scan_df['date'] = pd.to_datetime(scan_df['timestamp']).dt.date
+            scans_by_day = scan_df.groupby(['date', 'status']).size().reset_index(name='count')
+            pivot_df = scans_by_day.pivot(index='date', columns='status', values='count').reset_index().fillna(0)
+            if 'SUCCESS' not in pivot_df: pivot_df['SUCCESS'] = 0
+            if 'FAILED' not in pivot_df: pivot_df['FAILED'] = 0
+            fig = px.bar(pivot_df, x='date', y=['SUCCESS', 'FAILED'], title='Daily Scan Activity', labels={'value': 'Number of Scans', 'date': 'Date'}, color_discrete_map={'SUCCESS': '#4CAF50', 'FAILED': '#FF5252'})
+            fig.update_layout(legend_title_text='Scan Status', height=300, margin=dict(l=20, r=20, t=40, b=20), legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+            st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("No scan logs found matching the selected filters.")
+
+    if st.button("Refresh Scan Logs"):
+        st.cache_data.clear()
+        st.rerun()
+
 
