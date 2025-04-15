@@ -27,3 +27,13 @@ if 'first_name' not in st.session_state:
 
 # sidebar navigation
 SideBarLinks(st.session_state.role)
+
+#App header
+col1, col2 = st.columns([1, 5])
+
+with col1:
+    st.image("https://via.placeholder.com/150x150.png?text=FridgeFriend", width=120)
+
+with col2:
+    st.title("FridgeFriend")
+    st.subheader("Smart Food Management & Nutrition Tracking")
