@@ -65,3 +65,50 @@ def get_ingredient_details(ingredient_id):
     except Exception as e:
         st.error(f"Error: {str(e)}")
         return None
+# Function to update ingredient
+def update_ingredient(ingredient_id, data):
+    try:
+        response = requests.put(f"{API_BASE_URL}/ingredients/{ingredient_id}", json=data)
+        
+        if response.status_code == 200:
+            st.success("Ingredient updated successfully!")
+            st.cache_data.clear()
+            return True
+        else:
+            st.error(f"Error updating ingredient: {response.status_code}")
+            return False
+    except Exception as e:
+        st.error(f"Error: {str(e)}")
+        return False
+
+# Function to delete ingredient
+def delete_ingredient(ingredient_id):
+    try:
+        response = requests.delete(f"{API_BASE_URL}/ingredients/{ingredient_id}")
+        
+        if response.status_code == 200:
+            st.success("Ingredient deleted successfully!")
+            st.cache_data.clear()
+            return True
+        else:
+            st.error(f"Error deleting ingredient: {response.status_code}")
+            return False
+    except Exception as e:
+        st.error(f"Error: {str(e)}")
+        return False
+
+# Function to update macronutrients
+def update_macros(macro_id, data):
+    try:
+        response = requests.put(f"{API_BASE_URL}/macros/{macro_id}", json=data)
+        
+        if response.status_code == 200:
+            st.success("Macronutrients updated successfully!")
+            st.cache_data.clear()
+            return True
+        else:
+            st.error(f"Error updating macronutrients: {response.status_code}")
+            return False
+    except Exception as e:
+        st.error(f"Error: {str(e)}")
+        return False
