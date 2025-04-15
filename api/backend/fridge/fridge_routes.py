@@ -102,14 +102,14 @@ def add_ingredient_to_fridge(ingredient_id):
         response.status_code = 500
         return response
     
-@fridge.route('/', methods=['PUT'])
+@fridge.route('/expired', methods=['PUT'])
 def update_expired_status():
-    """Update expired status of ingredients"""
+    """Update expired status of ingredients - Used by Busy Ben for expiry notifications [Busy Ben-1]"""
     cursor = db.get_db().cursor()
 
     try:
         cursor.execute('''
-                UPDATE Fridge_Inventory fi
+                UPDATE Fridge_Ingredient fi
                 JOIN Ingredient i ON fi.ingredient_id = i.ingredient_id
                 SET fi.is_expired = TRUE
                 WHERE i.expiration_date < CURDATE()
