@@ -1,6 +1,6 @@
 from flask import Flask
 
-from db_connection import db
+from backend.db_connection import db
 from backend.users.user_routes import users
 from backend.fridge.fridge_routes import fridge
 from backend.ingredients.ingredient_routes import ingredients
