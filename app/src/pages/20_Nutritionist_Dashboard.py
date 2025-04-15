@@ -170,4 +170,37 @@ with tab2:
 
     st.plotly_chart(fig, use_container_width=True)
 
+    # Client count by goal
+    st.subheader("Client Distribution by Goal")
+
+    goal_counts = {
+        'Weight Loss': 12,
+        'Muscle Gain': 8,
+        'Maintenance': 5,
+        'Performance': 7,
+        'Health': 9
+    }
+
+    goal_df = pd.DataFrame({
+        'Goal': list(goal_counts.keys()),
+        'Clients': list(goal_counts.values())
+    })
+
+    fig = px.bar(
+        goal_df,
+        x='Goal',
+        y='Clients',
+        title='Number of Clients by Goal',
+        color='Goal',
+        color_discrete_sequence=px.colors.qualitative.Pastel
+    )
+
+    fig.update_layout(
+        height=300,
+        margin=dict(l=20, r=20, t=40, b=20)
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+
 
