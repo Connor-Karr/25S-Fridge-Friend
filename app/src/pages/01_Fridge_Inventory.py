@@ -72,3 +72,59 @@ with tab1:
             return []
     
     inventory = get_fridge_inventory()
+
+# Display inventory
+    if inventory:
+        # Convert to DataFrame for easier display
+        df = pd.DataFrame(inventory)
+        
+        # Create filtered views
+        filter_option = st.radio(
+            "Filter items:",
+            ["All", "Expiring Soon", "Expired", "Good"],
+            horizontal=True
+        )
+        
+        if filter_option != "All":
+            filtered_df = df[df['status'] == filter_option]
+        else:
+            filtered_df = df
+        
+        # Apply color to status
+        def color_status(val):
+            if val == "Expired":
+                return 'background-color: #FFCCCC'
+            elif val == "Expiring Soon":
+                return 'background-color: #FFFFCC'
+            else:
+                return 'background-color: #CCFFCC'
+        
+        # Display styled dataframe
+        st.dataframe(
+            filtered_df.style.applymap(
+                color_status, 
+                subset=['status']
+            ).format({
+                'quantity': '{:.1f}'
+            }),
+            column_config={
+                "ingredient_id": None,  # Hide ID column
+                "name": "Ingredient",
+                "quantity": "Quantity",
+                "expiration_date": "Expiration Date",
+                "days_left": "Days Left",
+                "status": "Status"
+            },
+            height=400
+        )
+        
+        # Summary stats
+        st.write(f"**Total items:** {len(df)}")
+        st.write(f"**Expiring soon:** {len(df[df['status'] == 'Expiring Soon'])}")
+        st.write(f"**Expired:** {len(df[df['status'] == 'Expired'])}")
+    else:
+        st.info("Your fridge is empty! Add some ingredients to get started.")
+    
+    if st.button("Refresh Inventory"):
+        st.cache_data.clear()
+        st.rerun()
