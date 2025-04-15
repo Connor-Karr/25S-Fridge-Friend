@@ -7,6 +7,7 @@ from backend.ingredients.ingredient_routes import ingredients
 from backend.meal_plans.meal_plan_routes import meal_plans
 from backend.macros.macros_routes import macros
 from backend.logs.log_routes import logs
+from backend.leftovers.leftovers_routes import leftovers
 from backend.simple.simple_routes import simple_routes
 import os
 from dotenv import load_dotenv
@@ -50,6 +51,7 @@ def create_app():
     app.register_blueprint(meal_plans, url_prefix='/meal-plans')
     app.register_blueprint(macros, url_prefix='/macronutrients')
     app.register_blueprint(logs, url_prefix='/logs')
+    app.register_blueprint(leftovers, url_prefix='/leftovers')
     
     # Don't forget to return the app object
     return app
