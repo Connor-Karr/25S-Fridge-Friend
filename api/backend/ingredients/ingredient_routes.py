@@ -152,14 +152,14 @@ def update_ingredient(ingredient_id):
 
 @ingredients.route('/<int:ingredient_id>', methods=['DELETE'])
 def delete_ingredient(ingredient_id):
-    """Delete unused/expired ingredient"""
+    """Delete unused/expired ingredient - Used by Alvin to clean database [Alvin-3]"""
     cursor = db.get_db().cursor()
 
     try:
         # Delete from fridge inventory first (foreign key constraint)
-        cursor.execute('DELETE FROM Fridge_Inventory WHERE ingredient_id = %s', (ingredient_id,))
+        cursor.execute('DELETE FROM Fridge_Ingredient WHERE ingredient_id = %s', (ingredient_id,))
 
-         # Delete from macronutrients
+        # Delete from macronutrients
         cursor.execute('DELETE FROM Macronutrients WHERE ingredient_id = %s', (ingredient_id,))
         
         # Delete the ingredient
@@ -179,27 +179,3 @@ def delete_ingredient(ingredient_id):
         response = make_response(jsonify({"error": "Could not delete ingredient"}))
         response.status_code = 500
         return response
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
