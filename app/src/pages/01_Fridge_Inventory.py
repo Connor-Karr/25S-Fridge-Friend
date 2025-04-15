@@ -258,3 +258,32 @@ with tab2:
                     st.error(f"Error creating ingredient: {response.status_code}")
             except Exception as e:
                 st.error(f"Error: {str(e)}")
+
+# Remove Expired Tab
+with tab3:
+    st.subheader("Remove Expired Items")
+    
+    # Get expired items
+    expired_items = [item for item in get_fridge_inventory() if item['status'] == 'Expired']
+    
+    if expired_items:
+        st.warning(f"You have {len(expired_items)} expired items in your fridge.")
+        
+        for item in expired_items:
+            st.write(f"• {item['name']} (Expired on {item['expiration_date']})")
+        
+        if st.button("Remove All Expired Items"):
+            try:
+                response = requests.delete(f"{API_BASE_URL}/fridge/expired")
+                
+                if response.status_code == 200:
+                    st.success("All expired items removed!")
+                    st.cache_data.clear()
+                    time.sleep(1)
+                    st.rerun()
+                else:
+                    st.error(f"Error removing expired items: {response.status_code}")
+            except Exception as e:
+                st.error(f"Error: {str(e)}")
+    else:
+        st.success("No expired items in your fridge!")
