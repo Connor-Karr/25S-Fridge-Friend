@@ -128,3 +128,133 @@ with tab1:
     if st.button("Refresh Inventory"):
         st.cache_data.clear()
         st.rerun()
+
+# Add Items Tab
+with tab2:
+    st.subheader("Add New Items to Fridge")
+    
+    # Get available ingredients
+    @st.cache_data(ttl=600)
+    def get_available_ingredients():
+        try:
+            response = requests.get(f"{API_BASE_URL}/ingredients")
+            
+            if response.status_code == 200:
+                data = response.json()
+                ingredients = []
+                
+                for item in data:
+                    ingredients.append({
+                        'id': item.get('ingredient_id'),
+                        'name': item.get('name', 'Unknown')
+                    })
+                
+                return ingredients
+            else:
+                st.error(f"Error fetching ingredients: {response.status_code}")
+                return []
+        except Exception as e:
+            st.error(f"Error: {str(e)}")
+            return []
+    
+    ingredients = get_available_ingredients()
+    
+    if ingredients:
+        # Create a form for adding items
+        with st.form("add_item_form"):
+            # Create a mapping of names to IDs
+            ingredient_names = [ing['name'] for ing in ingredients]
+            ingredient_ids = {ing['name']: ing['id'] for ing in ingredients}
+            
+            # Selection of ingredient
+            selected_ingredient = st.selectbox(
+                "Select ingredient:",
+                ingredient_names
+            )
+            
+            # Quantity input
+            quantity = st.number_input(
+                "Quantity:",
+                min_value=0.1,
+                value=1.0,
+                step=0.1
+            )
+            
+            # Submit button
+            submit_button = st.form_submit_button("Add to Fridge")
+            
+            # Process form submission
+            if submit_button:
+                ingredient_id = ingredient_ids[selected_ingredient]
+                
+                try:
+                    # Prepare data for API call
+                    data = {
+                        'fridge_id': 1,  # Hardcoded for demo
+                        'quantity': quantity
+                    }
+                    
+                    # Make API call
+                    response = requests.post(
+                        f"{API_BASE_URL}/fridge/{ingredient_id}",
+                        json=data
+                    )
+                    
+                    if response.status_code == 201:
+                        st.success(f"Added {quantity} {selected_ingredient} to your fridge!")
+                        st.cache_data.clear()  # Clear cache to refresh inventory
+                    else:
+                        st.error(f"Error adding item: {response.status_code}")
+                except Exception as e:
+                    st.error(f"Error: {str(e)}")
+    else:
+        st.warning("No ingredients available. Please contact support.")
+    
+    # Option to add a custom ingredient
+    st.markdown("---")
+    st.subheader("Add Custom Ingredient")
+    
+    with st.form("custom_ingredient_form"):
+        new_name = st.text_input("Ingredient name:")
+        expiration_date = st.date_input("Expiration date:", 
+                                       value=datetime.now().date() + timedelta(days=7))
+        new_quantity = st.number_input("Quantity:", min_value=0.1, value=1.0, step=0.1)
+        
+        custom_submit = st.form_submit_button("Add Custom Ingredient")
+        
+        if custom_submit and new_name:
+            try:
+                # First add the ingredient
+                ingredient_data = {
+                    'name': new_name,
+                    'expiration_date': expiration_date.strftime('%Y-%m-%d')
+                }
+                
+                response = requests.post(
+                    f"{API_BASE_URL}/ingredients",
+                    json=ingredient_data
+                )
+                
+                if response.status_code == 201:
+                    ingredient_id = response.json().get('ingredient_id')
+                    
+                    # Then add to fridge
+                    fridge_data = {
+                        'fridge_id': 1,
+                        'quantity': new_quantity
+                    }
+                    
+                    fridge_response = requests.post(
+                        f"{API_BASE_URL}/fridge/{ingredient_id}",
+                        json=fridge_data
+                    )
+                    
+                    if fridge_response.status_code == 201:
+                        st.success(f"Added custom ingredient {new_name}!")
+                        st.cache_data.clear()
+                    else:
+                        st.error(f"Error adding to fridge: {fridge_response.status_code}")
+                else:
+                    st.error(f"Error creating ingredient: {response.status_code}")
+            except Exception as e:
+                st.error(f"Error: {str(e)}")
