@@ -30,3 +30,26 @@ def get_leftovers():
     response = make_response(jsonify(leftovers))
     response.status_code = 200
     return response
+
+@leftovers.route('/<int:leftover_id>', methods=['GET'])
+def get_leftover(leftover_id):
+    """Get specific leftover details"""
+    cursor = db.get_db().cursor()
+    
+    cursor.execute('''
+        SELECT l.*, r.name as recipe_name, r.instructions
+        FROM Leftover l
+        JOIN Recipe r ON l.recipe_id = r.recipe_id
+        WHERE l.leftover_id = %s
+    ''', (leftover_id,))
+    
+    leftover = cursor.fetchone()
+    
+    if not leftover:
+        response = make_response(jsonify({"error": "Leftover not found"}))
+        response.status_code = 404
+        return response
+    
+    response = make_response(jsonify(leftover))
+    response.status_code = 200
+    return response
