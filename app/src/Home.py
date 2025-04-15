@@ -89,3 +89,19 @@ with col3:
         st.session_state.role = "nutritionist"
         st.session_state.first_name = "Nancy"
         st.switch_page("pages/20_Nutritionist_Dashboard.py")
+
+# Riley
+with col4:
+    st.markdown("#### 🏃‍♀️ Athlete")
+    st.write("Performance nutrition & tracking")
+    if st.button("Login as Riley", key="athlete"):
+        st.session_state.authenticated = True
+        st.session_state.role = "athlete"
+        st.session_state.first_name = "Riley"
+        st.switch_page("pages/30_Athlete_Dashboard.py")
+
+# Feature showcase with tabs
+st.markdown("---")
+st.markdown("## Feature Showcase")
+
+tabs = st.tabs(["Smart Inventory", "Recipe Suggestions", "Nutrition Tracking", "Budget Management"])
