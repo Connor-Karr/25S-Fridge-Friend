@@ -168,3 +168,22 @@ def delete_leftover(leftover_id):
         response = make_response(jsonify({"error": "Could not delete leftover"}))
         response.status_code = 500
         return response
+    
+@leftovers.route('/expired', methods=['DELETE'])
+def remove_expired_leftovers():
+    """Remove all expired leftovers"""
+    cursor = db.get_db().cursor()
+    
+    try:
+        cursor.execute('DELETE FROM Leftover WHERE is_expired = TRUE')
+        db.get_db().commit()
+        
+        count = cursor.rowcount
+        response = make_response(jsonify({"message": f"{count} expired leftovers removed"}))
+        response.status_code = 200
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error removing expired leftovers: {str(e)}")
+        response = make_response(jsonify({"error": "Could not remove expired leftovers"}))
+        response.status_code = 500
+        return response
