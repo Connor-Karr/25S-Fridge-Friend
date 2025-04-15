@@ -97,3 +97,51 @@ def add_leftover():
         response = make_response(jsonify({"error": "Could not add leftover"}))
         response.status_code = 500
         return response
+
+@leftovers.route('/<int:leftover_id>', methods=['PUT'])
+def update_leftover(leftover_id):
+    """Update leftover details"""
+    data = request.json
+    
+    quantity = data.get('quantity')
+    is_expired = data.get('is_expired')
+    
+    if quantity is None and is_expired is None:
+        response = make_response(jsonify({"error": "No fields to update"}))
+        response.status_code = 400
+        return response
+    
+    cursor = db.get_db().cursor()
+    
+    # Check if leftover exists
+    cursor.execute('SELECT * FROM Leftover WHERE leftover_id = %s', (leftover_id,))
+    if not cursor.fetchone():
+        response = make_response(jsonify({"error": "Leftover not found"}))
+        response.status_code = 404
+        return response
+    
+    update_fields = []
+    params = []
+    
+    if quantity is not None:
+        update_fields.append('quantity = %s')
+        params.append(quantity)
+    
+    if is_expired is not None:
+        update_fields.append('is_expired = %s')
+        params.append(is_expired)
+    
+    try:
+        query = f"UPDATE Leftover SET {', '.join(update_fields)} WHERE leftover_id = %s"
+        params.append(leftover_id)
+        cursor.execute(query, params)
+        db.get_db().commit()
+        
+        response = make_response(jsonify({"message": "Leftover updated successfully"}))
+        response.status_code = 200
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error updating leftover: {str(e)}")
+        response = make_response(jsonify({"error": "Could not update leftover"}))
+        response.status_code = 500
+        return response
