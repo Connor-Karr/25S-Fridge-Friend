@@ -23,3 +23,15 @@ def SideBarLinks(role=None):
         _add_nutritionist_links()
     elif role == "athlete":
         _add_athlete_links()
+        
+# Add logout button if authenticated
+    if st.session_state.get('authenticated', False):
+        st.sidebar.markdown("---")
+        st.sidebar.write(f"Logged in as: **{st.session_state.first_name}**")
+        
+        if st.sidebar.button("Logout"):
+            st.session_state.authenticated = False
+            st.session_state.role = None
+            st.session_state.first_name = None
+            st.rerun()
+        
