@@ -1,14 +1,13 @@
 from flask import Flask
 
-from backend.db_connection import db
+from db_connection import db
 from backend.users.user_routes import users
 from backend.fridge.fridge_routes import fridge
 from backend.ingredients.ingredient_routes import ingredients
 from backend.meal_plans.meal_plan_routes import meal_plans
 from backend.macros.macros_routes import macros
 from backend.logs.log_routes import logs
-from backend.leftovers.leftovers_routes import leftovers
-from backend.simple.simple_routes import simple_routes
+from backend.leftovers.leftover_routes import leftovers
 import os
 from dotenv import load_dotenv
 
