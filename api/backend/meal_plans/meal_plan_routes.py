@@ -92,7 +92,7 @@ def create_meal_plan():
 
 @meal_plans.route('/<int:meal_id>', methods=['PUT'])
 def update_meal_plan(meal_id):
-    """Update meal plan details"""
+    """Update meal plan details - Used by Nancy to modify client plans [Nancy-3]"""
     data = request.json
     
     quantity = data.get('quantity')
