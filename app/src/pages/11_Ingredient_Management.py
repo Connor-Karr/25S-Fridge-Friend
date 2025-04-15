@@ -112,3 +112,72 @@ def update_macros(macro_id, data):
     except Exception as e:
         st.error(f"Error: {str(e)}")
         return False
+
+# Ingredient Database Tab
+with tab1:
+    st.subheader("Ingredient Database")
+    ingredients = get_ingredients()
+    
+    if ingredients:
+        search_term = st.text_input("Search ingredients:", key="search_ingredients")
+        filtered_ingredients = [i for i in ingredients if search_term.lower() in i['name'].lower()] if search_term else ingredients
+        df = pd.DataFrame(filtered_ingredients)
+        st.dataframe(df, column_config={"id": st.column_config.NumberColumn("ID"), "name": "Ingredient Name", "expiration_date": "Default Expiration"}, height=300)
+        st.subheader("Ingredient Details")
+        
+        ingredient_names = [i['name'] for i in ingredients]
+        ingredient_ids = {i['name']: i['id'] for i in ingredients}
+        selected_ingredient = st.selectbox("Select ingredient to view/edit:", ingredient_names)
+        ingredient_id = ingredient_ids[selected_ingredient]
+        ingredient_details = get_ingredient_details(ingredient_id)
+        
+        if ingredient_details:
+            with st.expander(f"Details for {selected_ingredient}", expanded=True):
+                ingredient = ingredient_details.get('ingredient', {})
+                macros = ingredient_details.get('macronutrients', {})
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.subheader("Basic Information")
+                    st.write(f"**ID:** {ingredient.get('ingredient_id')}")
+                    st.write(f"**Name:** {ingredient.get('name')}")
+                    st.write(f"**Expiration Date:** {ingredient.get('expiration_date', 'N/A')}")
+                    with st.form(f"edit_ingredient_{ingredient_id}"):
+                        new_name = st.text_input("Update Name:", value=ingredient.get('name', ''))
+                        new_expiration = st.date_input("Update Default Expiration:", value=datetime.now().date() + timedelta(days=7))
+                        col1, col2 = st.columns(2)
+                        with col1: submit = st.form_submit_button("Update Ingredient")
+                        with col2: delete = st.form_submit_button("Delete Ingredient", type="secondary")
+                        if submit:
+                            data = {'name': new_name, 'expiration_date': new_expiration.strftime('%Y-%m-%d')}
+                            if update_ingredient(ingredient_id, data): time.sleep(1); st.rerun()
+                        if delete:
+                            if delete_ingredient(ingredient_id): time.sleep(1); st.rerun()
+                
+                with col2:
+                    st.subheader("Macronutrient Information")
+                    if macros:
+                        st.write(f"**Macro ID:** {macros.get('macro_id')}")
+                        st.write(f"**Protein:** {macros.get('protein', 0)} g")
+                        st.write(f"**Fat:** {macros.get('fat', 0)} g")
+                        st.write(f"**Carbs:** {macros.get('carbs', 0)} g")
+                        st.write(f"**Fiber:** {macros.get('fiber', 0)} g")
+                        st.write(f"**Sodium:** {macros.get('sodium', 0)} mg")
+                        st.write(f"**Calories:** {macros.get('calories', 0)}")
+                        with st.form(f"edit_macros_quick_{macros.get('macro_id')}"):
+                            st.caption("Quick Macronutrient Update")
+                            calories = st.number_input("Calories:", min_value=0, value=int(macros.get('calories', 0)))
+                            protein = st.number_input("Protein (g):", min_value=0.0, value=float(macros.get('protein', 0)), step=0.1)
+                            if st.form_submit_button("Update"):
+                                data = {'calories': calories, 'protein': protein}
+                                if update_macros(macros.get('macro_id'), data): time.sleep(1); st.rerun()
+                    else:
+                        st.info("No macronutrient data available for this ingredient.")
+                        if st.button("Add Macronutrient Data"):
+                            st.session_state.selected_ingredient_id = ingredient_id
+                            st.session_state.selected_ingredient_name = selected_ingredient
+                            st.switch_page("pages/13_User_Management.py")
+    else:
+        st.info("No ingredients found in the database.")
+        if st.button("Add New Ingredient"):
+            tab2.set_active(True)
