@@ -105,3 +105,28 @@ st.markdown("---")
 st.markdown("## Feature Showcase")
 
 tabs = st.tabs(["Smart Inventory", "Recipe Suggestions", "Nutrition Tracking", "Budget Management"])
+
+# Smart Inventory tab
+with tabs[0]:
+    col1, col2 = st.columns([2, 3])
+    
+    with col1:
+        st.markdown("### Smart Inventory Tracking")
+        st.markdown("""
+        **Never waste food again!**
+        - Real-time inventory tracking
+        - Expiration alerts
+        - Automatic update when items are used
+        - Easy scanning of new groceries
+        - Categorized storage system
+        """)
+    
+    with col2:
+        inventory_df = pd.DataFrame({
+            'Category': ['Dairy', 'Produce', 'Meat', 'Grains', 'Snacks'],
+            'Items': [4, 7, 3, 5, 6],
+            'Expiring Soon': [1, 2, 1, 0, 0]
+        })
+        
+        st.bar_chart(inventory_df.set_index('Category'))
+        st.caption("Example of your inventory breakdown by category")
