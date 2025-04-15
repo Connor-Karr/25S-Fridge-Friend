@@ -217,3 +217,32 @@ with chart_tab2:
     fig.add_trace(go.Scatter(x=dates, y=meal_plans, mode='lines', name='Meal Plans Created', line=dict(color='#2196F3')))
     fig.update_layout(title='User Activity (Last 14 Days)', xaxis_title='Date', yaxis_title='Number of Actions', height=400, hovermode='x unified')
     st.plotly_chart(fig, use_container_width=True)
+
+st.subheader("🆕 Recent Additions")
+recent = [
+    {"name": "Organic Quinoa", "added": "Today, 10:23 AM", "trusted": True},
+    {"name": "Plant-Based Protein Powder", "added": "Today, 09:15 AM", "trusted": True},
+    {"name": "Almond Flour", "added": "Yesterday", "trusted": True},
+    {"name": "Unknown Breakfast Cereal", "added": "2 days ago", "trusted": False},
+    {"name": "Vitamin D Supplement", "added": "3 days ago", "trusted": True}
+]
+
+def highlight_trusted(val):
+    return 'background-color: #E8F5E9' if val else 'background-color: #FFEBEE'
+
+st.dataframe(
+    pd.DataFrame(recent).style.applymap(highlight_trusted, subset=['trusted']),
+    column_config={
+        "name": "Ingredient Name",
+        "added": "Added",
+        "trusted": {
+            "header": "Trusted Source",
+            "display_text": {True: "✅ Verified", False: "❌ Unverified"}
+        }
+    },
+    height=300
+)
+
+if st.button("Refresh Dashboard Data"):
+    st.cache_data.clear()
+    st.rerun()
