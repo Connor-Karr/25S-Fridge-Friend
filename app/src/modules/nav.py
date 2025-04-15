@@ -13,3 +13,13 @@ def SideBarLinks(role=None):
 
 # Add a home button
     st.sidebar.page_link("Home.py", label="🏠 Home")
+
+# Add role-specific links
+    if role == "busy_student":
+        _add_student_links()
+    elif role == "admin":
+        _add_admin_links()
+    elif role == "nutritionist":
+        _add_nutritionist_links()
+    elif role == "athlete":
+        _add_athlete_links()
