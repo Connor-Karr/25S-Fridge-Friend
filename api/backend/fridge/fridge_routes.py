@@ -5,7 +5,7 @@ fridge = Blueprint('fridge', __name__)
 
 @fridge.route('/', methods=['GET'])
 def get_fridge_inventory():
-    """Get current fridge inventory - Used by Busy Ben to view fridge contents [Busy Ben-2]"""
+    """Get current fridge inventory"""
     client_id = request.args.get('client_id')
     
     if not client_id:
@@ -30,7 +30,7 @@ def get_fridge_inventory():
 
 @fridge.route('/<int:ingredient_id>', methods=['GET'])
 def get_fridge_ingredient(ingredient_id):
-    """Get details for a specific ingredient - Used by Riley to check specific ingredients [Riley-3]"""
+    """Get details for a specific ingredient"""
     fridge_id = request.args.get('fridge_id')
     
     if not fridge_id:
@@ -59,7 +59,7 @@ def get_fridge_ingredient(ingredient_id):
 
 @fridge.route('/<int:ingredient_id>', methods=['POST'])
 def add_ingredient_to_fridge(ingredient_id):
-    """Add new ingredient to fridge - Used by Busy Ben to stock fridge [Busy Ben-2]"""
+    """Add new ingredient to fridge"""
     data = request.json
     
     fridge_id = data.get('fridge_id')
@@ -104,7 +104,7 @@ def add_ingredient_to_fridge(ingredient_id):
     
 @fridge.route('/expired', methods=['PUT'])
 def update_expired_status():
-    """Update expired status of ingredients - Used by Busy Ben for expiry notifications [Busy Ben-1]"""
+    """Update expired status of ingredients"""
     cursor = db.get_db().cursor()
 
     try:
@@ -127,7 +127,7 @@ def update_expired_status():
     
 @fridge.route('/expired', methods=['DELETE'])
 def remove_expired_ingredients():
-    """Remove all expired ingredients - Used by Busy Ben to clean fridge [Busy Ben-1]"""
+    """Remove all expired ingredients"""
     cursor = db.get_db().cursor()
     try:
         cursor.execute('DELETE FROM Fridge_Ingredient WHERE is_expired = TRUE')

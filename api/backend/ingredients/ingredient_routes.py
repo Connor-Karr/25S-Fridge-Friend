@@ -5,7 +5,7 @@ ingredients = Blueprint('ingredients', __name__)
 
 @ingredients.route('/', methods=['GET'])
 def get_all_ingredients():
-    """Get list of all ingredients - Used by Alvin for ingredient management [Alvin-1]"""
+    """Get list of all ingredients"""
     cursor = db.get_db().cursor()
     cursor.execute('SELECT * FROM Ingredient')
     ingredients_data = cursor.fetchall()
@@ -16,7 +16,7 @@ def get_all_ingredients():
 
 @ingredients.route('/<int:ingredient_id>', methods=['GET'])
 def get_ingredient(ingredient_id):
-    """Get ingredient details with macronutrients - Used by Nancy for nutritional tracking [Nancy-5]"""
+    """Get ingredient details with macronutrients"""
     cursor = db.get_db().cursor()
 
     # Get ingredient basic info
@@ -49,7 +49,7 @@ def get_ingredient(ingredient_id):
 
 @ingredients.route('/', methods=['POST'])
 def add_ingredient():
-    """Add new trusted ingredient with macros - Used by Alvin to add trusted food items [Alvin-5]"""
+    """Add new trusted ingredient with macros"""
     data = request.json
 
     name = data.get('name')
@@ -103,7 +103,7 @@ def add_ingredient():
 
 @ingredients.route('/<int:ingredient_id>', methods=['PUT'])
 def update_ingredient(ingredient_id):
-    """Update ingredient details - Used by Alvin to update ingredient categories [Alvin-2]"""
+    """Update ingredient details"""
     data = request.json
     
     cursor = db.get_db().cursor()
@@ -152,7 +152,7 @@ def update_ingredient(ingredient_id):
 
 @ingredients.route('/<int:ingredient_id>', methods=['DELETE'])
 def delete_ingredient(ingredient_id):
-    """Delete unused/expired ingredient - Used by Alvin to clean database [Alvin-3]"""
+    """Delete unused/expired ingredient"""
     cursor = db.get_db().cursor()
 
     try:

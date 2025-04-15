@@ -5,7 +5,7 @@ macros = Blueprint('macros', __name__)
 
 @macros.route('/', methods=['GET'])
 def get_macronutrients():
-    """Get macronutrient data - Used by Riley for nutrition tracking [Riley-5]"""
+    """Get macronutrient data"""
     ingredient_id = request.args.get('ingredient_id')
     
     cursor = db.get_db().cursor()
@@ -36,7 +36,7 @@ def get_macronutrients():
 
 @macros.route('/<int:macro_id>', methods=['PUT'])
 def update_macronutrients(macro_id):
-    """Update macronutrient values - Used by Alvin to fix macro data [Alvin-1] and by Riley to adjust macro goals [Riley-5]"""
+    """Update macronutrient values"""
     data = request.json
     
     protein = data.get('protein')
