@@ -59,7 +59,7 @@ def get_fridge_ingredient(ingredient_id):
 
 @fridge.route('/<int:ingredient_id>', methods=['POST'])
 def add_ingredient_to_fridge(ingredient_id):
-    """Add new ingredient to fridge"""
+    """Add new ingredient to fridge - Used by Busy Ben to stock fridge [Busy Ben-2]"""
     data = request.json
     
     fridge_id = data.get('fridge_id')
@@ -73,7 +73,7 @@ def add_ingredient_to_fridge(ingredient_id):
     cursor = db.get_db().cursor()
     # Check if ingredient already exists in fridge
     cursor.execute(
-        'SELECT * FROM Fridge_Inventory WHERE fridge_id = %s AND ingredient_id = %s',
+        'SELECT * FROM Fridge_Ingredient WHERE fridge_id = %s AND ingredient_id = %s',
         (fridge_id, ingredient_id)
     )
     existing = cursor.fetchone()
@@ -81,13 +81,13 @@ def add_ingredient_to_fridge(ingredient_id):
         if existing:
             # Update quantity
             cursor.execute(
-                'UPDATE Fridge_Inventory SET quantity = quantity + %s WHERE fridge_id = %s AND ingredient_id = %s',
+                'UPDATE Fridge_Ingredient SET quantity = quantity + %s WHERE fridge_id = %s AND ingredient_id = %s',
                 (quantity, fridge_id, ingredient_id)
             )
         else:
             # Insert new entry
             cursor.execute(
-                'INSERT INTO Fridge_Inventory (fridge_id, ingredient_id, quantity, is_expired) VALUES (%s, %s, %s, FALSE)',
+                'INSERT INTO Fridge_Ingredient (fridge_id, ingredient_id, quantity, is_expired) VALUES (%s, %s, %s, FALSE)',
                 (fridge_id, ingredient_id, quantity)
             )
         
