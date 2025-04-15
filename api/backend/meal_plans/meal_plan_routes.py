@@ -33,6 +33,7 @@ def get_all_meal_plans():
     response.status_code = 200
     return response
 
+
 @meal_plans.route('/<int:meal_id>', methods=['GET'])
 def get_meal_plan(meal_id):
     """Get specific meal plan details"""
