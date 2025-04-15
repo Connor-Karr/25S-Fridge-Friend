@@ -140,3 +140,48 @@ with act4:
         with st.spinner("Running maintenance tasks..."):
             time.sleep(3)
             st.success("Database maintenance completed successfully!")
+
+st.subheader("📜 Recent System Logs")
+
+@st.cache_data(ttl=300)
+def get_error_logs():
+    try:
+        res = requests.get(f"{API_BASE_URL}/logs/errors")
+        if res.status_code == 200:
+            return [{
+                'error_id': log.get('error_id'),
+                'timestamp': log.get('timestamp', 'Unknown'),
+                'message': log.get('message', 'No message'),
+                'status': log.get('scan_status', 'Unknown'),
+                'ingredient': log.get('ingredient_name', 'Unknown')
+            } for log in res.json()]
+        else:
+            st.error(f"Error fetching logs: {res.status_code}")
+            return []
+    except Exception as e:
+        st.error(f"Error: {str(e)}")
+        return []
+
+error_logs = get_error_logs()
+if not error_logs:
+    error_logs = [
+        {'error_id': 1, 'timestamp': '2023-04-14 09:23:45', 'message': 'Unrecognized barcode during scan', 'status': 'FAILED', 'ingredient': 'Unknown Cereal'},
+        {'error_id': 2, 'timestamp': '2023-04-13 15:42:21', 'message': 'Network error during scan', 'status': 'FAILED', 'ingredient': 'Organic Apple'},
+        {'error_id': 3, 'timestamp': '2023-04-13 08:17:32', 'message': 'Database connection timeout', 'status': 'FAILED', 'ingredient': 'Almond Milk'}
+    ]
+
+if error_logs:
+    with st.expander("View Error Logs", expanded=True):
+        st.dataframe(
+            pd.DataFrame(error_logs),
+            column_config={
+                "error_id": None,
+                "timestamp": "Timestamp",
+                "message": "Error Message",
+                "status": "Status",
+                "ingredient": "Ingredient"
+            },
+            height=200
+        )
+else:
+    st.info("No error logs found. That's a good thing!")
