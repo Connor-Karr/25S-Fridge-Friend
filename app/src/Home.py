@@ -69,3 +69,23 @@ with col1:
         st.session_state.role = "busy_student"
         st.session_state.first_name = "Ben"
         st.switch_page("pages/00_Ben_Dashboard.py")
+
+#Alvin
+with col2:
+    st.markdown("#### 👨‍💻 Administrator")
+    st.write("System management & monitoring")
+    if st.button("Login as Alvin", key="admin"):
+        st.session_state.authenticated = True
+        st.session_state.role = "admin"
+        st.session_state.first_name = "Alvin"
+        st.switch_page("pages/10_Admin_Dashboard.py")
+
+#Nancy
+with col3:
+    st.markdown("#### 👩‍⚕️ Nutritionist")
+    st.write("Client management & meal planning")
+    if st.button("Login as Nancy", key="nutritionist"):
+        st.session_state.authenticated = True
+        st.session_state.role = "nutritionist"
+        st.session_state.first_name = "Nancy"
+        st.switch_page("pages/20_Nutritionist_Dashboard.py")
