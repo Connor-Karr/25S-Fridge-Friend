@@ -3,13 +3,13 @@ from backend.db_connection import db
 
 ingredients = Blueprint('ingredients', __name__)
 
-@ingredients.route('/<int:ingredient_id>', methods=['GET'])
-def get_ingredient(ingredient_id):
-    """Get ingredient details"""
+@ingredients.route('/', methods=['GET'])
+def get_all_ingredients():
+    """Get list of all ingredients - Used by Alvin for ingredient management [Alvin-1]"""
     cursor = db.get_db().cursor()
-    cursor.execute('SELECT * FROM Ingredient WHERE ingredient_id = %s', (ingredient_id,))
-    ingredient = cursor.fetchone()
-
+    cursor.execute('SELECT * FROM Ingredient')
+    ingredients_data = cursor.fetchall()
+    
     response = make_response(jsonify(ingredients_data))
     response.status_code = 200
     return response
