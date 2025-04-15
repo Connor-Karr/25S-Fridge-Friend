@@ -113,3 +113,57 @@ with col1:
     )
     
     st.plotly_chart(fig, use_container_width=True)
+
+
+# Upcoming workouts and meals
+with col2:
+    st.subheader("🏋️ Today's Training")
+    
+    workout = {
+        "type": "Speed Intervals",
+        "duration": "45 minutes",
+        "details": "5 min warmup, 10 x (1 min sprint, 2 min recovery), 5 min cooldown",
+        "focus": "Anaerobic Capacity",
+        "nutrition": "Pre: Carb-focused snack, Post: Protein shake"
+    }
+    
+    with st.container():
+        st.write(f"**Type:** {workout['type']}")
+        st.write(f"**Duration:** {workout['duration']}")
+        st.write(f"**Details:** {workout['details']}")
+        st.write(f"**Focus:** {workout['focus']}")
+        st.write(f"**Nutrition Strategy:** {workout['nutrition']}")
+        
+        if st.button("Log Workout", use_container_width=True):
+            with st.spinner("Logging workout..."):
+                time.sleep(1)
+                st.success("Workout logged successfully!")
+    
+    st.markdown("---")
+    st.subheader("🍽️ Today's Meal Plan")
+    
+    meals = [
+        {"name": "Breakfast", "time": "7:00 AM", "meal": "Oatmeal with Banana & Protein", "status": "Completed"},
+        {"name": "Snack", "time": "10:30 AM", "meal": "Protein Bar & Apple", "status": "Completed"},
+        {"name": "Lunch", "time": "1:00 PM", "meal": "Chicken Bowl with Quinoa & Veggies", "status": "Current"},
+        {"name": "Pre-Workout", "time": "4:30 PM", "meal": "Rice Cakes with Honey", "status": "Planned"},
+        {"name": "Dinner", "time": "7:30 PM", "meal": "Salmon, Sweet Potato & Broccoli", "status": "Planned"}
+    ]
+    
+    for meal in meals:
+        status_color = "green" if meal["status"] == "Completed" else "orange" if meal["status"] == "Current" else "gray"
+        status_icon = "✅" if meal["status"] == "Completed" else "⏳" if meal["status"] == "Current" else "⏱️"
+        
+        with st.container():
+            st.markdown(f"**{meal['name']} ({meal['time']})** {status_icon}")
+            st.write(f"{meal['meal']}")
+            
+            if meal["status"] != "Completed":
+                if st.button("Log as Eaten", key=f"log_{meal['name']}", use_container_width=True):
+                    with st.spinner("Logging meal..."):
+                        time.sleep(1)
+                        st.success(f"{meal['name']} logged as eaten!")
+                        st.rerun()
+            
+            st.markdown("---")
+
