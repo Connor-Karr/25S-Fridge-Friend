@@ -132,3 +132,42 @@ with tab1:
         with food_cols[i]:
             st.write(f"**{food}**")
 
+
+# Goal Progress Tab
+with tab2:
+    # Mock data for goal progress over time
+    dates = [(datetime.now() - timedelta(days=x*7)).strftime('%Y-%m-%d') for x in range(8)]
+    dates.reverse()
+
+    weight_loss_progress = [0, 12, 23, 35, 48, 57, 68, 75]
+    muscle_gain_progress = [0, 15, 28, 42, 55, 62, 70, 78]
+    maintenance_progress = [0, 10, 25, 40, 50, 60, 72, 85]
+    performance_progress = [0, 18, 30, 45, 58, 65, 75, 82]
+    health_progress = [0, 8, 20, 32, 45, 58, 68, 80]
+
+    progress_df = pd.DataFrame({
+        'Date': dates,
+        'Weight Loss': weight_loss_progress,
+        'Muscle Gain': muscle_gain_progress,
+        'Maintenance': maintenance_progress,
+        'Performance': performance_progress,
+        'Health': health_progress
+    })
+
+    fig = px.line(
+        progress_df,
+        x='Date',
+        y=['Weight Loss', 'Muscle Gain', 'Maintenance', 'Performance', 'Health'],
+        title='Client Goal Progress Over Time (% Completion)',
+        markers=True
+    )
+
+    fig.update_layout(
+        height=400,
+        margin=dict(l=20, r=20, t=40, b=20),
+        yaxis_title="Progress (%)"
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+
