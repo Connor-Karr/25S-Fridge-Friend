@@ -79,4 +79,56 @@ with col2:
     for appt in appointments:
         st.info(f"**{appt['time']}** - {appt['client']} ({appt['type']})")
 
+# Client analytics section
+st.markdown("---")
+st.subheader("📊 Client Analytics")
+
+# Create tabs for different analytics
+tab1, tab2 = st.tabs(["Nutrition Distribution", "Goal Progress"])
+
+# Nutrition Distribution Tab
+with tab1:
+    macros = {
+        "Weight Loss": {"Protein": 35, "Carbs": 25, "Fat": 40},
+        "Muscle Gain": {"Protein": 40, "Carbs": 40, "Fat": 20},
+        "Maintenance": {"Protein": 30, "Carbs": 40, "Fat": 30},
+        "Performance": {"Protein": 25, "Carbs": 55, "Fat": 20},
+        "Health": {"Protein": 25, "Carbs": 45, "Fat": 30}
+    }
+
+    selected_goal = st.selectbox("Select dietary goal:", list(macros.keys()))
+    selected_macros = macros[selected_goal]
+
+    macro_df = pd.DataFrame({
+        'Macronutrient': list(selected_macros.keys()),
+        'Percentage': list(selected_macros.values())
+    })
+
+    fig = px.pie(
+        macro_df,
+        values='Percentage',
+        names='Macronutrient',
+        title=f"Average Macronutrient Distribution for {selected_goal} Clients",
+        color_discrete_sequence=px.colors.qualitative.Set2
+    )
+
+    fig.update_layout(height=400, margin=dict(l=20, r=20, t=40, b=20))
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.subheader("Recommended Foods")
+
+    recommended_foods = {
+        "Weight Loss": ["Lean Chicken", "Leafy Greens", "Greek Yogurt", "Berries", "Eggs"],
+        "Muscle Gain": ["Chicken Breast", "Lean Beef", "Salmon", "Quinoa", "Sweet Potatoes"],
+        "Maintenance": ["Avocados", "Mixed Nuts", "Brown Rice", "Whole Grains", "Fish"],
+        "Performance": ["Oats", "Bananas", "Rice", "Potatoes", "Lean Meats"],
+        "Health": ["Olive Oil", "Nuts", "Leafy Greens", "Fish", "Whole Grains"]
+    }
+
+    foods = recommended_foods.get(selected_goal, [])
+    food_cols = st.columns(len(foods))
+
+    for i, food in enumerate(foods):
+        with food_cols[i]:
+            st.write(f"**{food}**")
 
