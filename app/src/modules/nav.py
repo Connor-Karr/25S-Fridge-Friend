@@ -34,4 +34,10 @@ def SideBarLinks(role=None):
             st.session_state.role = None
             st.session_state.first_name = None
             st.rerun()
+
+# Add footer to sidebar
+    st.sidebar.markdown("---")
+    st.sidebar.caption("FridgeFriend v1.0")
+    st.sidebar.caption("© 2025 CS3200 Project")
+
         
