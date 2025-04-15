@@ -84,7 +84,7 @@ def log_food_scan():
 
 @logs.route('/errors', methods=['GET'])
 def get_error_logs():
-    """Get error logs"""
+    """Get error logs - Used by Alvin to diagnose system issues [Alvin-6]"""
     cursor = db.get_db().cursor()
     
     cursor.execute('''
