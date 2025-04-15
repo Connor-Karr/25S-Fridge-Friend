@@ -47,3 +47,64 @@ with col1:
             st.error(f"**{event['time']}**: {event['event']}")
         else:
             st.info(f"**{event['time']}**: {event['event']}")
+
+
+with col2:
+    st.subheader("📊 System Statistics")
+
+    @st.cache_data(ttl=600)
+    def get_ingredient_count():
+        try:
+            res = requests.get(f"{API_BASE_URL}/ingredients")
+            return len(res.json()) if res.status_code == 200 else "N/A"
+        except:
+            return "N/A"
+
+    @st.cache_data(ttl=600)
+    def get_users_count():
+        try:
+            res = requests.get(f"{API_BASE_URL}/users")
+            return len(res.json()) if res.status_code == 200 else "N/A"
+        except:
+            return "N/A"
+
+    @st.cache_data(ttl=600)
+    def get_error_logs_count():
+        try:
+            res = requests.get(f"{API_BASE_URL}/logs/errors")
+            return len(res.json()) if res.status_code == 200 else "N/A"
+        except:
+            return "N/A"
+
+    stats_cols = st.columns(2)
+    with stats_cols[0]:
+        st.metric("Registered Users", get_users_count())
+        st.metric("Ingredients", get_ingredient_count())
+        st.metric("Error Logs", get_error_logs_count())
+    with stats_cols[1]:
+        st.metric("Food Scans Today", "128")
+        st.metric("Active Meal Plans", "76")
+        st.metric("Trusted Brands", "42")
+
+    # Chart
+    days = 14
+    dates = [(datetime.now() - timedelta(days=x)).strftime('%Y-%m-%d') for x in range(days)][::-1]
+    np.random.seed(42)
+    scan_success = np.random.randint(70, 120, size=days)
+    scan_failed = np.random.randint(5, 20, size=days)
+
+    scan_data = pd.DataFrame({
+        'Date': dates,
+        'Successful Scans': scan_success,
+        'Failed Scans': scan_failed
+    })
+    fig = px.bar(
+        scan_data,
+        x='Date',
+        y=['Successful Scans', 'Failed Scans'],
+        title='Food Scan Activity',
+        barmode='stack',
+        color_discrete_map={'Successful Scans': '#4CAF50', 'Failed Scans': '#FF5252'}
+    )
+    fig.update_layout(height=300, margin=dict(l=10, r=10, t=40, b=10), legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+    st.plotly_chart(fig, use_container_width=True)
