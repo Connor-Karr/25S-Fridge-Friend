@@ -221,3 +221,21 @@ with testimonial_col2:
 with testimonial_col3:
     st.markdown("#### *\"Training for marathons requires precise nutrition. FridgeFriend helps me hit my macros perfectly every day.\"*")
     st.markdown("**- Mark, Marathon Runner**")
+
+# Call to action
+st.markdown("---")
+st.markdown("### Ready to transform how you manage food and nutrition?")
+
+cta_col1, cta_col2, cta_col3 = st.columns([2, 1, 2])
+
+with cta_col2:
+    cta_button = st.button("Get Started Now!", use_container_width=True)
+    if cta_button:
+        st.session_state.authenticated = True
+        st.session_state.role = "busy_student"  # Default to student role
+        st.session_state.first_name = "New User"
+        st.switch_page("pages/00_Ben_Dashboard.py")
+
+# Footer
+st.markdown("---")
+st.caption("© 2025 FridgeFriend | A CS 3200 Project | Northeastern University")
