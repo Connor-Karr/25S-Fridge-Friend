@@ -172,3 +172,47 @@ def update_constraints(pc_id):
         response = make_response(jsonify({"error": "Could not update personal constraints"}))
         response.status_code = 500
         return response
+    
+@users.route('/constraints', methods=['POST'])
+def create_constraints():
+    """Create personal constraints"""
+    data = request.json
+    
+    budget = data.get('budget')
+    dietary_restrictions = data.get('dietary_restrictions')
+    personal_diet = data.get('personal_diet')
+    age_group = data.get('age_group')
+    
+    cursor = db.get_db().cursor()
+    
+    try:
+        cursor.execute(
+            '''INSERT INTO Personal_Constraints 
+               (budget, dietary_restrictions, personal_diet, age_group) 
+               VALUES (%s, %s, %s, %s)''',
+            (budget, dietary_restrictions, personal_diet, age_group)
+        )
+        db.get_db().commit()
+        
+        pc_id = cursor.lastrowid
+        
+        # If client_id is provided, link these constraints to the client
+        client_id = data.get('client_id')
+        if client_id:
+            cursor.execute(
+                'UPDATE Client SET pc_id = %s WHERE client_id = %s',
+                (pc_id, client_id)
+            )
+            db.get_db().commit()
+        
+        response = make_response(jsonify({
+            "message": "Personal constraints created successfully",
+            "pc_id": pc_id
+        }))
+        response.status_code = 201
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error creating personal constraints: {str(e)}")
+        response = make_response(jsonify({"error": "Could not create personal constraints"}))
+        response.status_code = 500
+        return response
