@@ -37,3 +37,18 @@ with col1:
 with col2:
     st.title("FridgeFriend")
     st.subheader("Smart Food Management & Nutrition Tracking")
+
+
+# Main page content
+st.markdown("""
+## Welcome to FridgeFriend!
+
+FridgeFriend is a data-driven application designed to streamline healthy eating by intelligently combining real-time fridge inventory management, personalized nutrition tracking, and dynamic meal suggestions.
+
+### Key Features:
+- **Smart Inventory Tracking**: Monitor what's in your fridge and get alerts for expiring items
+- **Personalized Nutrition**: Track your macros and nutrition based on your goals
+- **Recipe Suggestions**: Get meal ideas based on what's in your fridge
+- **Budget Planning**: Stay within your grocery budget with smart planning
+- **Allergen Management**: Track dietary restrictions and allergies
+""")
