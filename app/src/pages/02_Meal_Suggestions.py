@@ -229,3 +229,110 @@ with tab1:
             
             if missing_ingredients:
                 st.write(f"**{recipe['name']}** - Missing: {', '.join(missing_ingredients)}")
+# Budget-Friendly Tab
+with tab2:
+    st.subheader("Budget-Friendly Meals (Under $3)")
+    
+    # Filter recipes by cost
+    budget_recipes = [recipe for recipe in recipes if recipe["cost"] <= 3.00]
+    
+    # Check which recipes can be made with available ingredients
+    available_budget_recipes = []
+    for recipe in budget_recipes:
+        # Get list of ingredient IDs in the fridge
+        fridge_ingredient_ids = [item["ingredient_id"] for item in inventory]
+        
+        # Check if all required ingredients are available
+        if all(ing_id in fridge_ingredient_ids for ing_id in recipe["ingredients"]):
+            available_budget_recipes.append(recipe)
+    
+    # Display available budget recipes
+    if available_budget_recipes:
+        # Sort by cost
+        available_budget_recipes.sort(key=lambda x: x["cost"])
+        
+        for recipe in available_budget_recipes:
+            with st.expander(f"{recipe['name']} - ${recipe['cost']:.2f}"):
+                st.write(f"**Description:** {recipe['description']}")
+                st.write(f"**Preparation Time:** {recipe['prep_time']} minutes")
+                st.write(f"**Cost Estimate:** ${recipe['cost']:.2f}")
+                st.write(f"**Calories:** {recipe['calories']} | **Protein:** {recipe['protein']}g | **Carbs:** {recipe['carbs']}g | **Fat:** {recipe['fat']}g")
+                
+                # Show ingredients
+                st.write("**Ingredients:**")
+                for ing_id in recipe["ingredients"]:
+                    for item in inventory:
+                        if item["ingredient_id"] == ing_id:
+                            st.write(f"- {item['name']} ({item['quantity']} available)")
+                
+                st.write("**Instructions:**")
+                st.write(recipe["instructions"])
+                
+                # Cook now or save as meal plan buttons
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    if st.button("Cook Now", key=f"cook_budget_{recipe['id']}"):
+                        st.success(f"Preparing {recipe['name']}!")
+                        # Mock cooking steps
+                        
+                with col2:
+                    if st.button("Add to Meal Plan", key=f"save_budget_{recipe['id']}"):
+                        # Mock creating a meal plan
+                        with st.spinner("Adding to meal plan..."):
+                            time.sleep(1)
+                            st.success(f"Added {recipe['name']} to your meal plan!")
+    else:
+        st.info("No budget-friendly recipes available with your current ingredients.")
+        
+        # Show what's missing for budget recipes
+        st.subheader("What you're missing for budget-friendly meals:")
+        
+        for recipe in budget_recipes:
+            missing_ingredients = []
+            fridge_ingredient_ids = [item["ingredient_id"] for item in inventory]
+            
+            for ing_id in recipe["ingredients"]:
+                if ing_id not in fridge_ingredient_ids:
+                    # Find the ingredient name
+                    for rec in recipes:
+                        if rec["id"] == ing_id:
+                            missing_ingredients.append(rec["name"])
+                            break
+            
+            if missing_ingredients:
+                st.write(f"**{recipe['name']}** - Missing: {', '.join(missing_ingredients)}")
+    
+    # Weekly budget tracking
+    st.markdown("---")
+    st.subheader("Weekly Grocery Budget")
+    
+    # Mock budget data
+    budget_total = 100
+    spent_so_far = 62.35
+    remaining = budget_total - spent_so_far
+    
+    # Display budget information
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("Budget", f"${budget_total:.2f}")
+    
+    with col2:
+        st.metric("Spent", f"${spent_so_far:.2f}")
+    
+    with col3:
+        st.metric("Remaining", f"${remaining:.2f}")
+    
+    # Budget visualization
+    st.progress(spent_so_far / budget_total)
+    
+    # Budget tips
+    with st.expander("Budget-Saving Tips"):
+        st.write("""
+        1. **Meal Planning:** Plan your meals to avoid impulse purchases
+        2. **Bulk Buying:** Purchase staples like rice, pasta, and beans in bulk
+        3. **Seasonal Produce:** Buy fruits and vegetables that are in season
+        4. **Reduce Food Waste:** Use leftovers creatively in new meals
+        5. **Store Brands:** Choose store brands over name brands when possible
+        """)
