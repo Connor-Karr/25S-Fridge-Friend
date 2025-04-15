@@ -63,3 +63,20 @@ with col1:
     if st.button("+ Add New Client"):
         st.switch_page("pages/21_Client_Management.py")
 
+
+# Today's agenda section
+with col2:
+    st.subheader("📅 Today's Agenda")
+
+    # Mock appointments
+    appointments = [
+        {"time": "9:00 AM", "client": "John D.", "type": "Check-in"},
+        {"time": "11:30 AM", "client": "Emma L.", "type": "Meal Plan Review"},
+        {"time": "2:00 PM", "client": "Sarah M.", "type": "Initial Consultation"},
+        {"time": "4:30 PM", "client": "Michael R.", "type": "Progress Review"}
+    ]
+
+    for appt in appointments:
+        st.info(f"**{appt['time']}** - {appt['client']} ({appt['type']})")
+
+
