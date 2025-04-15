@@ -167,9 +167,39 @@ with tabs[2]:
         """)
     
     with col2:
-        # Mock nutrition progress bars
         st.write("**Daily Nutrition Progress**")
         st.progress(0.75, text="Protein: 75%")
         st.progress(0.60, text="Carbs: 60%")
         st.progress(0.90, text="Fat: 90%")
         st.progress(0.80, text="Calories: 80%")
+
+# Budget Management tab
+with tabs[3]:
+    col1, col2 = st.columns([2, 3])
+    
+    with col1:
+        st.markdown("### Smart Budget Management")
+        st.markdown("""
+        **Save money on groceries!**
+        - Weekly grocery budget tracking
+        - Cost-per-meal calculations
+        - Budget-friendly recipe suggestions
+        - Waste reduction savings
+        - Smart shopping list generation
+        """)
+    
+    with col2:
+        budget_data = pd.DataFrame({
+            'Category': ['Protein', 'Produce', 'Grains', 'Dairy', 'Snacks'],
+            'Expense': [45, 30, 15, 20, 10]
+        })
+        
+        fig = px.pie(
+            budget_data, 
+            values='Expense', 
+            names='Category',
+            title='Weekly Grocery Budget Breakdown',
+            color_discrete_sequence=px.colors.qualitative.Pastel
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
