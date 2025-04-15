@@ -210,3 +210,62 @@ for i, race in enumerate(races):
             st.write(f"**Goal:** {race['goal']}")
             st.write(f"**Training Phase:** {race['training_phase']}")
             st.write(f"**Days Until:** {race['days_until']}")
+
+# Nutrition and Performance Insights
+st.markdown("---")
+st.subheader("🔍 Performance Insights")
+
+# Create tabs for different insights
+insight_tab1, insight_tab2 = st.tabs(["Nutrition Impact", "Recovery Analysis"])
+
+# Nutrition Impact Tab
+with insight_tab1:
+    # Mock data for energy level vs. carb intake
+    days = 14
+    dates = [(datetime.now() - timedelta(days=x)).strftime('%m/%d') for x in range(days)]
+    dates.reverse()  # oldest to newest
+
+    np.random.seed(45)
+    carb_intake = np.clip(np.random.normal(210, 40, days), 120, 300).astype(int)
+    energy_level = np.clip((carb_intake/300)*10 + np.random.normal(0, 1, days), 1, 10).astype(int)
+
+    energy_data = pd.DataFrame({
+        'Date': dates,
+        'Carb Intake (g)': carb_intake,
+        'Energy Level (1-10)': energy_level
+    })
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Bar(
+        x=energy_data['Date'],
+        y=energy_data['Carb Intake (g)'],
+        name='Carb Intake (g)',
+        marker_color='rgba(55, 83, 109, 0.7)'
+    ))
+
+    fig.add_trace(go.Scatter(
+        x=energy_data['Date'],
+        y=energy_data['Energy Level (1-10)'],
+        name='Energy Level (1-10)',
+        mode='lines+markers',
+        marker=dict(color='red'),
+        yaxis='y2'
+    ))
+
+    fig.update_layout(
+        title='Carb Intake vs. Energy Level',
+        xaxis=dict(title='Date'),
+        yaxis=dict(title='Carb Intake (g)', titlefont=dict(color='rgba(55, 83, 109, 1)'), tickfont=dict(color='rgba(55, 83, 109, 1)')),
+        yaxis2=dict(title='Energy Level (1-10)', titlefont=dict(color='red'), tickfont=dict(color='red'), anchor='x', overlaying='y', side='right', range=[0, 11]),
+        height=400,
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.write("""
+    **Insight:** Your energy levels show a strong correlation with carbohydrate intake. Days with 240g+ of carbs resulted in 
+    energy levels of 8 or higher, while days below 180g of carbs averaged energy levels of 5-6. Consider maintaining carb 
+    intake above 220g on hard training days.
+    """)
