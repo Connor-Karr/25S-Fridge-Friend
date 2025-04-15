@@ -145,3 +145,26 @@ def update_leftover(leftover_id):
         response = make_response(jsonify({"error": "Could not update leftover"}))
         response.status_code = 500
         return response
+    
+@leftovers.route('/<int:leftover_id>', methods=['DELETE'])
+def delete_leftover(leftover_id):
+    """Delete leftover"""
+    cursor = db.get_db().cursor()
+    
+    try:
+        cursor.execute('DELETE FROM Leftover WHERE leftover_id = %s', (leftover_id,))
+        db.get_db().commit()
+        
+        if cursor.rowcount == 0:
+            response = make_response(jsonify({"error": "Leftover not found"}))
+            response.status_code = 404
+            return response
+        
+        response = make_response(jsonify({"message": "Leftover deleted successfully"}))
+        response.status_code = 200
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error deleting leftover: {str(e)}")
+        response = make_response(jsonify({"error": "Could not delete leftover"}))
+        response.status_code = 500
+        return response
