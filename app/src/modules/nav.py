@@ -40,4 +40,14 @@ def SideBarLinks(role=None):
     st.sidebar.caption("FridgeFriend v1.0")
     st.sidebar.caption("© 2025 CS3200 Project")
 
+def _add_student_links():
+    """Add links for the Student role (Ben)"""
+    st.sidebar.markdown("### Student Navigation")
+    
+    st.sidebar.page_link("pages/00_Ben_Dashboard.py", label="📊 Dashboard")
+    st.sidebar.page_link("pages/01_Fridge_Inventory.py", label="🧊 Fridge Inventory")
+    st.sidebar.page_link("pages/02_Meal_Suggestions.py", label="🍲 Meal Suggestions")
+    st.sidebar.page_link("pages/03_Leftovers_Tracker.py", label="🥡 Leftovers Tracker")
+
+
         
