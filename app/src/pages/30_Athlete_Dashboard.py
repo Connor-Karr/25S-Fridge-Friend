@@ -269,3 +269,71 @@ with insight_tab1:
     energy levels of 8 or higher, while days below 180g of carbs averaged energy levels of 5-6. Consider maintaining carb 
     intake above 220g on hard training days.
     """)
+
+# Recovery Analysis Tab
+with insight_tab2:
+    recovery_dates = [(datetime.now() - timedelta(days=x)).strftime('%m/%d') for x in range(days)]
+    recovery_dates.reverse()
+
+    np.random.seed(46)
+    protein_intake = np.clip(np.random.normal(130, 20, days), 90, 170).astype(int)
+    recovery_score = np.clip((protein_intake/170)*100 + np.random.normal(0, 10, days), 50, 100).astype(int)
+
+    recovery_data = pd.DataFrame({
+        'Date': recovery_dates,
+        'Protein Intake (g)': protein_intake,
+        'Recovery Score (%)': recovery_score
+    })
+
+    fig = px.scatter(
+        recovery_data,
+        x='Protein Intake (g)',
+        y='Recovery Score (%)',
+        trendline='ols',
+        title='Protein Intake vs. Recovery Score',
+        labels={'Protein Intake (g)': 'Protein Intake (g)', 'Recovery Score (%)': 'Recovery Score (%)'}
+    )
+
+    fig.update_layout(height=400, xaxis=dict(range=[80, 180]), yaxis=dict(range=[40, 110]))
+
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.write("""
+    **Insight:** There's a positive correlation between protein intake and recovery scores. On average, every additional 
+    10g of protein is associated with a 5% increase in recovery score. For optimal recovery, aim for at least 140g of protein 
+    on heavy training days.
+    """)
+
+# Recommendations Section
+st.markdown("---")
+st.subheader("🔎 Personalized Recommendations")
+
+recommendations = [
+    {
+        "title": "Increase Pre-Workout Carbs",
+        "description": "Based on your recent performance data, increasing carbs to 60-80g in your pre-workout meal could improve your energy levels during high-intensity intervals.",
+        "category": "Nutrition"
+    },
+    {
+        "title": "Improve Recovery with Tart Cherry Juice",
+        "description": "Adding 8oz of tart cherry juice to your post-workout routine may help reduce inflammation and improve recovery times before your upcoming races.",
+        "category": "Recovery"
+    },
+    {
+        "title": "Adjust Protein Timing",
+        "description": "Distribute protein more evenly throughout the day (aim for 30-40g per meal) rather than consuming the majority at dinner.",
+        "category": "Nutrition"
+    }
+]
+
+for i, rec in enumerate(recommendations):
+    with st.expander(f"{rec['title']} ({rec['category']})", expanded=i==0):
+        st.write(rec['description'])
+
+        col1, col2 = st.columns([1, 4])
+        with col1:
+            if st.button("Apply", key=f"apply_{i}"):
+                st.success(f"Added {rec['title']} to your plan!")
+        with col2:
+            if st.button("Dismiss", key=f"dismiss_{i}"):
+                st.info("Recommendation dismissed.")
