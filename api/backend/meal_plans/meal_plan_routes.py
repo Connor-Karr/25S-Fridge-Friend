@@ -150,16 +150,9 @@ def delete_meal_plan(meal_id):
         response.status_code = 500
         return response
     
-@meal_plans.route('/', methods=['DELETE'])
-def delete_outdated_meal_plans():
-    """Delete outdated meal plans"""
-    recipe_id = request.args.get('recipe_id')
-    
-    if not recipe_id:
-        response = make_response(jsonify({"error": "Recipe ID is required"}))
-        response.status_code = 400
-        return response
-    
+@meal_plans.route('/recipe/<int:recipe_id>', methods=['DELETE'])
+def delete_outdated_meal_plans(recipe_id):
+    """Delete outdated meal plans by recipe - Used by Riley to remove past phase meal plans [Riley-2]"""
     cursor = db.get_db().cursor()
     
     try:
@@ -175,4 +168,3 @@ def delete_outdated_meal_plans():
         response = make_response(jsonify({"error": "Could not delete meal plans"}))
         response.status_code = 500
         return response
-
