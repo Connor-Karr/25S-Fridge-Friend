@@ -38,7 +38,7 @@ def get_scan_history():
 
 @logs.route('/scans', methods=['POST'])
 def log_food_scan():
-    """Log new food scan"""
+    """Log new food scan - Used by Alvin to track scanning issues [Alvin-6]"""
     data = request.json
     
     ingredient_id = data.get('ingredient_id')
