@@ -129,7 +129,7 @@ def update_meal_plan(meal_id):
 
 @meal_plans.route('/<int:meal_id>', methods=['DELETE'])
 def delete_meal_plan(meal_id):
-    """Delete specific meal plan"""
+    """Delete specific meal plan - Used by Nancy to remove ineffective plans [Nancy-3] and Riley to remove old plans [Riley-1]"""
     cursor = db.get_db().cursor()
     
     try:
