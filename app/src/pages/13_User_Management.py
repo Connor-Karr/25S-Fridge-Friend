@@ -327,3 +327,78 @@ with tab2:
                     st.success(f"User {new_username} created successfully! (Mock)")
                     time.sleep(1)
                     st.rerun()
+
+    with col2:
+        st.write("### Bulk Operations")
+        
+        st.write("#### Update Status")
+        
+        with st.form("update_status_form"):
+            status_options = st.selectbox(
+                "Set status for all matching users:",
+                ["active", "inactive", "test"]
+            )
+            
+            role_filter = st.selectbox(
+                "For users with role:",
+                ["All", "client", "nutritionist", "admin"]
+            )
+            
+            confirm_status = st.checkbox("I confirm this bulk operation")
+            
+            submit_button = st.form_submit_button("Update Status")
+            
+            if submit_button and confirm_status:
+                with st.spinner("Updating user status..."):
+                    affected_users = [
+                        user for user in users
+                        if (role_filter == "All" or user.get('role') == role_filter)
+                    ]
+                    
+                    time.sleep(2)
+                    
+                    st.success(f"Updated status to '{status_options}' for {len(affected_users)} users!")
+        
+        st.write("#### Test User Cleanup")
+        
+        with st.form("test_user_form"):
+            confirm_test = st.checkbox("I confirm removal of all test users")
+            
+            submit_button = st.form_submit_button("Remove All Test Users")
+            
+            if submit_button and confirm_test:
+                with st.spinner("Removing test users..."):
+                    test_users = [
+                        user for user in users
+                        if user.get('status') == 'test'
+                    ]
+                    
+                    time.sleep(2)
+                    
+                    st.success(f"Removed {len(test_users)} test users successfully!")
+    
+    st.markdown("---")
+    st.subheader("Role Management")
+    
+    role_permissions = {
+        "client": ["View own profile", "Track nutrition", "Create meal plans", "Manage fridge inventory"],
+        "nutritionist": ["View client profiles", "Create meal plans", "Track client nutrition", "Manage dietary restrictions", "View nutrition analytics"],
+        "admin": ["Manage all users", "View system logs", "Manage food database", "View system analytics", "Manage application settings"]
+    }
+    
+    role_tabs = st.tabs(["Client", "Nutritionist", "Admin"])
+    
+    for i, (role, permissions) in enumerate(role_permissions.items()):
+        with role_tabs[i]:
+            st.write(f"**{role.capitalize()} Role Permissions:**")
+            
+            for permission in permissions:
+                st.checkbox(permission, value=True, disabled=True)
+            
+            with st.expander("Add Custom Permission"):
+                with st.form(f"add_permission_{role}"):
+                    new_permission = st.text_input("New Permission:", key=f"new_perm_{role}")
+                    submit = st.form_submit_button("Add Permission")
+                    
+                    if submit and new_permission:
+                        st.success(f"Permission '{new_permission}' added to {role} role! (Mock)")
