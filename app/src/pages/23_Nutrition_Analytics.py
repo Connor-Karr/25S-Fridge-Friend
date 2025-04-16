@@ -162,3 +162,146 @@ with tab1:
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.info("No clients match the selected filters.")
+# Nutrient Analysis Tab
+with tab2:
+    st.subheader("Nutrient Analysis")
+    
+    # Controls for nutrient, analysis type, and grouping
+    control_col1, control_col2, control_col3 = st.columns(3)
+    with control_col1:
+        nutrient = st.selectbox(
+            "Select nutrient:",
+            ["Protein", "Carbs", "Fat", "Fiber", "Sodium", "Vitamin D", "Calcium", "Iron"]
+        )
+    with control_col2:
+        analysis_type = st.selectbox(
+            "Analysis type:",
+            ["Average Intake", "% of Target", "Trend Over Time"]
+        )
+    with control_col3:
+        grouping = st.selectbox(
+            "Group by:",
+            ["Diet Type", "Goal", "Age Group", "Individual"]
+        )
+    
+    if grouping == "Diet Type":
+        groups = ["Low Carb", "High Protein", "Balanced", "Keto", "Mediterranean"]
+    elif grouping == "Goal":
+        groups = ["Weight Loss", "Muscle Gain", "Maintenance", "Performance", "Health"]
+    elif grouping == "Age Group":
+        groups = ["18-24", "25-34", "35-44", "45-54", "55+"]
+    else:
+        groups = [client["name"] for client in clients]
+    
+    np.random.seed(44)
+    nutrient_data = []
+    
+    if analysis_type == "Trend Over Time":
+        days = 30
+        dates = [(datetime.now() - timedelta(days=x)).strftime('%Y-%m-%d') for x in range(days)]
+        dates.reverse()
+        
+        for group in groups:
+            if nutrient == "Protein":
+                base, std_dev = 100, 15
+            elif nutrient == "Carbs":
+                base, std_dev = 180, 25
+            elif nutrient == "Fat":
+                base, std_dev = 60, 10
+            else:
+                base, std_dev = 50, 8
+            
+            trend = np.linspace(-5, 5, days)
+            values = np.clip(np.random.normal(base, std_dev, days) + trend, 0, None)
+            for i, date in enumerate(dates):
+                nutrient_data.append({"Date": date, "Group": group, "Value": values[i]})
+        
+        nutrient_df = pd.DataFrame(nutrient_data)
+        fig = px.line(
+            nutrient_df,
+            x="Date",
+            y="Value",
+            color="Group",
+            title=f"{nutrient} Trend Over Time by {grouping}",
+            markers=True
+        )
+        fig.update_layout(height=500, xaxis_title="Date", yaxis_title=f"{nutrient} (g)" if nutrient not in ["Sodium", "Vitamin D", "Calcium", "Iron"] else f"{nutrient} (mg)")
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        # Generate average or % of target data per group
+        for group in groups:
+            if nutrient == "Protein":
+                base, std_dev, target = 100, 15, 120
+            elif nutrient == "Carbs":
+                base, std_dev, target = 180, 25, 200
+            elif nutrient == "Fat":
+                base, std_dev, target = 60, 10, 65
+            elif nutrient == "Fiber":
+                base, std_dev, target = 25, 5, 30
+            elif nutrient == "Sodium":
+                base, std_dev, target = 2000, 300, 2300
+            else:
+                base, std_dev, target = 50, 10, 60
+            
+            if group in ["High Protein", "Muscle Gain", "25-34", "John D."]:
+                base_adj = base * 1.1
+            elif group in ["Low Carb", "Keto", "Weight Loss"]:
+                base_adj = base * 0.8 if nutrient == "Carbs" else base * 1.05
+            else:
+                base_adj = base
+            
+            value = np.clip(np.random.normal(base_adj, std_dev), 0, None)
+            if analysis_type == "% of Target":
+                value = (value / target) * 100
+            
+            nutrient_data.append({"Group": group, "Value": value})
+        
+        nutrient_df = pd.DataFrame(nutrient_data)
+        if analysis_type == "% of Target":
+            fig = px.bar(
+                nutrient_df,
+                x="Group",
+                y="Value",
+                title=f"{nutrient} Intake (% of Target) by {grouping}",
+                color="Value",
+                color_continuous_scale=px.colors.sequential.Viridis,
+                text="Value"
+            )
+            fig.update_traces(texttemplate='%{text:.1f}%', textposition='outside')
+            fig.add_hline(
+                y=100,
+                line_dash="dash",
+                line_color="red",
+                annotation_text="Target (100%)",
+                annotation_position="bottom right"
+            )
+            fig.update_layout(height=400, xaxis_title=grouping, yaxis_title="% of Target", yaxis=dict(range=[0, max(150, nutrient_df["Value"].max() * 1.1)]))
+        else:
+            fig = px.bar(
+                nutrient_df,
+                x="Group",
+                y="Value",
+                title=f"Average {nutrient} Intake by {grouping}",
+                color="Group",
+                text="Value"
+            )
+            fig.update_traces(texttemplate='%{text:.1f}', textposition='outside')
+            fig.update_layout(height=400, xaxis_title=grouping, yaxis_title=f"{nutrient} (g)" if nutrient not in ["Sodium", "Vitamin D", "Calcium", "Iron"] else f"{nutrient} (mg)")
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # Nutrient insights based on selected nutrient
+    st.subheader("Nutrient Insights")
+    if nutrient == "Protein":
+        st.info("High-protein diet clients are consistently meeting protein targets (94% compliance), while low-carb dieters show more variability.")
+        st.info("Consider increasing protein targets for performance-focused clients as they consistently exceed their current levels.")
+    elif nutrient == "Carbs":
+        st.warning("Keto diet clients occasionally exceed their carb limits on weekends, leading to a 23% drop in compliance.")
+        st.info("Offer guidance on hidden carb sources and weekend meal strategies for keto clients.")
+    elif nutrient == "Fat":
+        st.info("Mediterranean diet clients have the most consistent healthy fat intake, achieving 92% compliance.")
+        st.info("Share Mediterranean fat sourcing techniques with other groups to promote better fat profiles.")
+    elif nutrient == "Fiber":
+        st.warning("Fiber intake is below target for 72% of clients, regardless of diet type.")
+        st.info("Implement targeted fiber education programs and recommend more high-fiber foods.")
+    else:
+        st.info("Select different nutrients to view specific insights.")
