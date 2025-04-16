@@ -54,3 +54,88 @@ def update_user(user_id, data):
     except Exception as e:
         st.error(f"Error: {str(e)}")
         return False
+    
+
+users = get_users()
+
+if not users:
+    users = [
+        {"user_id": 1, "f_name": "John", "l_name": "Doe", "username": "johndoe", "email": "john.doe@example.com", "role": "client", "status": "active"},
+        {"user_id": 2, "f_name": "Jane", "l_name": "Smith", "username": "janesmith", "email": "jane.smith@example.com", "role": "client", "status": "active"},
+        {"user_id": 3, "f_name": "Bob", "l_name": "Johnson", "username": "bjohnson", "email": "bob.johnson@example.com", "role": "client", "status": "inactive"},
+        {"user_id": 4, "f_name": "Sarah", "l_name": "Williams", "username": "swilliams", "email": "sarah.williams@example.com", "role": "nutritionist", "status": "active"},
+        {"user_id": 5, "f_name": "Mike", "l_name": "Brown", "username": "mbrown", "email": "mike.brown@example.com", "role": "admin", "status": "active"},
+        {"user_id": 6, "f_name": "Test", "l_name": "User", "username": "testuser", "email": "test@example.com", "role": "client", "status": "test"}
+    ]
+
+tab1, tab2, tab3 = st.tabs(["User Accounts", "Account Management", "System Stats"])
+
+
+with tab1:
+    st.subheader("User Accounts")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        search_term = st.text_input("Search users:", placeholder="Name, email, or username...")
+    
+    with col2:
+        status_filter = st.selectbox(
+            "Filter by status:",
+            ["All", "Active", "Inactive", "Test"]
+        )
+    
+    filtered_users = users
+    
+    if search_term:
+        filtered_users = [
+            user for user in filtered_users
+            if (search_term.lower() in user.get('f_name', '').lower() or
+                search_term.lower() in user.get('l_name', '').lower() or
+                search_term.lower() in user.get('username', '').lower() or
+                search_term.lower() in user.get('email', '').lower())
+        ]
+    
+    if status_filter != "All":
+        filtered_users = [
+            user for user in filtered_users
+            if user.get('status', '').lower() == status_filter.lower()
+        ]
+    
+    st.write(f"Showing {len(filtered_users)} users")
+    
+    if filtered_users:
+        user_df = pd.DataFrame([
+            {
+                "ID": user.get('user_id'),
+                "Name": f"{user.get('f_name', '')} {user.get('l_name', '')}",
+                "Username": user.get('username', ''),
+                "Email": user.get('email', ''),
+                "Role": user.get('role', '').capitalize(),
+                "Status": user.get('status', '').capitalize()
+            }
+            for user in filtered_users
+        ])
+        
+        def highlight_status(val):
+            if val == "Active":
+                return 'background-color: #CCFFCC'
+            elif val == "Inactive":
+                return 'background-color: #FFCCCC'
+            elif val == "Test":
+                return 'background-color: #FFFFCC'
+            return ''
+        
+        st.dataframe(
+            user_df.style.applymap(highlight_status, subset=['Status']),
+            column_config={
+                "ID": st.column_config.NumberColumn("ID", width="small"),
+                "Name": st.column_config.TextColumn("Name"),
+                "Username": st.column_config.TextColumn("Username"),
+                "Email": st.column_config.TextColumn("Email"),
+                "Role": st.column_config.TextColumn("Role"),
+                "Status": st.column_config.TextColumn("Status", width="small")
+            },
+            use_container_width=True,
+            height=400
+        )
