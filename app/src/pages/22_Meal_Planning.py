@@ -217,3 +217,74 @@ with tab1:
                 st.rerun()
     else:
         st.info("No meal plans found. Create a new meal plan in the 'Create New Plan' tab.")
+# Create New Plan Tab
+with tab2:
+    st.subheader("Create New Meal Plan")
+    
+    with st.form("create_meal_form"):
+        # Client selection
+        client_options = [f"{client['name']} ({client['diet']})" for client in clients]
+        selected_client_option = st.selectbox("Select client:", client_options)
+        selected_client_index = client_options.index(selected_client_option)
+        selected_client_id = clients[selected_client_index]['id']
+        
+        # Recipe selection
+        recipe_options = [f"{recipe['name']} ({recipe['calories']} cal)" for recipe in recipes]
+        selected_recipe_option = st.selectbox("Select recipe:", recipe_options)
+        selected_recipe_index = recipe_options.index(selected_recipe_option)
+        selected_recipe_id = recipes[selected_recipe_index]['id']
+        
+        servings = st.number_input("Number of servings:", min_value=1, value=1)
+        
+        # Check for dietary restrictions and compatibility
+        selected_client = clients[selected_client_index]
+        selected_recipe = recipes[selected_recipe_index]
+        
+        allergy_warning = False
+        diet_mismatch = False
+        
+        if selected_client['allergies'] != "None":
+            allergy_list = selected_client['allergies'].lower().split(',')
+            for allergy in allergy_list:
+                if any(allergy.strip() in tag.lower() for tag in selected_recipe['tags']):
+                    allergy_warning = True
+                    break
+        
+        diet_mapping = {
+            "Low Carb": ["low-carb", "keto"],
+            "High Protein": ["high-protein"],
+            "Balanced": ["balanced"],
+            "Keto": ["keto", "low-carb"],
+            "Mediterranean": ["mediterranean"]
+        }
+        
+        if selected_client['diet'] in diet_mapping:
+            compatible_tags = diet_mapping[selected_client['diet']]
+            if not any(tag in selected_recipe['tags'] for tag in compatible_tags):
+                diet_mismatch = True
+        
+        if allergy_warning:
+            st.warning(f"⚠️ Warning: This recipe may contain allergens that {selected_client['name']} is allergic to.")
+        if diet_mismatch:
+            st.warning(f"⚠️ Warning: This recipe may not be compatible with {selected_client['name']}'s {selected_client['diet']} diet.")
+        
+        with st.expander("Recipe Preview"):
+            st.write(f"**{selected_recipe['name']}**")
+            st.write(f"**Calories:** {selected_recipe['calories']} per serving")
+            st.write(f"**Protein:** {selected_recipe['protein']}g | **Carbs:** {selected_recipe['carbs']}g | **Fat:** {selected_recipe['fat']}g")
+            st.write(f"**Tags:** {', '.join(selected_recipe['tags'])}")
+        
+        submit_button = st.form_submit_button("Create Meal Plan")
+        if submit_button:
+            meal_plan_data = {
+                'pc_id': selected_client_id,
+                'recipe_id': selected_recipe_id,
+                'quantity': servings
+            }
+            result, success = create_meal_plan(meal_plan_data)
+            if success:
+                st.success(f"Meal plan created successfully for {selected_client['name']}!")
+                st.cache_data.clear()
+                time.sleep(1)
+                tab1.set_active(True)
+                st.rerun()
