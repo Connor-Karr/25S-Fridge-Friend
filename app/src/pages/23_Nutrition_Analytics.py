@@ -305,3 +305,158 @@ with tab2:
         st.info("Implement targeted fiber education programs and recommend more high-fiber foods.")
     else:
         st.info("Select different nutrients to view specific insights.")
+# Client Comparisons Tab
+with tab3:
+    st.subheader("Client Comparisons")
+    
+    selected_clients = st.multiselect(
+        "Select clients to compare:",
+        [client["name"] for client in clients],
+        default=[clients[0]["name"], clients[1]["name"]] if len(clients) >= 2 else []
+    )
+    
+    if selected_clients:
+        metrics = st.multiselect(
+            "Select metrics to compare:",
+            ["Calories", "Protein", "Carbs", "Fat", "Diet Compliance", "Meal Logging Consistency", "Progress Rate"],
+            default=["Calories", "Protein", "Diet Compliance"]
+        )
+        
+        if metrics:
+            comparison_data = []
+            for client_name in selected_clients:
+                client = next((c for c in clients if c["name"] == client_name), None)
+                if client:
+                    client_row = {"Client": client_name}
+                    diet_bias = {
+                        "Low Carb": {"Calories": -100, "Protein": 20, "Carbs": -50, "Fat": 10},
+                        "High Protein": {"Calories": 100, "Protein": 40, "Carbs": -20, "Fat": -5},
+                        "Keto": {"Calories": -50, "Protein": 30, "Carbs": -80, "Fat": 30},
+                        "Balanced": {"Calories": 0, "Protein": 0, "Carbs": 0, "Fat": 0},
+                        "Mediterranean": {"Calories": -30, "Protein": -10, "Carbs": 20, "Fat": 5}
+                    }
+                    goal_bias = {
+                        "Weight Loss": {"Diet Compliance": 5, "Meal Logging Consistency": 10, "Progress Rate": 8},
+                        "Muscle Gain": {"Diet Compliance": 8, "Meal Logging Consistency": 5, "Progress Rate": 7},
+                        "Maintenance": {"Diet Compliance": 10, "Meal Logging Consistency": 0, "Progress Rate": 6},
+                        "Performance": {"Diet Compliance": 12, "Meal Logging Consistency": 15, "Progress Rate": 9},
+                        "Health": {"Diet Compliance": 5, "Meal Logging Consistency": -5, "Progress Rate": 4}
+                    }
+                    
+                    diet = client["diet"]
+                    goal = client["goal"]
+                    
+                    for metric in metrics:
+                        np.random.seed(hash(client_name + metric) % 10000)
+                        if metric in ["Calories", "Protein", "Carbs", "Fat"]:
+                            base_values = {"Calories": 2000, "Protein": 100, "Carbs": 200, "Fat": 65}
+                            base = base_values[metric] + diet_bias.get(diet, {}).get(metric, 0)
+                            value = np.clip(np.random.normal(base, base * 0.1), 0, None)
+                            client_row[metric] = round(value, 1)
+                        else:
+                            base_values = {"Diet Compliance": 75, "Meal Logging Consistency": 70, "Progress Rate": 65}
+                            base = base_values[metric] + goal_bias.get(goal, {}).get(metric, 0)
+                            value = np.clip(np.random.normal(base, 5), 0, 100)
+                            client_row[metric] = round(value, 1)
+                    comparison_data.append(client_row)
+            
+            comparison_df = pd.DataFrame(comparison_data)
+            st.dataframe(comparison_df, use_container_width=True)
+            
+            if len(selected_clients) <= 5:
+                fig = go.Figure()
+                for data in comparison_data:
+                    values = [data[metric] for metric in metrics]
+                    normalized_values = []
+                    for j, metric in enumerate(metrics):
+                        if metric in ["Diet Compliance", "Meal Logging Consistency", "Progress Rate"]:
+                            normalized_values.append(values[j])
+                        elif metric == "Calories":
+                            normalized_values.append((values[j] / 2000) * 100)
+                        elif metric == "Protein":
+                            normalized_values.append((values[j] / 100) * 100)
+                        elif metric == "Carbs":
+                            normalized_values.append((values[j] / 200) * 100)
+                        elif metric == "Fat":
+                            normalized_values.append((values[j] / 65) * 100)
+                    fig.add_trace(go.Scatterpolar(
+                        r=normalized_values,
+                        theta=metrics,
+                        fill='toself',
+                        name=data["Client"]
+                    ))
+                fig.update_layout(
+                    polar=dict(radialaxis=dict(visible=True, range=[0, 150])),
+                    title="Client Comparison (Normalized %)",
+                    height=500
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            
+            st.subheader("Key Differences")
+            if len(selected_clients) >= 2:
+                max_diff_metric, max_diff_value, max_diff_clients = None, 0, (None, None)
+                for metric in metrics:
+                    for i, client1 in enumerate(comparison_data):
+                        for j, client2 in enumerate(comparison_data):
+                            if i < j:
+                                diff = abs(client1[metric] - client2[metric])
+                                if diff > max_diff_value:
+                                    max_diff_value = diff
+                                    max_diff_metric = metric
+                                    max_diff_clients = (client1["Client"], client2["Client"])
+                if max_diff_metric:
+                    st.info(f"**Biggest difference:** {max_diff_clients[0]} and {max_diff_clients[1]} differ most in {max_diff_metric} ({max_diff_value:.1f} units difference).")
+                
+                min_diff_metric, min_diff_value, min_diff_clients = None, float('inf'), (None, None)
+                for metric in metrics:
+                    for i, client1 in enumerate(comparison_data):
+                        for j, client2 in enumerate(comparison_data):
+                            if i < j:
+                                diff = abs(client1[metric] - client2[metric])
+                                if diff < min_diff_value:
+                                    min_diff_value = diff
+                                    min_diff_metric = metric
+                                    min_diff_clients = (client1["Client"], client2["Client"])
+                if min_diff_metric:
+                    st.info(f"**Most similar:** {min_diff_clients[0]} and {min_diff_clients[1]} are most similar in {min_diff_metric} (only {min_diff_value:.1f} units difference).")
+            
+            st.subheader("Suggested Interventions")
+            for client in comparison_data:
+                client_name = client["Client"]
+                weakest_metric, weakest_value = None, float('inf')
+                for metric in metrics:
+                    if metric == "Calories":
+                        normalized_value = (client[metric] / 2000) * 100
+                    elif metric == "Protein":
+                        normalized_value = (client[metric] / 100) * 100
+                    elif metric == "Carbs":
+                        normalized_value = (client[metric] / 200) * 100
+                    elif metric == "Fat":
+                        normalized_value = (client[metric] / 65) * 100
+                    else:
+                        normalized_value = client[metric]
+                    if normalized_value < weakest_value:
+                        weakest_value = normalized_value
+                        weakest_metric = metric
+                if weakest_metric:
+                    st.write(f"**{client_name}:** Focus on improving {weakest_metric}")
+                    if weakest_metric == "Diet Compliance":
+                        st.write("  - Simplify meal plan to increase adherence")
+                        st.write("  - Set up more frequent check-ins")
+                        st.write("  - Provide easier alternatives for challenging meals")
+                    elif weakest_metric == "Meal Logging Consistency":
+                        st.write("  - Send daily reminders at meal times")
+                        st.write("  - Simplify logging process with quick-add options")
+                        st.write("  - Provide positive reinforcement for consistent logging")
+                    elif weakest_metric == "Progress Rate":
+                        st.write("  - Adjust targets for achievable short-term goals")
+                        st.write("  - Increase check-in frequency")
+                        st.write("  - Review and adjust nutrition plan")
+                    elif weakest_metric == "Protein":
+                        st.write("  - Add protein-rich snacks between meals")
+                        st.write("  - Consider protein supplementation")
+                        st.write("  - Provide high-protein recipe alternatives")
+        else:
+            st.info("Please select at least one metric to compare.")
+    else:
+        st.info("Please select at least one client to analyze.")
