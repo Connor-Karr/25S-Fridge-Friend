@@ -66,7 +66,7 @@ FridgeFriend is a data-driven application designed to streamline healthy eating 
 # Make API calls for user data (simulated)
 try:
     # Student (Ben) data
-    student_response = requests.get(f"{API_BASE_URL}/auth/student/1")
+    student_response = requests.get(f"{API_BASE_URL}/users/auth/student/1")
     if student_response.status_code == 200:
         student_data = student_response.json()
         logger.info("Student API Response: %s", student_data)
@@ -92,7 +92,7 @@ except Exception as e:
 
 try:
     # Admin (Alvin) data
-    admin_response = requests.get(f"{API_BASE_URL}/auth/admin/1")
+    admin_response = requests.get(f"{API_BASE_URL}/users/auth/admin/1")
     if admin_response.status_code == 200:
         admin_data = admin_response.json()
         admin_firstname = admin_data["data"][0]["firstName"]
@@ -113,7 +113,7 @@ except Exception as e:
 
 try:
     # Nutritionist (Nancy) data
-    nutritionist_response = requests.get(f"{API_BASE_URL}/auth/nutritionist/1")
+    nutritionist_response = requests.get(f"{API_BASE_URL}/users/auth/nutritionist/1")
     if nutritionist_response.status_code == 200:
         nutritionist_data = nutritionist_response.json()
         nutritionist_firstname = nutritionist_data["data"][0]["firstName"]
@@ -134,7 +134,7 @@ except Exception as e:
 
 try:
     # Athlete (Riley) data
-    athlete_response = requests.get(f"{API_BASE_URL}/auth/athlete/1")
+    athlete_response = requests.get(f"{API_BASE_URL}/users/auth/athlete/1")
     if athlete_response.status_code == 200:
         athlete_data = athlete_response.json()
         athlete_firstname = athlete_data["data"][0]["firstName"]
