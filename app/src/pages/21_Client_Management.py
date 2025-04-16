@@ -173,3 +173,39 @@ clients = [
         }
     }
 ]
+selected_client_id = st.session_state.get('selected_client_id', None)
+selected_client_name = st.session_state.get('selected_client_name', None)
+
+# Main page content
+if selected_client_id:
+    client = next((c for c in clients if c["id"] == selected_client_id), None)
+    
+    if client:
+        st.title(f"Client Profile: {client['name']}")
+        
+        # Creates tabs for different sections
+        tab1, tab2, tab3, tab4 = st.tabs(["Overview", "Nutrition Plan", "Allergy Management", "Progress"])
+        
+        # Overview Tab
+        with tab1:
+            col1, col2 = st.columns([1, 2])
+            
+            # Basic info column
+            with col1:
+                st.subheader("Basic Information")
+                st.write(f"**Age:** {client['age']}")
+                st.write(f"**Email:** {client['email']}")
+                st.write(f"**Phone:** {client['phone']}")
+                st.write(f"**Height:** {client['height']}")
+                st.write(f"**Weight:** {client['weight']}")
+                st.write(f"**Activity Level:** {client['activity_level']}")
+                st.write(f"**Goal:** {client['goal']}")
+                st.write(f"**Diet Type:** {client['diet']}")
+                st.write(f"**Allergies:** {client['allergies']}")
+                
+                if st.button("Edit Profile"):
+                    st.session_state.edit_profile = True
+            
+            # Nutrition overview column
+            with col2:
+                st.subheader("Nutrition Overview")
