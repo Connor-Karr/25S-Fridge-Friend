@@ -350,3 +350,154 @@ with tab2:
                 
                 st.success(f"Template values applied!")
                 st.rerun()
+
+# Nutrition Analysis Tab
+with tab3:
+    st.subheader("Nutrition Analysis")
+    
+    # Date range selection
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        analysis_period = st.selectbox(
+            "Analysis Period:",
+            ["Last 7 Days", "Last 14 Days", "Last 30 Days", "Custom Range"]
+        )
+    
+    with col2:
+        if analysis_period == "Custom Range":
+            date_range = st.date_input(
+                "Select date range:",
+                value=(datetime.now().date() - timedelta(days=7), datetime.now().date()),
+                max_value=datetime.now().date()
+            )
+        else:
+            if analysis_period == "Last 7 Days":
+                days = 7
+            elif analysis_period == "Last 14 Days":
+                days = 14
+            else:  # Last 30 Days
+                days = 30
+            
+            date_range = (datetime.now().date() - timedelta(days=days), datetime.now().date())
+    
+    # Generate mock data for the analysis period
+    analysis_dates = []
+    current_date = date_range[0]
+    while current_date <= date_range[1]:
+        analysis_dates.append(current_date.strftime('%Y-%m-%d'))
+        current_date += timedelta(days=1)
+    
+    # Generate mock nutrition data
+    np.random.seed(42)  # for reproducibility
+    
+    nutrition_data = []
+    for date in analysis_dates:
+        # Base values with some random variation
+        protein = np.random.normal(120, 15)
+        carbs = np.random.normal(200, 30)
+        fat = np.random.normal(50, 8)
+        calories = (protein * 4) + (carbs * 4) + (fat * 9) + np.random.normal(0, 50)
+        
+        nutrition_data.append({
+            'date': date,
+            'protein': max(0, round(protein)),
+            'carbs': max(0, round(carbs)),
+            'fat': max(0, round(fat)),
+            'calories': max(0, round(calories))
+        })
+    
+    # Convert to DataFrame
+    df = pd.DataFrame(nutrition_data)
+    
+    # Display average metrics for the period
+    avg_protein = df['protein'].mean()
+    avg_carbs = df['carbs'].mean()
+    avg_fat = df['fat'].mean()
+    avg_calories = df['calories'].mean()
+    
+    # Create metric cards
+    metric_cols = st.columns(4)
+    
+    with metric_cols[0]:
+        st.metric("Avg. Protein", f"{avg_protein:.1f}g", delta=f"{avg_protein - targets['Protein']:.1f}g")
+    
+    with metric_cols[1]:
+        st.metric("Avg. Carbs", f"{avg_carbs:.1f}g", delta=f"{avg_carbs - targets['Carbs']:.1f}g")
+    
+    with metric_cols[2]:
+        st.metric("Avg. Fat", f"{avg_fat:.1f}g", delta=f"{avg_fat - targets['Fat']:.1f}g")
+    
+    with metric_cols[3]:
+        st.metric("Avg. Calories", f"{avg_calories:.0f}", delta=f"{avg_calories - targets['Calories']:.0f}")
+    
+    # Trends over time
+    st.subheader("Nutrient Trends")
+    
+    # Select nutrient to visualize
+    nutrient_options = ["Calories", "Protein", "Carbs", "Fat", "All Macros"]
+    selected_nutrient = st.selectbox("Select nutrient to visualize:", nutrient_options)
+    
+    # Create appropriate chart based on selection
+    if selected_nutrient == "All Macros":
+        # Create a line chart for all macros
+        fig = go.Figure()
+        
+        # Add traces for each macro
+        fig.add_trace(go.Scatter(x=df['date'], y=df['protein'], mode='lines+markers', name='Protein (g)'))
+        fig.add_trace(go.Scatter(x=df['date'], y=df['carbs'], mode='lines+markers', name='Carbs (g)'))
+        fig.add_trace(go.Scatter(x=df['date'], y=df['fat'], mode='lines+markers', name='Fat (g)'))
+        
+        # Update layout
+        fig.update_layout(
+            title=f'Macronutrient Trends ({analysis_period})',
+            xaxis_title='Date',
+            yaxis_title='Grams',
+            height=400,
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        # For single nutrient, show trend with target line
+        nutrient_column = selected_nutrient.lower()
+        
+        # Create figure
+        fig = go.Figure()
+        
+        # Add nutrient trace
+        fig.add_trace(go.Scatter(
+            x=df['date'], 
+            y=df[nutrient_column],
+            mode='lines+markers',
+            name=selected_nutrient
+        ))
+        
+        # Add target line
+        if selected_nutrient in targets:
+            target_value = targets[selected_nutrient]
+            fig.add_trace(go.Scatter(
+                x=df['date'],
+                y=[target_value] * len(df),
+                mode='lines',
+                name=f'Target ({target_value})',
+                line=dict(color='red', dash='dash')
+            ))
+        
+        # Update layout
+        unit = "kcal" if selected_nutrient == "Calories" else "g"
+        fig.update_layout(
+            title=f'{selected_nutrient} Trend ({analysis_period})',
+            xaxis_title='Date',
+            yaxis_title=f'{selected_nutrient} ({unit})',
+            height=400,
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # Nutrition insights
+    st.subheader("Nutrition Insights")
+    
+    # Generate some insights based on the data
+    insights = []
