@@ -618,3 +618,441 @@ with tab3:
         - **Enzymatic Activity**: Optimal hydration improves recovery enzyme function
 **Hydration Guidelines:**
         """)
+
+# Hydration guidelines
+        hydration_data = pd.DataFrame({
+            'Sweat Loss': ['1 pound (16 oz)', '2 pounds (32 oz)', '3+ pounds (48+ oz)'],
+            'Water Requirement': ['20-24 oz', '40-48 oz', '60-72+ oz'],
+            'Electrolyte Need': ['Low', 'Medium', 'High']
+        })
+        
+        st.dataframe(
+            hydration_data,
+            column_config={
+                "Sweat Loss": st.column_config.TextColumn("Sweat Loss"),
+                "Water Requirement": st.column_config.TextColumn("Water to Drink"),
+                "Electrolyte Need": st.column_config.TextColumn("Electrolyte Need")
+            },
+            use_container_width=True
+        )
+        
+        # Hydration calculator
+        st.subheader("Quick Hydration Calculator")
+        
+        weight_before = st.number_input("Pre-workout weight (lbs):", min_value=80.0, max_value=300.0, value=150.0, step=0.1)
+        weight_after = st.number_input("Post-workout weight (lbs):", min_value=80.0, max_value=300.0, value=148.5, step=0.1)
+        fluid_consumed = st.number_input("Fluid consumed during workout (oz):", min_value=0.0, max_value=100.0, value=16.0, step=1.0)
+        
+        if st.button("Calculate Hydration Needs"):
+            weight_loss = weight_before - weight_after
+            actual_sweat_loss = weight_loss * 16 + fluid_consumed  # 16 oz per pound
+            
+            # Calculate recommended fluid intake
+            fluid_to_consume = actual_sweat_loss * 1.5  # Replace 150% of losses
+            
+            st.success(f"You lost approximately {weight_loss:.1f} lbs ({actual_sweat_loss:.0f} oz) of sweat")
+            st.info(f"**Recommendation:** Drink {fluid_to_consume:.0f} oz of fluid to fully rehydrate")
+            
+            # Electrolyte recommendations
+            if actual_sweat_loss > 48:
+                st.warning("Consider a high-electrolyte drink to replace lost minerals")
+            elif actual_sweat_loss > 32:
+                st.info("Include moderate electrolytes in your recovery drinks")
+    
+    with recovery_tabs[3]:
+        st.write("### Recovery Micronutrients")
+        
+        st.write("""
+        Beyond proteins and carbs, specific micronutrients play crucial roles in recovery:
+        """)
+        
+        # Create micronutrient info
+        micronutrient_data = [
+            {
+                "nutrient": "Vitamin D",
+                "benefits": "Reduces inflammation, supports protein synthesis",
+                "sources": "Fatty fish, egg yolks, sunlight exposure, fortified foods"
+            },
+            {
+                "nutrient": "Magnesium",
+                "benefits": "Reduces muscle soreness, supports energy production",
+                "sources": "Dark leafy greens, nuts, seeds, whole grains"
+            },
+            {
+                "nutrient": "Antioxidants (Vit C & E)",
+                "benefits": "Combats oxidative stress, reduces inflammation",
+                "sources": "Berries, citrus fruits, bell peppers, nuts, seeds"
+            },
+            {
+                "nutrient": "Zinc",
+                "benefits": "Supports immune function and protein synthesis",
+                "sources": "Meat, shellfish, legumes, seeds"
+            },
+            {
+                "nutrient": "Omega-3 Fatty Acids",
+                "benefits": "Reduces inflammation, improves recovery rate",
+                "sources": "Fatty fish, walnuts, flaxseeds, chia seeds"
+            }
+        ]
+        
+        # Display micronutrients in expandable sections
+        for data in micronutrient_data:
+            with st.expander(data["nutrient"]):
+                st.write(f"**Benefits:** {data['benefits']}")
+                st.write(f"**Food Sources:** {data['sources']}")
+        
+        # Anti-inflammatory foods
+        st.subheader("Anti-inflammatory Recovery Foods")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.write("**Tart Cherries**")
+            st.write("- Reduces muscle soreness")
+            st.write("- Improves sleep quality")
+            st.write("- Speeds recovery time")
+        
+        with col2:
+            st.write("**Turmeric**")
+            st.write("- Contains curcumin")
+            st.write("- Powerful anti-inflammatory")
+            st.write("- Reduces joint pain")
+        
+        with col3:
+            st.write("**Fatty Fish**")
+            st.write("- Rich in omega-3s")
+            st.write("- Reduces inflammation")
+            st.write("- Supports muscle repair")
+
+# Training Phases Tab
+with tab4:
+    st.subheader("Training Phase Nutrition")
+    st.write("Adjust your nutrition strategy for different training phases")
+    
+    # Create training phase selector
+    current_phase = st.radio(
+        "Current Training Phase:",
+        ["Base Building", "Build Phase", "Peaking", "Taper", "Race Week", "Recovery"],
+        horizontal=True
+    )
+    
+    # Define nutritional strategies for each phase
+    phase_nutrition = {
+        "Base Building": {
+            "calories": "Maintenance to slight surplus",
+            "carbs": "Moderate (5-6g/kg/day)",
+            "protein": "Moderate-high (1.6-1.8g/kg/day)",
+            "fat": "Moderate (1g/kg/day)",
+            "emphasis": "Building good nutritional habits, establishing baseline",
+            "priority_nutrients": ["Protein", "Iron", "Calcium", "Vitamin D"],
+            "sample_meals": [
+                "Overnight oats with Greek yogurt and berries", 
+                "Chicken and vegetable stir fry with brown rice",
+                "Salmon with sweet potato and green vegetables"
+            ]
+        },
+        "Build Phase": {
+            "calories": "Maintenance to moderate surplus (+200-300 cals)",
+            "carbs": "Moderate-high (6-8g/kg/day)",
+            "protein": "High (1.8-2.0g/kg/day)",
+            "fat": "Moderate (1g/kg/day)",
+            "emphasis": "Fueling increasingly intense workouts, enhanced recovery",
+            "priority_nutrients": ["Carbohydrates", "Protein", "Magnesium", "B Vitamins"],
+            "sample_meals": [
+                "Protein pancakes with banana and maple syrup",
+                "Turkey wrap with hummus and vegetables", 
+                "Beef and vegetable bowl with rice and avocado"
+            ]
+        },
+        "Peaking": {
+            "calories": "Maintenance to slight surplus",
+            "carbs": "High (8-10g/kg/day)",
+            "protein": "High (1.8-2.0g/kg/day)",
+            "fat": "Low-moderate (0.8g/kg/day)",
+            "emphasis": "Maximum glycogen storage, intense workout fueling",
+            "priority_nutrients": ["Carbohydrates", "Sodium", "Potassium", "Antioxidants"],
+            "sample_meals": [
+                "Oatmeal with banana, honey, and protein powder",
+                "Pasta with lean meat sauce and vegetables", 
+                "Rice bowl with chicken, vegetables, and teriyaki sauce"
+            ]
+        },
+        "Taper": {
+            "calories": "Slightly reduced (-100-200 cals)",
+            "carbs": "Moderate-high (7-8g/kg/day)",
+            "protein": "Moderate (1.6-1.8g/kg/day)",
+            "fat": "Low-moderate (0.8g/kg/day)",
+            "emphasis": "Maintaining glycogen while reducing volume, avoiding weight gain",
+            "priority_nutrients": ["Carbohydrates", "Protein", "Zinc", "Antioxidants"],
+            "sample_meals": [
+                "Greek yogurt with granola and fruit",
+                "Quinoa salad with grilled chicken and vegetables", 
+                "Fish with roasted potatoes and green beans"
+            ]
+        },
+        "Race Week": {
+            "calories": "Maintenance",
+            "carbs": "High, increasing to very high (8-12g/kg/day)",
+            "protein": "Moderate (1.5-1.6g/kg/day)",
+            "fat": "Low (0.5-0.8g/kg/day)",
+            "emphasis": "Carb-loading, reducing fiber, easy digestion",
+            "priority_nutrients": ["Carbohydrates", "Sodium", "Magnesium", "Potassium"],
+            "sample_meals": [
+                "White toast with honey and banana",
+                "Plain pasta with small amount of sauce", 
+                "White rice with lean protein and minimal fiber"
+            ]
+        },
+        "Recovery": {
+            "calories": "Maintenance to slight deficit (-100-200 cals)",
+            "carbs": "Moderate (5-6g/kg/day)",
+            "protein": "High (1.8-2.0g/kg/day)",
+            "fat": "Moderate (1g/kg/day)",
+            "emphasis": "Tissue repair, inflammation reduction, immune support",
+            "priority_nutrients": ["Protein", "Omega-3s", "Antioxidants", "Zinc"],
+            "sample_meals": [
+                "Protein smoothie with berries and spinach",
+                "Salmon with quinoa and roasted vegetables", 
+                "Chicken and vegetable soup with whole grain bread"
+            ]
+        }
+    }
+    
+    # Display selected phase information
+    if current_phase in phase_nutrition:
+        phase_data = phase_nutrition[current_phase]
+        
+        # Create columns for data display
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.subheader("Nutrition Strategy")
+            
+            # Create nutrition summary
+            st.write(f"**Calories:** {phase_data['calories']}")
+            st.write(f"**Carbohydrates:** {phase_data['carbs']}")
+            st.write(f"**Protein:** {phase_data['protein']}")
+            st.write(f"**Fat:** {phase_data['fat']}")
+            st.write(f"**Emphasis:** {phase_data['emphasis']}")
+            
+            # Create nutrition visualization
+            carb_pct = 60 if "high" in phase_data['carbs'].lower() else 50 if "moderate" in phase_data['carbs'].lower() else 40
+            protein_pct = 30 if "high" in phase_data['protein'].lower() else 25 if "moderate" in phase_data['protein'].lower() else 20
+            fat_pct = 100 - carb_pct - protein_pct
+            
+            # Create donut chart for macro ratio
+            macro_data = pd.DataFrame({
+                'Macronutrient': ['Carbs', 'Protein', 'Fat'],
+                'Percentage': [carb_pct, protein_pct, fat_pct]
+            })
+            
+            fig = px.pie(
+                macro_data,
+                values='Percentage',
+                names='Macronutrient',
+                title=f'{current_phase} Macro Ratio',
+                color_discrete_sequence=px.colors.qualitative.Set2,
+                hole=0.4
+            )
+            
+            fig.update_layout(height=300)
+            
+            st.plotly_chart(fig, use_container_width=True)
+        
+        with col2:
+            st.subheader("Key Recommendations")
+            
+            # Priority nutrients
+            st.write("**Priority Nutrients:**")
+            for nutrient in phase_data['priority_nutrients']:
+                st.write(f"- {nutrient}")
+            
+            # Sample meals
+            st.write("**Sample Meals:**")
+            for meal in phase_data['sample_meals']:
+                st.write(f"- {meal}")
+            
+            # Create a meal plan button
+            if st.button("Create Meal Plan for This Phase"):
+                with st.spinner("Creating personalized meal plan..."):
+                    time.sleep(2)
+                    st.success(f"Meal plan created for {current_phase}!")
+                    
+                    # Mock create a meal plan in the database
+                    plan_data = {
+                        "pc_id": 1,  # Mock personal constraints ID
+                        "recipe_id": 1 if current_phase == "Base Building" else 2 if current_phase == "Recovery" else 3 if current_phase == "Build Phase" else 4,
+                        "quantity": 1
+                    }
+                    
+                    result, success = create_meal_plan(plan_data)
+                    
+                    if success:
+                        st.success("Meal plan saved to your account!")
+                    else:
+                        # Mock success for demo
+                        st.success("Meal plan saved to your account! (Mock)")
+    
+    # Phase transition guidelines
+    st.markdown("---")
+    st.subheader("Phase Transition Guidelines")
+    
+    st.write("""
+    When transitioning between training phases, make these nutrition adjustments:
+    """)
+    
+    # Create expandable sections for each transition
+    with st.expander("Base → Build"):
+        st.write("""
+        - Gradually increase carbohydrate intake by 1-2g/kg/day
+        - Add ~200 calories daily to support increased training load
+        - Slightly increase protein intake to support muscle adaptation
+        - Time carbs strategically around harder workouts
+        """)
+    
+    with st.expander("Build → Peak"):
+        st.write("""
+        - Further increase carbohydrates by 1-2g/kg/day
+        - Maintain protein at high levels (1.8-2.0g/kg/day)
+        - Decrease fat intake slightly to accommodate more carbs
+        - Prioritize recovery nutrition after intense sessions
+        - Consider adding intra-workout carbs for longer sessions
+        """)
+    
+    with st.expander("Peak → Taper"):
+        st.write("""
+        - Reduce calories slightly as training volume decreases
+        - Maintain carbohydrate intake to ensure full glycogen stores
+        - Slightly reduce protein intake (1.6-1.8g/kg/day)
+        - Monitor body weight to avoid unwanted gains
+        - Begin reducing fiber intake in final days before race
+        """)
+    
+    with st.expander("Taper → Race"):
+        st.write("""
+        - Implement carb-loading protocol 1-3 days before race
+        - Dramatically reduce fiber intake 24-48 hours pre-race
+        - Maintain adequate hydration and electrolyte balance
+        - Reduce fat and protein to accommodate higher carbs
+        - Test race-day nutrition strategy during final workouts
+        """)
+    
+    with st.expander("Race → Recovery"):
+        st.write("""
+        - Focus on rehydration and glycogen replenishment immediately post-race
+        - Gradually return to normal eating patterns over 24-48 hours
+        - Emphasize protein intake for tissue repair
+        - Include anti-inflammatory foods (berries, fatty fish, turmeric)
+        - Don't restrict calories too much; support recovery before resuming training
+        """)
+    
+    # Personal phase tracking
+    st.markdown("---")
+    st.subheader("Personal Phase Tracking")
+    
+    # Create simple mock phase tracking visualization
+    # Generate data for the past 6 months and next 2 months
+    months = 8
+    month_labels = [(datetime.now() - timedelta(days=30*(months-3-i))).strftime('%b') for i in range(months)]
+    
+    # Define phases for each month
+    phases = ["Base Building", "Base Building", "Build Phase", "Build Phase", 
+              "Peaking", "Taper", "Race Week", "Recovery"]
+    
+    # Create DataFrame
+    phase_df = pd.DataFrame({
+        'Month': month_labels,
+        'Phase': phases,
+        'Current': [i == 5 for i in range(months)]  # Mark current month
+    })
+    
+    # Create figure
+    fig = go.Figure()
+    
+    # Add bars for each phase with different colors
+    colors = {
+        "Base Building": "#91e5ff",
+        "Build Phase": "#4cb5ff",
+        "Peaking": "#1e88e5",
+        "Taper": "#ff9800",
+        "Race Week": "#f44336",
+        "Recovery": "#4caf50"
+    }
+    
+    # Add phase bars
+    for phase in set(phases):
+        mask = phase_df['Phase'] == phase
+        fig.add_trace(go.Bar(
+            x=phase_df[mask]['Month'],
+            y=[1] * sum(mask),
+            name=phase,
+            marker_color=colors[phase],
+            width=0.6
+        ))
+    
+    # Add current month indicator
+    current_month = phase_df[phase_df['Current']]['Month'].values[0]
+    
+    fig.add_shape(
+        type="line",
+        x0=current_month,
+        y0=0,
+        x1=current_month,
+        y1=1,
+        line=dict(color="Black", width=3)
+    )
+    
+    fig.add_annotation(
+        x=current_month,
+        y=1.05,
+        text="You are here",
+        showarrow=False,
+        font=dict(color="black", size=14)
+    )
+    
+    # Update layout
+    fig.update_layout(
+        title="Training Phase Timeline",
+        xaxis_title="Month",
+        yaxis_visible=False,
+        height=300,
+        barmode='stack',
+        showlegend=True,
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Add button to update phase
+    col1, col2 = st.columns([1, 2])
+    
+    with col1:
+        if st.button("Update Current Phase"):
+            st.session_state.update_phase = True
+    
+    # Phase update form
+    if st.session_state.get("update_phase", False):
+        with st.form("update_phase_form"):
+            st.subheader("Update Training Phase")
+            
+            new_phase = st.selectbox(
+                "Select current training phase:",
+                ["Base Building", "Build Phase", "Peaking", "Taper", "Race Week", "Recovery"]
+            )
+            
+            next_race = st.date_input(
+                "Next race date:",
+                value=datetime.now().date() + timedelta(days=30)
+            )
+            
+            submit = st.form_submit_button("Save Phase Update")
+            
+            if submit:
+                st.success(f"Training phase updated to {new_phase}")
+                st.info(f"Nutritional recommendations updated for {new_phase} phase")
+                
+                # Clear update state
+                if "update_phase" in st.session_state:
+                    del st.session_state.update_phase
+                
+                st.rerun()
