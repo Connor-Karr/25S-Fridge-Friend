@@ -245,3 +245,177 @@ with tab1:
                     st.rerun()
     else:
         st.info("No meal plans found. Add some meal plans for different training phases!")
+
+# Race Day Tab
+with tab2:
+    st.subheader("Race Day Nutrition")
+    st.write("Specialized meal plans for before, during, and after races")
+    
+    # Create race day timeline visualization
+    timeline_data = [
+        {"time": "-12 hours", "meal": "Carb-loading dinner", "description": "High-carb, moderate protein, low fat, low fiber"},
+        {"time": "-3 hours", "meal": "Pre-race breakfast", "description": "Easy-to-digest carbs, low fiber, low fat"},
+        {"time": "-30 minutes", "meal": "Final fuel", "description": "Simple carbs, electrolytes"},
+        {"time": "During Race", "meal": "Race nutrition", "description": "Carbs, electrolytes, fluids"},
+        {"time": "+0-30 minutes", "meal": "Immediate recovery", "description": "Quick carbs + protein, fluids"},
+        {"time": "+1-2 hours", "meal": "Recovery meal", "description": "Balanced meal with protein, carbs, and antioxidants"}
+    ]
+    
+    # Create a visual timeline
+    for i, item in enumerate(timeline_data):
+        with st.container(border=True):
+            col1, col2 = st.columns([1, 3])
+            
+            with col1:
+                st.subheader(item["time"])
+            
+            with col2:
+                st.write(f"**{item['meal']}**")
+                st.write(item["description"])
+                
+                # Add example button
+                if st.button("See Examples", key=f"example_{i}"):
+                    if item["time"] == "-12 hours":
+                        st.info("**Examples:** Pasta with tomato sauce, bread, baked potato, rice bowl, pancakes with maple syrup")
+                    elif item["time"] == "-3 hours":
+                        st.info("**Examples:** Oatmeal with banana, toast with honey, sports drink, white rice with a small amount of protein")
+                    elif item["time"] == "-30 minutes":
+                        st.info("**Examples:** Sports gel, banana, energy chews, sports drink")
+                    elif item["time"] == "During Race":
+                        st.info("**Examples:** Sports gels (every 45-60 minutes), sports drink, energy chews")
+                    elif item["time"] == "+0-30 minutes":
+                        st.info("**Examples:** Recovery drink, chocolate milk, banana with protein shake")
+                    elif item["time"] == "+1-2 hours":
+                        st.info("**Examples:** Turkey or chicken sandwich, recovery smoothie, rice bowl with lean protein")
+    
+    # Race day carbs calculator
+    st.markdown("---")
+    st.subheader("Race Day Carbs Calculator")
+    
+    with st.form("carb_calculator"):
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            weight = st.number_input("Weight (lbs):", min_value=80, max_value=300, value=150)
+            race_duration = st.selectbox(
+                "Race Duration:",
+                ["5K (20-30 min)", "10K (40-60 min)", "Half Marathon (1:30-2:30)", "Marathon (3:00-5:00)"]
+            )
+        
+        with col2:
+            timing = st.radio(
+                "Timing:",
+                ["Night Before Race", "Race Morning", "During Race", "Post-Race Recovery"]
+            )
+        
+        calculate_button = st.form_submit_button("Calculate Needs")
+        
+        if calculate_button:
+            # Convert weight to kg
+            weight_kg = weight * 0.453592
+            
+            # Calculate carb needs based on timing and race
+            if timing == "Night Before Race":
+                carb_factor = 8  # g/kg
+                carb_needs = weight_kg * carb_factor
+                st.success(f"Carbohydrate Target: **{carb_needs:.0f} grams**")
+                st.write(f"Aim for {carb_needs:.0f}g of carbs with your dinner and evening snacks. Focus on easy-to-digest sources like pasta, rice, potatoes, and bread.")
+            
+            elif timing == "Race Morning":
+                # Calculate based on race distance
+                if "5K" in race_duration:
+                    carb_factor = 1  # g/kg
+                elif "10K" in race_duration:
+                    carb_factor = 1.5  # g/kg
+                elif "Half" in race_duration:
+                    carb_factor = 2  # g/kg
+                else:  # Marathon
+                    carb_factor = 3  # g/kg
+                
+                carb_needs = weight_kg * carb_factor
+                st.success(f"Pre-Race Carbohydrate Target: **{carb_needs:.0f} grams**")
+                st.write(f"Consume {carb_needs:.0f}g of carbs 3-4 hours before your race. Choose low-fiber, low-fat options that are easy to digest.")
+            
+            elif timing == "During Race":
+                # Calculate based on race distance
+                if "5K" in race_duration:
+                    carb_factor = 0  # No need for 5K
+                    st.info("Carbohydrate supplementation is generally not necessary for a 5K race.")
+                elif "10K" in race_duration:
+                    carb_factor = 30  # g/hour
+                    st.success(f"Carbohydrate Target: **30 grams/hour**")
+                    st.write("For a 10K, a small amount of carbs from a sports drink or gel may help, especially in the latter half of the race.")
+                elif "Half" in race_duration:
+                    carb_factor = 60  # g/hour
+                    st.success(f"Carbohydrate Target: **60 grams/hour**")
+                    st.write("Aim for 60g of carbs per hour from sports drinks, gels, or chews. Start fueling early and maintain a consistent schedule.")
+                else:  # Marathon
+                    carb_factor = 90  # g/hour
+                    st.success(f"Carbohydrate Target: **60-90 grams/hour**")
+                    st.write("For a marathon, aim for 60-90g of carbs per hour. Use a mix of sports drinks, gels, and solid foods if your stomach allows.")
+            
+            else:  # Post-Race Recovery
+                # Calculate based on weight
+                carb_factor = 1  # g/kg
+                protein_factor = 0.3  # g/kg
+                
+                carb_needs = weight_kg * carb_factor
+                protein_needs = weight_kg * protein_factor
+                
+                st.success(f"Recovery Targets: **{carb_needs:.0f}g carbs and {protein_needs:.0f}g protein**")
+                st.write(f"Within 30 minutes post-race, consume {carb_needs:.0f}g of carbs and {protein_needs:.0f}g of protein. Follow with a complete meal within 2 hours.")
+    
+    # Race day meal plan templates
+    st.markdown("---")
+    st.subheader("Race Day Meal Plan Templates")
+    
+    race_plans = [
+        {
+            "name": "5K/10K Race Plan", 
+            "description": "Optimized for shorter, higher-intensity races",
+            "meals": [
+                {"time": "Night Before", "meal": "Pasta with tomato sauce, garlic bread, and a small side salad"},
+                {"time": "3h Before", "meal": "Oatmeal with banana and honey, white toast with jam"},
+                {"time": "During", "meal": "Sports drink only (5K) or sports drink + 1 gel at halfway mark (10K)"},
+                {"time": "After", "meal": "Recovery shake, followed by sandwich and fruit in 1-2 hours"}
+            ]
+        },
+        {
+            "name": "Half Marathon Plan",
+            "description": "Balanced fueling for sustained energy over 13.1 miles",
+            "meals": [
+                {"time": "Night Before", "meal": "Rice bowl with lean protein, cooked vegetables, and dinner roll"},
+                {"time": "3h Before", "meal": "Bagel with honey, banana, and sports drink"},
+                {"time": "During", "meal": "Sports drink + gels every 40-45 minutes (2-3 total)"},
+                {"time": "After", "meal": "Recovery shake, followed by balanced meal with chicken, rice, and vegetables"}
+            ]
+        },
+        {
+            "name": "Marathon Plan",
+            "description": "Comprehensive fueling for maximum endurance",
+            "meals": [
+                {"time": "2 Days Before", "meal": "Begin carb-loading with high-carb meals throughout the day"},
+                {"time": "Night Before", "meal": "Large pasta dinner with bread, light protein, and minimal fat/fiber"},
+                {"time": "3h Before", "meal": "Oatmeal with banana and honey, white bread with jam, sports drink"},
+                {"time": "During", "meal": "Sports drink + gel every 30 minutes, salt tabs for hot weather"},
+                {"time": "After", "meal": "Recovery shake immediately, light meal in 1-2 hours, feast the next day"}
+            ]
+        }
+    ]
+    
+    # Create columns for race plans
+    cols = st.columns(len(race_plans))
+    
+    for i, plan in enumerate(race_plans):
+        with cols[i]:
+            st.subheader(plan["name"])
+            st.write(plan["description"])
+            
+            # Show meals as a list
+            for meal in plan["meals"]:
+                st.markdown(f"**{meal['time']}:** {meal['meal']}")
+            
+            # Add button to save plan
+            if st.button("Use This Template", key=f"use_plan_{i}"):
+                st.success(f"Race day template selected: {plan['name']}")
+                st.info("This would create personalized meal plans based on the template in a real app.")
