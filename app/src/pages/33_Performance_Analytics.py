@@ -206,3 +206,157 @@ def generate_mock_nutrition_data(days=60):
     })
     
     return nutrition_data
+
+# Mock performance metrics
+@st.cache_data(ttl=600)
+def generate_mock_performance_metrics(workout_data, nutrition_data):
+    dates = workout_data['Date'].tolist()
+    
+    # Generate energy levels with some correlation to nutrition
+    energy = []
+    recovery = []
+    sleep_quality = []
+    
+    for i, date in enumerate(dates):
+        # Find nutrition for the previous day (if available)
+        prev_day_nutrition = nutrition_data[nutrition_data['Date'] == date]
+        
+        if not prev_day_nutrition.empty:
+            # Base energy on carbs and calories
+            carbs = prev_day_nutrition['Carbs (g)'].values[0]
+            calories = prev_day_nutrition['Calories'].values[0]
+            water = prev_day_nutrition['Water (L)'].values[0]
+            
+            # Factors that influence energy
+            carb_factor = (carbs / 250) * 5  # Scale to 0-5 range
+            calorie_factor = (calories / 2400) * 3  # Scale to 0-3 range
+            water_factor = (water / 3) * 2  # Scale to 0-2 range
+            
+            # Calculate base energy (0-10 scale)
+            base_energy = carb_factor + calorie_factor + water_factor
+            energy_value = np.clip(base_energy + np.random.normal(0, 0.5), 1, 10)
+            energy.append(round(energy_value, 1))
+            
+            # Calculate recovery based on protein, sleep and previous workout
+            protein = prev_day_nutrition['Protein (g)'].values[0]
+            
+            # Get previous day's workout if available
+            if i > 0:
+                prev_workout_rpe = workout_data.iloc[i-1]['RPE (0-10)']
+            else:
+                prev_workout_rpe = 0
+            
+            # Factors that influence recovery
+            protein_factor = (protein / 140) * 5  # Scale to 0-5 range
+            workout_factor = (1 - (prev_workout_rpe / 10)) * 3  # Lower RPE = better recovery
+            sleep_factor = np.random.uniform(0, 2)  # Random sleep quality
+            
+            # Calculate base recovery (0-10 scale)
+            base_recovery = protein_factor + workout_factor + sleep_factor
+            recovery_value = np.clip(base_recovery + np.random.normal(0, 0.5), 1, 10)
+            recovery.append(round(recovery_value, 1))
+            
+            # Generate sleep quality (somewhat independent)
+            sleep_value = np.clip(np.random.normal(7, 1), 3, 10)
+            sleep_quality.append(round(sleep_value, 1))
+        else:
+            # Default values if no nutrition data
+            energy.append(round(np.random.uniform(5, 7), 1))
+            recovery.append(round(np.random.uniform(5, 7), 1))
+            sleep_quality.append(round(np.random.uniform(6, 8), 1))
+    
+    # Create DataFrame
+    performance_data = pd.DataFrame({
+        'Date': dates,
+        'Energy (1-10)': energy,
+        'Recovery (1-10)': recovery,
+        'Sleep (1-10)': sleep_quality
+    })
+    
+    return performance_data
+
+# Get data
+workout_data = generate_mock_workout_data()
+nutrition_data = generate_mock_nutrition_data()
+performance_data = generate_mock_performance_metrics(workout_data, nutrition_data)
+
+# Combine all data
+combined_data = pd.merge(workout_data, nutrition_data, on='Date', how='left')
+combined_data = pd.merge(combined_data, performance_data, on='Date', how='left')
+
+# Create tabs for different analysis views
+tab1, tab2, tab3, tab4 = st.tabs(["Performance Overview", "Nutrition Impact", "Recovery Analysis", "Optimization"])
+
+# Performance Overview Tab
+with tab1:
+    st.subheader("Training & Performance Overview")
+    
+    # Date range selection
+    date_range = st.slider(
+        "Select date range:",
+        min_value=datetime.strptime(combined_data['Date'].min(), '%Y-%m-%d').date(),
+        max_value=datetime.strptime(combined_data['Date'].max(), '%Y-%m-%d').date(),
+        value=(
+            datetime.strptime(combined_data['Date'].min(), '%Y-%m-%d').date(),
+            datetime.strptime(combined_data['Date'].max(), '%Y-%m-%d').date()
+        )
+    )
+    
+    # Filter data based on date range
+    start_date = date_range[0].strftime('%Y-%m-%d')
+    end_date = date_range[1].strftime('%Y-%m-%d')
+    
+    filtered_data = combined_data[
+        (combined_data['Date'] >= start_date) & 
+        (combined_data['Date'] <= end_date)
+    ]
+    
+    # Weekly volume chart
+    st.subheader("Weekly Training Volume")
+    
+    # Calculate weekly volume
+    filtered_data['Week'] = pd.to_datetime(filtered_data['Date']).dt.strftime('%Y-%U')
+    weekly_volume = filtered_data.groupby('Week').agg({
+        'Distance (miles)': 'sum',
+        'Duration (min)': 'sum',
+        'Calories': 'sum'
+    }).reset_index()
+    
+    # Create figure
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    
+    # Add distance bars
+    fig.add_trace(
+        go.Bar(
+            x=weekly_volume['Week'],
+            y=weekly_volume['Distance (miles)'],
+            name="Weekly Distance",
+            marker_color='royalblue'
+        ),
+        secondary_y=False
+    )
+    
+    # Add duration line
+    fig.add_trace(
+        go.Scatter(
+            x=weekly_volume['Week'], 
+            y=weekly_volume['Duration (min)'],
+            name="Weekly Duration",
+            line=dict(color='firebrick')
+        ),
+        secondary_y=True
+    )
+    
+    # Set titles
+    fig.update_layout(
+        title_text="Weekly Training Volume",
+        height=400
+    )
+    
+    # Set axis titles
+    fig.update_xaxes(title_text="Week")
+    fig.update_yaxes(title_text="Distance (miles)", secondary_y=False)
+    fig.update_yaxes(title_text="Duration (minutes)", secondary_y=True)
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
