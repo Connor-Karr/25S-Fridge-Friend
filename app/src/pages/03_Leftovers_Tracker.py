@@ -201,3 +201,76 @@ with tab1:
                         st.error(f"Error removing expired leftovers: {response.status_code}")
                 except Exception as e:
                     st.error(f"Error: {str(e)}")
+
+# Add New Leftover Tab
+with tab2:
+    st.subheader("Add New Leftover Meal")
+    
+    # Function to get recipes
+    @st.cache_data(ttl=600)
+    def get_recipes():
+        try:
+            # Using meal plans API to get recipes
+            response = requests.get(f"{API_BASE_URL}/meal-plans")
+            
+            if response.status_code == 200:
+                data = response.json()
+                recipes = []
+                
+                for item in data:
+                    recipes.append({
+                        'id': item.get('recipe_id'),
+                        'name': item.get('recipe_name', 'Unknown Recipe')
+                    })
+                
+                return recipes
+            else:
+                st.error(f"Error fetching recipes: {response.status_code}")
+                return []
+        except Exception as e:
+            st.error(f"Error: {str(e)}")
+            return []
+    
+    recipes = get_recipes()
+    
+    if recipes:
+        with st.form("add_leftover_form"):
+            # Recipe selection
+            recipe_names = [r['name'] for r in recipes]
+            recipe_ids = {r['name']: r['id'] for r in recipes}
+            
+            selected_recipe = st.selectbox("Select recipe:", recipe_names)
+            recipe_id = recipe_ids[selected_recipe]
+            
+            # Quantity
+            quantity = st.number_input(
+                "Number of servings:",
+                min_value=0.5,
+                value=1.0,
+                step=0.5
+            )
+            
+            # Submit
+            submit = st.form_submit_button("Add Leftover")
+            
+            if submit:
+                try:
+                    data = {
+                        'recipe_id': recipe_id,
+                        'quantity': quantity
+                    }
+                    
+                    response = requests.post(f"{API_BASE_URL}/leftovers", json=data)
+                    
+                    if response.status_code == 201:
+                        st.success(f"Added {quantity} servings of {selected_recipe} to leftovers!")
+                        st.cache_data.clear()
+                    else:
+                        st.error(f"Error adding leftover: {response.status_code}")
+                except Exception as e:
+                    st.error(f"Error: {str(e)}")
+    else:
+        st.warning("No recipes available. Add some meal plans first!")
+        
+        if st.button("Go to Meal Suggestions"):
+            st.switch_page("pages/02_Meal_Suggestions.py")
