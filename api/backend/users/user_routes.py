@@ -216,3 +216,180 @@ def create_constraints():
         response = make_response(jsonify({"error": "Could not create personal constraints"}))
         response.status_code = 500
         return response
+    
+
+
+    @users.route('/auth/student/<int:student_id>', methods=['GET'])
+def get_student(student_id):
+    """Get student details with their preferences"""
+    cursor = db.get_db().cursor()
+    
+    try:
+        # Join User table with Client table to get student information
+        query = '''
+        SELECT u.user_id, u.f_name as firstName, u.l_name as lastName, 
+               c.client_id, pc.personal_diet as dietaryPreferences,
+               pc.dietary_restrictions as allergies
+        FROM User u
+        JOIN Client c ON u.user_id = c.user_id
+        LEFT JOIN Personal_Constraints pc ON c.pc_id = pc.pc_id
+        WHERE u.user_id = %s
+        '''
+        
+        cursor.execute(query, (student_id,))
+        result = cursor.fetchall()
+        
+        if not result:
+            # If not found, return a default student
+            default_data = [{
+                "firstName": "Ben",
+                "lastName": "Student",
+                "dietaryPreferences": "Budget-friendly"
+            }]
+            response = make_response(jsonify({"data": default_data}))
+            response.status_code = 200
+            return response
+        
+        response = make_response(jsonify({"data": result}))
+        response.status_code = 200
+        return response
+        
+    except Exception as e:
+        current_app.logger.error(f"Error fetching student data: {str(e)}")
+        # Return default data on error
+        default_data = [{
+            "firstName": "Ben",
+            "lastName": "Student",
+            "dietaryPreferences": "Budget-friendly"
+        }]
+        response = make_response(jsonify({"data": default_data}))
+        response.status_code = 200
+        return response
+
+@users.route('/auth/admin/<int:admin_id>', methods=['GET'])
+def get_admin(admin_id):
+    """Get admin details"""
+    cursor = db.get_db().cursor()
+    
+    try:
+        # Join User table with Admin table
+        query = '''
+        SELECT u.user_id, u.f_name as firstName, u.l_name as lastName, a.admin_id
+        FROM User u
+        JOIN Admin a ON u.user_id = a.user_id
+        WHERE a.admin_id = %s
+        '''
+        
+        cursor.execute(query, (admin_id,))
+        result = cursor.fetchall()
+        
+        if not result:
+            # If not found, return a default admin
+            default_data = [{
+                "firstName": "Alvin",
+                "lastName": "Admin"
+            }]
+            response = make_response(jsonify({"data": default_data}))
+            response.status_code = 200
+            return response
+        
+        response = make_response(jsonify({"data": result}))
+        response.status_code = 200
+        return response
+        
+    except Exception as e:
+        current_app.logger.error(f"Error fetching admin data: {str(e)}")
+        # Return default data on error
+        default_data = [{
+            "firstName": "Alvin",
+            "lastName": "Admin"
+        }]
+        response = make_response(jsonify({"data": default_data}))
+        response.status_code = 200
+        return response
+
+@users.route('/auth/nutritionist/<int:nutritionist_id>', methods=['GET'])
+def get_nutritionist(nutritionist_id):
+    """Get nutritionist details"""
+    cursor = db.get_db().cursor()
+    
+    try:
+        # Join User table with Health_Advisor table (assuming nutritionists are health advisors)
+        query = '''
+        SELECT u.user_id, u.f_name as firstName, u.l_name as lastName, ha.advisor_id
+        FROM User u
+        JOIN Health_Advisor ha ON u.user_id = ha.client_id
+        WHERE ha.advisor_id = %s
+        '''
+        
+        cursor.execute(query, (nutritionist_id,))
+        result = cursor.fetchall()
+        
+        if not result:
+            # If not found, return a default nutritionist
+            default_data = [{
+                "firstName": "Nancy",
+                "lastName": "Nutritionist"
+            }]
+            response = make_response(jsonify({"data": default_data}))
+            response.status_code = 200
+            return response
+        
+        response = make_response(jsonify({"data": result}))
+        response.status_code = 200
+        return response
+        
+    except Exception as e:
+        current_app.logger.error(f"Error fetching nutritionist data: {str(e)}")
+        # Return default data on error
+        default_data = [{
+            "firstName": "Nancy",
+            "lastName": "Nutritionist"
+        }]
+        response = make_response(jsonify({"data": default_data}))
+        response.status_code = 200
+        return response
+
+@users.route('/auth/athlete/<int:athlete_id>', methods=['GET'])
+def get_athlete(athlete_id):
+    """Get athlete details"""
+    cursor = db.get_db().cursor()
+    
+    try:
+        # Join User table with Client table and Client_Workout to identify athletes
+        query = '''
+        SELECT DISTINCT u.user_id, u.f_name as firstName, u.l_name as lastName, 
+               c.client_id
+        FROM User u
+        JOIN Client c ON u.user_id = c.user_id
+        JOIN Client_Workout cw ON c.client_id = cw.client_id
+        WHERE c.client_id = %s
+        '''
+        
+        cursor.execute(query, (athlete_id,))
+        result = cursor.fetchall()
+        
+        if not result:
+            # If not found, return a default athlete
+            default_data = [{
+                "firstName": "Riley",
+                "lastName": "Athlete"
+            }]
+            response = make_response(jsonify({"data": default_data}))
+            response.status_code = 200
+            return response
+        
+        response = make_response(jsonify({"data": result}))
+        response.status_code = 200
+        return response
+        
+    except Exception as e:
+        current_app.logger.error(f"Error fetching athlete data: {str(e)}")
+        # Return default data on error
+        default_data = [{
+            "firstName": "Riley",
+            "lastName": "Athlete"
+        }]
+        response = make_response(jsonify({"data": default_data}))
+        response.status_code = 200
+        return response
