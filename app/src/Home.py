@@ -68,7 +68,7 @@ with col1:
         st.session_state.authenticated = True
         st.session_state.role = "busy_student"
         st.session_state.first_name = "Ben"
-        st.switch_page("pages/00_Ben_Dashboard.py")
+        st.switch_page("pages/00_Fridge_Dashboard.py")
 
 #Alvin
 with col2:

@@ -280,10 +280,10 @@ for i, (metric, value) in enumerate(quality_metrics.items()):
             st.metric(metric, value, delta="+5%")
 
 with st.expander("Tips for Maintaining Data Quality"):
-    st.write(\"\"\"
+    st.write("""
     1. **Consistency**: Ensure ingredient names follow a consistent format (e.g., \"Whole Milk\" not \"milk, whole\").
     2. **Completeness**: Always include complete macronutrient information when adding new ingredients.
     3. **Accuracy**: Verify nutritional information against trusted sources like USDA database.
     4. **Regular Audits**: Periodically review ingredients for outdated or inaccurate information.
     5. **Trusted Sources**: Prioritize adding ingredients from verified brand databases.
-    \"\"\")
+    """)
