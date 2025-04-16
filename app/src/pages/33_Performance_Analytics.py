@@ -142,3 +142,67 @@ def generate_mock_workout_data(days=60):
     
     return workout_data
 
+# Mock nutrition data
+@st.cache_data(ttl=600)
+def generate_mock_nutrition_data(days=60):
+    np.random.seed(43)
+    
+    # Generate dates
+    end_date = datetime.now().date()
+    start_date = end_date - timedelta(days=days-1)
+    dates = [(start_date + timedelta(days=i)).strftime('%Y-%m-%d') for i in range(days)]
+    
+    # Generate baseline nutrition values with weekly patterns
+    calories = []
+    protein = []
+    carbs = []
+    fat = []
+    water = []
+    
+    for i in range(days):
+        day_of_week = (start_date + timedelta(days=i)).weekday()
+        
+        # Pattern: Higher carbs on workout days, higher protein on strength days, higher calories on weekends
+        if day_of_week in [0, 2, 3, 5]:  # Run days (Mon, Wed, Thu, Sat)
+            base_carbs = 250
+            base_protein = 120
+            base_fat = 65
+            base_calories = 2400
+            base_water = 3.0
+        elif day_of_week == 1:  # Strength day (Tue)
+            base_carbs = 200
+            base_protein = 150
+            base_fat = 70
+            base_calories = 2300
+            base_water = 3.2
+        elif day_of_week == 6:  # Rest day (Sun)
+            base_carbs = 180
+            base_protein = 100
+            base_fat = 75
+            base_calories = 2000
+            base_water = 2.8
+        else:
+            base_carbs = 200
+            base_protein = 110
+            base_fat = 70
+            base_calories = 2100
+            base_water = 3.0
+        
+        # Add some random variation
+        calories.append(round(base_calories + np.random.normal(0, 100)))
+        protein.append(round(base_protein + np.random.normal(0, 10)))
+        carbs.append(round(base_carbs + np.random.normal(0, 20)))
+        fat.append(round(base_fat + np.random.normal(0, 8)))
+        water.append(round(base_water + np.random.normal(0, 0.5), 1))
+    
+    # Create DataFrame
+    nutrition_data = pd.DataFrame({
+        'Date': dates,
+        'Calories': calories,
+        'Protein (g)': protein,
+        'Carbs (g)': carbs,
+        'Fat (g)': fat,
+        'Water (L)': water
+    })
+    
+    return nutrition_data
