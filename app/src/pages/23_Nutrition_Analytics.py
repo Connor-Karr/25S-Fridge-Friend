@@ -551,3 +551,54 @@ with tab4:
                     file_name="gluten_free_guide.txt",
                     mime="text/plain"
                 )
+# Generate report section
+st.markdown("---")
+st.subheader("🔄 Generate Nutrition Reports")
+
+with st.form("generate_report_form"):
+    col1, col2 = st.columns(2)
+    with col1:
+        report_type = st.selectbox(
+            "Report Type:",
+            ["Client Summary", "Diet Compliance", "Nutrition Analysis", "Allergy Management"]
+        )
+        client_selection = st.multiselect(
+            "Select clients:",
+            [client["name"] for client in clients],
+            default=[clients[0]["name"]] if clients else []
+        )
+    with col2:
+        include_charts = st.checkbox("Include charts", value=True)
+        include_recommendations = st.checkbox("Include recommendations", value=True)
+        report_format = st.selectbox(
+            "Report format:",
+            ["PDF", "Excel", "Text"]
+        )
+    
+    submit = st.form_submit_button("Generate Report")
+    
+    if submit:
+        if client_selection:
+            with st.spinner("Generating report..."):
+                time.sleep(2)
+                report_content = f"""
+                # Nutrition Analysis Report
+                Report Type: {report_type}
+                Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}
+                
+                ## Clients Included
+                {', '.join(client_selection)}
+                
+                ## Summary
+                This report provides a detailed analysis of nutritional data for the selected clients over the specified time period.
+                
+                ## Key Findings
+                - Diet compliance averages 78% across all clients
+                - Protein intake is consistently below target for 60% of clients
+                """
+                st.download_button(
+                    label="Download Report",
+                    data=report_content,
+                    file_name=f"nutrition_report_{datetime.now().strftime('%Y%m%d')}.txt",
+                    mime="text/plain"
+                )
