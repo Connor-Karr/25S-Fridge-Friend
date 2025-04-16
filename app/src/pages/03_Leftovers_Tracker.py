@@ -274,3 +274,17 @@ with tab2:
         
         if st.button("Go to Meal Suggestions"):
             st.switch_page("pages/02_Meal_Suggestions.py")
+
+# Display tips
+st.markdown("---")
+st.subheader("Tips for Leftover Storage")
+tips = [
+    "🕒 Most cooked leftovers stay good for 3-4 days in the refrigerator",
+    "🥶 Freezing leftovers can extend their life to 2-3 months",
+    "🔥 Always reheat leftovers to at least 165°F (74°C) before eating",
+    "📦 Store leftovers in air-tight containers to maintain freshness",
+    "🧊 Cool hot food before refrigerating to prevent bacterial growth"
+]
+
+for tip in tips:
+    st.info(tip)
