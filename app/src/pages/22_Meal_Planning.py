@@ -108,3 +108,5 @@ recipes = [
     {"id": 7, "name": "Mediterranean Salad", "calories": 310, "protein": 14, "carbs": 20, "fat": 19, "tags": ["mediterranean", "low-carb", "vegetarian"]},
     {"id": 8, "name": "Protein Smoothie", "calories": 290, "protein": 30, "carbs": 28, "fat": 5, "tags": ["breakfast", "high-protein", "quick"]}
 ]
+# Create different tabs
+tab1, tab2, tab3 = st.tabs(["Current Meal Plans", "Create New Plan", "Recipe Database"])
