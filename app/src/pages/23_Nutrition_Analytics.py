@@ -28,3 +28,27 @@ clients = [
     {"id": 4, "name": "Emma L.", "age": 19, "goal": "Performance", "diet": "Keto"},
     {"id": 5, "name": "David W.", "age": 55, "goal": "Health", "diet": "Mediterranean"}
 ]
+# Time period selection
+time_period = st.selectbox(
+    "Analysis Period:",
+    ["Last 30 Days", "Last 3 Months", "Last 6 Months", "Year to Date", "Custom Range"]
+)
+
+if time_period == "Custom Range":
+    date_range = st.date_input(
+        "Select date range:",
+        value=(datetime.now().date() - timedelta(days=30), datetime.now().date()),
+        max_value=datetime.now().date()
+    )
+else:
+    if time_period == "Last 30 Days":
+        days = 30
+    elif time_period == "Last 3 Months":
+        days = 90
+    elif time_period == "Last 6 Months":
+        days = 180
+    else:  # Year to Date
+        start_of_year = datetime(datetime.now().year, 1, 1).date()
+        days = (datetime.now().date() - start_of_year).days
+
+    date_range = (datetime.now().date() - timedelta(days=days), datetime.now().date())
