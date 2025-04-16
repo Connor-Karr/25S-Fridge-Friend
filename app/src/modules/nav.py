@@ -7,10 +7,6 @@ def SideBarLinks(role=None):
         role: The user's role (busy_student, admin, nutritionist, athlete)
     """
 
-# Add logo to sidebar
-    # In a real app, replace with your logo file path
-    st.sidebar.image("https://via.placeholder.com/150x150.png?text=FridgeFriend", width=120)
-
 # Add a home button
     st.sidebar.page_link("Home.py", label="🏠 Home")
 
