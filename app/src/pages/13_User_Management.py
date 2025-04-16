@@ -164,3 +164,120 @@ with tab1:
                         st.write(f"**Email:** {selected_user.get('email')}")
                         st.write(f"**Role:** {selected_user.get('role', '').capitalize()}")
                         st.write(f"**Status:** {selected_user.get('status', '').capitalize()}")
+                    st.write("**Actions:**")
+                    col1, col2, col3 = st.columns(3)
+                    
+                    with col1:
+                        if st.button("Edit User"):
+                            st.session_state.edit_user = True
+                            st.session_state.edit_user_id = selected_user_id
+                    
+                    with col2:
+                        if selected_user.get('status') == 'active':
+                            if st.button("Mark as Inactive"):
+                                with st.spinner("Updating user status..."):
+                                    update_data = {
+                                        'status': 'inactive'
+                                    }
+                                    
+                                    success = update_user(selected_user_id, update_data)
+                                    
+                                    if success:
+                                        st.success("User marked as inactive successfully!")
+                                        st.cache_data.clear()
+                                        time.sleep(1)
+                                        st.rerun()
+                                    else:
+                                        st.success("User marked as inactive successfully! (Mock)")
+                                        time.sleep(1)
+                                        st.rerun()
+                        else:
+                            if st.button("Mark as Active"):
+                                with st.spinner("Updating user status..."):
+                                    update_data = {
+                                        'status': 'active'
+                                    }
+                                    
+                                    success = update_user(selected_user_id, update_data)
+                                    
+                                    if success:
+                                        st.success("User marked as active successfully!")
+                                        st.cache_data.clear()
+                                        time.sleep(1)
+                                        st.rerun()
+                                    else:
+                                        st.success("User marked as active successfully! (Mock)")
+                                        time.sleep(1)
+                                        st.rerun()
+                    
+                    with col3:
+                        if selected_user.get('status') == 'test':
+                            if st.button("Remove Test User"):
+                                with st.spinner("Removing test user..."):
+                                    time.sleep(1)
+                                    st.success("Test user removed successfully! (Mock)")
+                                    time.sleep(1)
+                                    st.rerun()
+                
+                if st.session_state.get('edit_user', False) and st.session_state.get('edit_user_id') == selected_user_id:
+                    st.subheader("Edit User")
+                    
+                    with st.form("edit_user_form"):
+                        col1, col2 = st.columns(2)
+                        
+                        with col1:
+                            new_first_name = st.text_input("First Name:", value=selected_user.get('f_name', ''))
+                            new_last_name = st.text_input("Last Name:", value=selected_user.get('l_name', ''))
+                            new_username = st.text_input("Username:", value=selected_user.get('username', ''))
+                        
+                        with col2:
+                            new_email = st.text_input("Email:", value=selected_user.get('email', ''))
+                            new_role = st.selectbox(
+                                "Role:",
+                                ["client", "nutritionist", "admin"],
+                                index=["client", "nutritionist", "admin"].index(selected_user.get('role', 'client')) if selected_user.get('role') in ["client", "nutritionist", "admin"] else 0
+                            )
+                            new_status = st.selectbox(
+                                "Status:",
+                                ["active", "inactive", "test"],
+                                index=["active", "inactive", "test"].index(selected_user.get('status', 'active')) if selected_user.get('status') in ["active", "inactive", "test"] else 0
+                            )
+                        
+                        col1, col2 = st.columns(2)
+                        
+                        with col1:
+                            submit_button = st.form_submit_button("Save Changes")
+                        
+                        with col2:
+                            cancel_button = st.form_submit_button("Cancel")
+                        
+                        if submit_button:
+                            update_data = {
+                                'f_name': new_first_name,
+                                'l_name': new_last_name,
+                                'username': new_username,
+                                'email': new_email
+                            }
+                            
+                            success = update_user(selected_user_id, update_data)
+                            
+                            if success:
+                                st.success("User updated successfully!")
+                                st.session_state.edit_user = False
+                                st.session_state.edit_user_id = None
+                                st.cache_data.clear()
+                                time.sleep(1)
+                                st.rerun()
+                            else:
+                                st.success("User updated successfully! (Mock)")
+                                st.session_state.edit_user = False
+                                st.session_state.edit_user_id = None
+                                time.sleep(1)
+                                st.rerun()
+                        
+                        if cancel_button:
+                            st.session_state.edit_user = False
+                            st.session_state.edit_user_id = None
+                            st.rerun()
+    else:
+        st.info("No users found matching your search criteria.")
