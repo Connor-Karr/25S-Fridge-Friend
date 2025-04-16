@@ -991,3 +991,288 @@ with tab4:
     Based on your performance and nutrition data, here are personalized recommendations 
     to optimize your nutrition for better performance.
     """)
+
+# Create nutrition target recommendations
+    target_calories = round(combined_data['Calories'].mean())
+    target_protein = round(combined_data['Protein (g)'].mean())
+    target_carbs = round(combined_data['Carbs (g)'].mean())
+    target_fat = round(combined_data['Fat (g)'].mean())
+    target_water = round(combined_data['Water (L)'].mean(), 1)
+    
+    # Adjust targets based on performance correlations
+    # Calories adjustment
+    cal_energy_corr = combined_data[['Calories', 'Energy (1-10)']].corr().iloc[0, 1]
+    cal_recovery_corr = combined_data[['Calories', 'Recovery (1-10)']].corr().iloc[0, 1]
+    if cal_energy_corr > 0.3 or cal_recovery_corr > 0.3:
+        target_calories = round(target_calories * 1.05)  # Increase by 5%
+    elif cal_energy_corr < -0.3 or cal_recovery_corr < -0.3:
+        target_calories = round(target_calories * 0.95)  # Decrease by 5%
+    
+    # Protein adjustment
+    protein_recovery_corr = combined_data[['Protein (g)', 'Recovery (1-10)']].corr().iloc[0, 1]
+    if protein_recovery_corr > 0.3:
+        target_protein = round(target_protein * 1.1)  # Increase by 10%
+    elif protein_recovery_corr < -0.3:
+        target_protein = round(target_protein * 0.95)  # Decrease by 5%
+    
+    # Carbs adjustment
+    carbs_energy_corr = combined_data[['Carbs (g)', 'Energy (1-10)']].corr().iloc[0, 1]
+    if carbs_energy_corr > 0.3:
+        target_carbs = round(target_carbs * 1.1)  # Increase by 10%
+    elif carbs_energy_corr < -0.3:
+        target_carbs = round(target_carbs * 0.95)  # Decrease by 5%
+    
+    # Display current averages and targets
+    st.write("### Nutrition Targets")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric(
+            "Daily Calories", 
+            f"{target_calories} kcal", 
+            delta=f"{target_calories - round(combined_data['Calories'].mean())} kcal"
+        )
+        st.metric(
+            "Protein", 
+            f"{target_protein} g", 
+            delta=f"{target_protein - round(combined_data['Protein (g)'].mean())} g"
+        )
+    
+    with col2:
+        st.metric(
+            "Carbohydrates", 
+            f"{target_carbs} g", 
+            delta=f"{target_carbs - round(combined_data['Carbs (g)'].mean())} g"
+        )
+        st.metric(
+            "Fat", 
+            f"{target_fat} g", 
+            delta=f"{target_fat - round(combined_data['Fat (g)'].mean())} g"
+        )
+    
+    with col3:
+        st.metric(
+            "Water", 
+            f"{target_water} L", 
+            delta=f"{target_water - round(combined_data['Water (L)'].mean(), 1)} L"
+        )
+    
+    # Workout-specific nutrition recommendations
+    st.write("### Workout-Specific Recommendations")
+    
+    # Create recommendations for different workout types
+    workout_recommendations = {
+        "Long Run": {
+            "carbs": "8-10g/kg body weight (day before)",
+            "protein": "1.6-1.8g/kg body weight",
+            "timing": "Carb-heavy dinner night before, breakfast 3h before",
+            "hydration": "500-750ml per hour during run"
+        },
+        "Tempo Run": {
+            "carbs": "6-8g/kg body weight",
+            "protein": "1.6-1.8g/kg body weight",
+            "timing": "Carbs 2-3h before, recovery nutrition within 30min after",
+            "hydration": "400-600ml per hour during run"
+        },
+        "Interval Training": {
+            "carbs": "6-8g/kg body weight",
+            "protein": "1.8-2.0g/kg body weight",
+            "timing": "Small snack 1-2h before, protein+carbs within 30min after",
+            "hydration": "500-750ml per hour during training"
+        },
+        "Easy Run": {
+            "carbs": "5-7g/kg body weight",
+            "protein": "1.6-1.8g/kg body weight",
+            "timing": "Normal meal timing, no special considerations needed",
+            "hydration": "400-600ml per hour during run"
+        }
+    }
+    
+    # Create tabs for each workout type
+    workout_tabs = st.tabs(list(workout_recommendations.keys()))
+    
+    for i, (workout_type, recommendations) in enumerate(workout_recommendations.items()):
+        with workout_tabs[i]:
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.write("**Nutritional Targets:**")
+                st.write(f"Carbohydrates: {recommendations['carbs']}")
+                st.write(f"Protein: {recommendations['protein']}")
+                st.write(f"Timing: {recommendations['timing']}")
+                st.write(f"Hydration: {recommendations['hydration']}")
+            
+            with col2:
+                st.write("**Sample Pre-Workout Meal:**")
+                
+                if workout_type == "Long Run":
+                    st.write("- Oatmeal with banana, honey, and almond butter")
+                    st.write("- Toast with jam")
+                    st.write("- Coffee or tea")
+                elif workout_type == "Tempo Run":
+                    st.write("- Greek yogurt with berries and granola")
+                    st.write("- Banana")
+                    st.write("- Small coffee (if tolerated)")
+                elif workout_type == "Interval Training":
+                    st.write("- Rice cake with nut butter and honey")
+                    st.write("- Small apple")
+                    st.write("- Water")
+                else:  # Easy Run
+                    st.write("- Normal balanced meal 1-2 hours before")
+                    st.write("- No special considerations needed")
+                
+                st.write("**Sample Post-Workout Meal:**")
+                
+                if workout_type == "Long Run":
+                    st.write("- Protein smoothie with banana and berries")
+                    st.write("- Peanut butter sandwich")
+                    st.write("- Chocolate milk")
+                elif workout_type == "Tempo Run":
+                    st.write("- Protein shake")
+                    st.write("- Banana or energy bar")
+                    st.write("- Complete meal within 2 hours")
+                elif workout_type == "Interval Training":
+                    st.write("- Recovery shake with 3:1 carb:protein ratio")
+                    st.write("- Piece of fruit")
+                    st.write("- Complete meal within 2 hours")
+                else:  # Easy Run
+                    st.write("- Normal balanced meal")
+                    st.write("- Focus on hydration")
+    
+    # Periodized nutrition planner
+    st.write("### Periodized Nutrition Plan")
+    
+    st.write("""
+    This tool helps you match your nutrition strategy with your training periodization 
+    for optimal performance and recovery.
+    """)
+    
+    # Create form for training phase input
+    with st.form("periodized_nutrition_form"):
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            training_phase = st.selectbox(
+                "Current training phase:",
+                ["Base Building", "Build Phase", "Peak Phase", "Taper", "Race Week", "Recovery"]
+            )
+            
+            weight = st.number_input("Weight (lbs):", min_value=80, max_value=300, value=150)
+        
+        with col2:
+            training_hours = st.slider("Weekly training hours:", min_value=3, max_value=20, value=8)
+            
+            goal = st.selectbox(
+                "Primary goal:",
+                ["General Fitness", "Performance", "Weight Management", "Recovery"]
+            )
+        
+        submit_button = st.form_submit_button("Generate Nutrition Plan")
+        
+        if submit_button:
+            # Convert weight to kg
+            weight_kg = weight * 0.453592
+            
+            # Calculate base nutrition needs
+            if training_phase == "Base Building":
+                carbs_g_per_kg = 5
+                protein_g_per_kg = 1.6
+                fat_g_per_kg = 1.0
+                adjust_text = "Focus on establishing good nutritional habits and fueling for general training."
+            elif training_phase == "Build Phase":
+                carbs_g_per_kg = 6 + (training_hours / 10)  # Increase with training volume
+                protein_g_per_kg = 1.8
+                fat_g_per_kg = 1.0
+                adjust_text = "Increase carbohydrates to support higher training load."
+            elif training_phase == "Peak Phase":
+                carbs_g_per_kg = 7 + (training_hours / 8)
+                protein_g_per_kg = 2.0
+                fat_g_per_kg = 0.8
+                adjust_text = "Prioritize carbohydrates for workout fueling and recovery."
+            elif training_phase == "Taper":
+                carbs_g_per_kg = 6
+                protein_g_per_kg = 1.8
+                fat_g_per_kg = 0.8
+                adjust_text = "Maintain high carbs while reducing calories slightly as training volume decreases."
+            elif training_phase == "Race Week":
+                carbs_g_per_kg = 8 + (training_hours / 5)
+                protein_g_per_kg = 1.6
+                fat_g_per_kg = 0.6
+                adjust_text = "Implement carb-loading protocol 2-3 days before race."
+            else:  # Recovery
+                carbs_g_per_kg = 4
+                protein_g_per_kg = 2.0
+                fat_g_per_kg = 1.2
+                adjust_text = "Focus on protein for recovery and anti-inflammatory foods."
+            
+            # Apply goal-specific adjustments
+            if goal == "Weight Management":
+                carbs_g_per_kg *= 0.9  # Reduce carbs slightly
+                fat_g_per_kg *= 0.9  # Reduce fat slightly
+            elif goal == "Performance":
+                carbs_g_per_kg *= 1.1  # Increase carbs
+            elif goal == "Recovery":
+                protein_g_per_kg *= 1.1  # Increase protein
+            
+            # Calculate total macros
+            carbs = round(weight_kg * carbs_g_per_kg)
+            protein = round(weight_kg * protein_g_per_kg)
+            fat = round(weight_kg * fat_g_per_kg)
+            
+            # Calculate calories
+            calories = (carbs * 4) + (protein * 4) + (fat * 9)
+            
+            # Display nutrition plan
+            st.success("Personalized Nutrition Plan Generated!")
+            
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.metric("Daily Calories", f"{calories} kcal")
+            
+            with col2:
+                st.metric("Protein", f"{protein}g ({round(protein/weight_kg, 1)}g/kg)")
+            
+            with col3:
+                st.metric("Carbs", f"{carbs}g ({round(carbs/weight_kg, 1)}g/kg)")
+            
+            st.write(f"**Fat:** {fat}g ({round(fat/weight_kg, 1)}g/kg)")
+            
+            st.write(f"**Adjustment Strategy:** {adjust_text}")
+            
+            # Macro ratio
+            protein_pct = round((protein * 4) / calories * 100)
+            carbs_pct = round((carbs * 4) / calories * 100)
+            fat_pct = round((fat * 9) / calories * 100)
+            
+            # Create macro ratio pie chart
+            macro_data = pd.DataFrame({
+                'Macronutrient': ['Carbs', 'Protein', 'Fat'],
+                'Percentage': [carbs_pct, protein_pct, fat_pct]
+            })
+            
+            fig = px.pie(
+                macro_data,
+                values='Percentage',
+                names='Macronutrient',
+                title='Recommended Macro Ratio',
+                color_discrete_sequence=px.colors.qualitative.Set2
+            )
+            
+            fig.update_layout(height=300)
+            
+            st.plotly_chart(fig, use_container_width=True)
+            
+            # Workout-specific recommendations
+            st.subheader("Workout-Day Adjustments")
+            
+            st.write("**Hard Workout Days:**")
+            st.write(f"- Increase carbs to {round(carbs * 1.2)}g (+20%)")
+            st.write("- Consume ~60% of daily carbs in the meals before and after workout")
+            st.write("- Consider intra-workout nutrition for sessions >90 minutes")
+            
+            st.write("**Easy/Recovery Days:**")
+            st.write(f"- Decrease carbs to {round(carbs * 0.8)}g (-20%)")
+            st.write(f"- Maintain protein at {protein}g to support recovery")
+            st.write("- Focus on nutrient-dense foods and adequate hydration")
