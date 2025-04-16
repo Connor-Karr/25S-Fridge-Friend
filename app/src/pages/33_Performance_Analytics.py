@@ -694,3 +694,300 @@ with tab2:
         bin_size = 0.5
         min_val = (combined_data[nutrition_metric].min() // bin_size) * bin_size
         max_val = ((combined_data[nutrition_metric].max() // bin_size) + 1) * bin_size
+
+# Create bins
+    bins = np.arange(min_val, max_val + bin_size, bin_size)
+    bin_labels = [f"{b} - {b+bin_size}" for b in bins[:-1]]
+    
+    # Bin the nutrition data
+    combined_data['Nutrition Bin'] = pd.cut(
+        combined_data[nutrition_metric],
+        bins=bins,
+        labels=bin_labels,
+        include_lowest=True
+    )
+    
+    # Group by nutrition bin
+    bin_groups = combined_data.groupby("Nutrition Bin").agg({
+        performance_metric: ["mean", "count"]
+    }).reset_index()
+    
+    bin_groups.columns = ["Nutrition Bin", "Performance Mean", "Count"]
+    
+    # Only include bins with sufficient data
+    bin_groups = bin_groups[bin_groups["Count"] >= 3]
+    
+    if not bin_groups.empty:
+        # Create bar chart
+        fig = px.bar(
+            bin_groups,
+            x="Nutrition Bin",
+            y="Performance Mean",
+            title=f"Average {performance_metric} by {nutrition_metric} Range",
+            color="Performance Mean",
+            color_continuous_scale=px.colors.sequential.Viridis
+        )
+        
+        # Add count as text
+        fig.update_traces(text=bin_groups["Count"], textposition='outside')
+        
+        # Find optimal nutrition level
+        optimal_bin = bin_groups.loc[bin_groups["Performance Mean"].idxmax()]
+        
+        # Add annotation for optimal level
+        fig.add_annotation(
+            x=optimal_bin["Nutrition Bin"],
+            y=optimal_bin["Performance Mean"],
+            text="Optimal Range",
+            showarrow=True,
+            arrowhead=1
+        )
+        
+        fig.update_layout(height=400)
+        
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # Show interpretation
+        st.info(f"**Optimal Range:** Your {performance_metric} appears to be highest when your {nutrition_metric} is in the range of {optimal_bin['Nutrition Bin']}.")
+    else:
+        st.warning("Not enough data to determine optimal nutrition levels. Try adjusting the date range or metrics.")
+
+# Recovery Analysis Tab
+with tab3:
+    st.subheader("Recovery Analysis")
+    
+    # Workout impact on recovery
+    st.write("### Workout Impact on Recovery")
+    
+    # Calculate next-day recovery by workout type
+    workout_recovery = []
+    
+    for i in range(len(combined_data)-1):
+        current_workout = combined_data.iloc[i]
+        next_day_recovery = combined_data.iloc[i+1]["Recovery (1-10)"]
+        
+        workout_recovery.append({
+            "Workout Type": current_workout["Workout"],
+            "RPE (0-10)": current_workout["RPE (0-10)"],
+            "Duration (min)": current_workout["Duration (min)"],
+            "Next Day Recovery": next_day_recovery
+        })
+    
+    workout_recovery_df = pd.DataFrame(workout_recovery)
+    
+    # Group by workout type
+    workout_recovery_groups = workout_recovery_df.groupby("Workout Type").agg({
+        "Next Day Recovery": "mean",
+        "RPE (0-10)": "mean",
+        "Duration (min)": "mean"
+    }).reset_index()
+    
+    # Only include workout types with data
+    workout_recovery_groups = workout_recovery_groups[workout_recovery_groups["Workout Type"] != "Rest"]
+    
+    if not workout_recovery_groups.empty:
+        # Create horizontal bar chart
+        fig = px.bar(
+            workout_recovery_groups,
+            y="Workout Type",
+            x="Next Day Recovery",
+            orientation='h',
+            title="Average Next-Day Recovery by Workout Type",
+            color="RPE (0-10)",
+            color_continuous_scale=px.colors.sequential.Plasma,
+            hover_data=["Duration (min)"]
+        )
+        
+        fig.update_layout(height=400)
+        
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # Nutrition impact on recovery
+    st.write("### Nutrition Impact on Recovery")
+    
+    # Select two nutrition metrics
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        x_metric = st.selectbox(
+            "Select first nutrition metric:",
+            ["Protein (g)", "Carbs (g)", "Fat (g)", "Calories", "Water (L)"],
+            index=0
+        )
+    
+    with col2:
+        y_metric = st.selectbox(
+            "Select second nutrition metric:",
+            ["Protein (g)", "Carbs (g)", "Fat (g)", "Calories", "Water (L)"],
+            index=1
+        )
+    
+    # Create scatter plot with recovery as color
+    fig = px.scatter(
+        combined_data,
+        x=x_metric,
+        y=y_metric,
+        color="Recovery (1-10)",
+        title=f"Recovery by {x_metric} and {y_metric}",
+        color_continuous_scale=px.colors.sequential.Viridis,
+        hover_data=["Date", "Workout", "RPE (0-10)"]
+    )
+    
+    # Add quadrant lines at the median of each metric
+    x_median = combined_data[x_metric].median()
+    y_median = combined_data[y_metric].median()
+    
+    fig.add_vline(
+        x=x_median,
+        line_dash="dash",
+        line_color="gray"
+    )
+    
+    fig.add_hline(
+        y=y_median,
+        line_dash="dash",
+        line_color="gray"
+    )
+    
+    # Add quadrant annotations
+    fig.add_annotation(
+        x=combined_data[x_metric].max() * 0.75,
+        y=combined_data[y_metric].max() * 0.75,
+        text=f"High {x_metric}, High {y_metric}",
+        showarrow=False,
+        font=dict(size=10)
+    )
+    
+    fig.add_annotation(
+        x=combined_data[x_metric].min() * 1.25,
+        y=combined_data[y_metric].max() * 0.75,
+        text=f"Low {x_metric}, High {y_metric}",
+        showarrow=False,
+        font=dict(size=10)
+    )
+    
+    fig.add_annotation(
+        x=combined_data[x_metric].max() * 0.75,
+        y=combined_data[y_metric].min() * 1.25,
+        text=f"High {x_metric}, Low {y_metric}",
+        showarrow=False,
+        font=dict(size=10)
+    )
+    
+    fig.add_annotation(
+        x=combined_data[x_metric].min() * 1.25,
+        y=combined_data[y_metric].min() * 1.25,
+        text=f"Low {x_metric}, Low {y_metric}",
+        showarrow=False,
+        font=dict(size=10)
+    )
+    
+    fig.update_layout(height=500)
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Recovery timeline visualization
+    st.write("### Recovery Timeline After Hard Workouts")
+    
+    # Define hard workouts as RPE >= 7
+    hard_workouts = combined_data[combined_data['RPE (0-10)'] >= 7]
+    
+    if not hard_workouts.empty:
+        # Find recovery patterns after hard workouts
+        recovery_patterns = []
+        
+        for index, workout in hard_workouts.iterrows():
+            workout_date = workout['Date']
+            workout_date_dt = datetime.strptime(workout_date, '%Y-%m-%d')
+            
+            # Get next 3 days of recovery data
+            recovery_days = []
+            
+            for i in range(1, 4):
+                next_date = (workout_date_dt + timedelta(days=i)).strftime('%Y-%m-%d')
+                next_day_data = combined_data[combined_data['Date'] == next_date]
+                
+                if not next_day_data.empty:
+                    recovery_days.append({
+                        "Day": i,
+                        "Recovery": next_day_data['Recovery (1-10)'].values[0],
+                        "Workout Type": workout['Workout'],
+                        "Workout Date": workout_date,
+                        "RPE": workout['RPE (0-10)']
+                    })
+            
+            recovery_patterns.extend(recovery_days)
+        
+        recovery_df = pd.DataFrame(recovery_patterns)
+        
+        if not recovery_df.empty:
+            # Group by day after workout
+            recovery_by_day = recovery_df.groupby("Day").agg({
+                "Recovery": "mean"
+            }).reset_index()
+            
+            # Create line chart
+            fig = px.line(
+                recovery_by_day,
+                x="Day",
+                y="Recovery",
+                title="Average Recovery Pattern After Hard Workouts",
+                markers=True,
+                line_shape="spline"
+            )
+            
+            # Update x-axis to show days
+            fig.update_xaxes(
+                tickvals=[1, 2, 3],
+                ticktext=["Day 1", "Day 2", "Day 3"]
+            )
+            
+            fig.update_layout(
+                height=350,
+                xaxis_title="Days After Hard Workout",
+                yaxis_title="Recovery Score (1-10)"
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+            
+            # Show recovery by workout type
+            recovery_by_type = recovery_df.groupby(["Workout Type", "Day"]).agg({
+                "Recovery": "mean"
+            }).reset_index()
+            
+            # Create line chart by workout type
+            fig = px.line(
+                recovery_by_type,
+                x="Day",
+                y="Recovery",
+                color="Workout Type",
+                title="Recovery Patterns by Workout Type",
+                markers=True
+            )
+            
+            # Update x-axis to show days
+            fig.update_xaxes(
+                tickvals=[1, 2, 3],
+                ticktext=["Day 1", "Day 2", "Day 3"]
+            )
+            
+            fig.update_layout(
+                height=350,
+                xaxis_title="Days After Workout",
+                yaxis_title="Recovery Score (1-10)"
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("Not enough recovery data available after hard workouts.")
+    else:
+        st.info("No hard workouts (RPE >= 7) found in the selected date range.")
+
+# Optimization Tab
+with tab4:
+    st.subheader("Nutrition Optimization Recommendations")
+    
+    st.write("""
+    Based on your performance and nutrition data, here are personalized recommendations 
+    to optimize your nutrition for better performance.
+    """)
