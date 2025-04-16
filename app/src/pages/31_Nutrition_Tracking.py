@@ -537,3 +537,29 @@ with tab3:
     # Display insights
     for insight in insights:
         st.write(insight)
+
+# Recommendations based on insights
+    st.subheader("Recommendations")
+    
+    recommendations = []
+    
+    # Generate recommendations based on the nutrition data
+    if avg_protein < targets["Protein"] * 0.9:
+        recommendations.append("Add a post-workout protein shake (25-30g protein) to boost your daily intake.")
+    
+    if avg_carbs < targets["Carbs"] * 0.9:
+        recommendations.append("Include more whole grains, fruits, and starchy vegetables to increase your carbohydrate intake.")
+    
+    if avg_fat < targets["Fat"] * 0.8:
+        recommendations.append("Add 1-2 servings of healthy fats daily (avocado, nuts, olive oil) to reach optimal fat intake.")
+    
+    if avg_calories < targets["Calories"] * 0.9:
+        recommendations.append("Increase portion sizes slightly at each meal to ensure adequate energy intake for training.")
+    
+    # Display recommendations
+    for i, recommendation in enumerate(recommendations):
+        st.write(f"{i+1}. {recommendation}")
+    
+    # If no recommendations (all metrics on target)
+    if not recommendations:
+        st.success("Your nutrition is well-balanced! Continue with your current approach as it's supporting your training needs effectively.")
