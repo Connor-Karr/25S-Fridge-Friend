@@ -419,3 +419,202 @@ with tab2:
             if st.button("Use This Template", key=f"use_plan_{i}"):
                 st.success(f"Race day template selected: {plan['name']}")
                 st.info("This would create personalized meal plans based on the template in a real app.")
+
+# Recovery Tab
+with tab3:
+    st.subheader("Recovery Nutrition")
+    st.write("Optimize your recovery with targeted nutrition strategies")
+    
+    # Recovery nutrition calculator
+    st.write("### Recovery Nutrition Calculator")
+    
+    with st.form("recovery_calculator"):
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            workout_type = st.selectbox(
+                "Workout Type:",
+                ["Easy Run", "Tempo Run", "Long Run", "Interval Training", "Race", "Cross-Training"]
+            )
+            
+            duration = st.slider("Duration (minutes):", min_value=15, max_value=240, value=60)
+        
+        with col2:
+            intensity = st.select_slider("Intensity:", options=["Low", "Moderate", "High", "Very High"])
+            
+            weight = st.number_input("Weight (lbs):", min_value=80, max_value=300, value=150)
+        
+        calculate_button = st.form_submit_button("Calculate Recovery Needs")
+        
+        if calculate_button:
+            # Convert weight to kg
+            weight_kg = weight * 0.453592
+            
+            # Calculate calorie burn (very simplified)
+            intensity_factor = {
+                "Low": 6,
+                "Moderate": 8,
+                "High": 10,
+                "Very High": 12
+            }
+            
+            calories_per_min_per_kg = intensity_factor[intensity]
+            calories_burned = calories_per_min_per_kg * weight_kg * duration / 60
+            
+            # Calculate macros for recovery
+            carb_factor = 0
+            protein_factor = 0
+            
+            if intensity in ["High", "Very High"] or duration > 90:
+                carb_factor = 1.0  # g/kg
+                protein_factor = 0.3  # g/kg
+            elif intensity == "Moderate" or duration > 60:
+                carb_factor = 0.7  # g/kg
+                protein_factor = 0.25  # g/kg
+            else:
+                carb_factor = 0.5  # g/kg
+                protein_factor = 0.2  # g/kg
+            
+            carb_needs = weight_kg * carb_factor
+            protein_needs = weight_kg * protein_factor
+            
+            # Display results
+            st.markdown("### Recovery Nutrition Plan")
+            
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.metric("Calories Burned", f"{calories_burned:.0f} kcal")
+            
+            with col2:
+                st.metric("Carbohydrate Target", f"{carb_needs:.0f}g")
+            
+            with col3:
+                st.metric("Protein Target", f"{protein_needs:.0f}g")
+            
+            # Recovery timing recommendations
+            st.subheader("Recovery Timeline")
+            
+            st.write("**0-30 minutes post-workout:**")
+            st.write(f"- Consume {carb_needs:.0f}g carbs and {protein_needs:.0f}g protein")
+            st.write("- Focus on fast-digesting options")
+            st.write(f"- Drink 16-24 oz fluid per pound of weight lost")
+            
+            st.write("**1-2 hours post-workout:**")
+            st.write("- Complete balanced meal with protein, carbs, and vegetables")
+            st.write("- Continue hydrating")
+            
+            st.write("**Throughout day:**")
+            st.write("- Ensure total daily protein intake of 1.6-2.0g/kg body weight")
+            st.write(f"- Maintain at least {weight_kg * 6:.0f}g total daily carbs for glycogen replenishment")
+            
+            # Example recovery meals
+            st.subheader("Example Recovery Options")
+            
+            if intensity in ["High", "Very High"] or duration > 90:
+                st.info("**High-Intensity Recovery Options:**")
+                st.write("1. Protein smoothie with banana, berries, and protein powder")
+                st.write("2. Chocolate milk and a banana")
+                st.write("3. Greek yogurt with honey and fruit")
+                st.write("4. Turkey sandwich on white bread")
+            else:
+                st.info("**Moderate-Intensity Recovery Options:**")
+                st.write("1. Greek yogurt with berries")
+                st.write("2. Apple with nut butter")
+                st.write("3. Tuna on whole grain crackers")
+                st.write("4. Small protein shake")
+    
+    # Recovery nutrition science
+    st.markdown("---")
+    st.subheader("Recovery Nutrition Science")
+    
+    # Create tabs for different aspects of recovery
+    recovery_tabs = st.tabs(["Timing", "Protein Quality", "Hydration", "Micronutrients"])
+    
+    with recovery_tabs[0]:
+        st.write("### The Recovery Window")
+        
+        st.write("""
+        The ideal window for post-workout nutrition:
+        
+        - **The 30-Minute Window**: Research shows enhanced glycogen synthesis when carbs are consumed 
+          immediately after exercise.
+          
+        - **Extended Recovery**: While the 30-minute window is important, studies show recovery continues 
+          for 24+ hours after hard workouts.
+          
+        - **Practical Approach**: Consume fast-digesting carbs and protein within 30 minutes, followed by a 
+          complete meal within 2 hours.
+        """)
+        
+        # Create timeline visualization
+        timeline = pd.DataFrame({
+            'Time': ['0 min', '30 min', '2 hours', '24 hours'],
+            'Glycogen Synthesis Rate': [100, 80, 50, 30],
+            'Protein Synthesis Rate': [90, 100, 80, 60]
+        })
+        
+        fig = px.line(
+            timeline, 
+            x='Time', 
+            y=['Glycogen Synthesis Rate', 'Protein Synthesis Rate'],
+            title='Recovery Rates After Exercise',
+            markers=True
+        )
+        
+        fig.update_layout(height=350, yaxis_title='Relative Rate (%)')
+        
+        st.plotly_chart(fig, use_container_width=True)
+    
+    with recovery_tabs[1]:
+        st.write("### Protein Quality for Recovery")
+        
+        # Protein quality data
+        protein_data = pd.DataFrame({
+            'Protein Source': ['Whey', 'Casein', 'Egg', 'Soy', 'Pea', 'Rice', 'Collagen'],
+            'Leucine Content (g/25g protein)': [2.7, 2.3, 2.2, 1.8, 1.7, 1.4, 0.8],
+            'Digestion Rate (relative)': [95, 65, 80, 75, 70, 65, 60],
+            'PDCAAS Score (%)': [100, 100, 100, 91, 85, 65, 50]
+        })
+        
+        # Create bar chart for leucine content
+        fig = px.bar(
+            protein_data,
+            x='Protein Source',
+            y='Leucine Content (g/25g protein)',
+            title='Leucine Content by Protein Source (per 25g protein)',
+            color='PDCAAS Score (%)',
+            color_continuous_scale=px.colors.sequential.Viridis
+        )
+        
+        fig.update_layout(height=350)
+        
+        st.plotly_chart(fig, use_container_width=True)
+        
+        st.write("""
+        **Why Protein Quality Matters:**
+        
+        1. **Leucine Content**: Leucine is the primary amino acid that triggers muscle protein synthesis.
+        
+        2. **Digestion Rate**: Fast-digesting proteins like whey are ideal post-workout, while slow-digesting 
+           proteins like casein are better before bed.
+        
+        3. **Complete Amino Acid Profile**: PDCAAS score indicates how complete a protein's amino acid profile is 
+           relative to human needs.
+        
+        **Recommendation**: For optimal recovery, use a fast-digesting, high-leucine protein source immediately 
+        post-workout, followed by complete meals with mixed protein sources.
+        """)
+    
+    with recovery_tabs[2]:
+        st.write("### Hydration for Recovery")
+        
+        st.write("""
+        Proper hydration is critical for recovery because:
+        
+        - **Nutrient Transport**: Fluids help transport nutrients to muscles
+        - **Waste Removal**: Helps flush metabolic waste products
+        - **Temperature Regulation**: Supports continued cooling after exercise
+        - **Enzymatic Activity**: Optimal hydration improves recovery enzyme function
+**Hydration Guidelines:**
+        """)
