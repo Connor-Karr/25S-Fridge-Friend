@@ -563,3 +563,96 @@ with tab3:
     # If no recommendations (all metrics on target)
     if not recommendations:
         st.success("Your nutrition is well-balanced! Continue with your current approach as it's supporting your training needs effectively.")
+
+# Tracking resources
+st.markdown("---")
+st.subheader("📚 Nutrition Resources for Runners")
+
+# Create a container for the resources
+with st.container():
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.write("**Race Day Nutrition Guide**")
+        st.write("Learn how to fuel before, during, and after races")
+        if st.button("View Guide"):
+            with st.spinner("Loading guide..."):
+                time.sleep(1)
+                st.success("Guide loaded!")
+                st.markdown("""
+                ## Race Day Nutrition Guide
+                
+                ### Pre-Race (3-4 hours before)
+                - 400-600 calories
+                - 80-120g carbs
+                - Low fat and fiber
+                - Examples: Oatmeal with banana, toast with honey
+                
+                ### During Race
+                - 30-60g carbs per hour for races >60 min
+                - Stay hydrated with 16-20 oz fluid per hour
+                - Use easily digestible sources (gels, sports drinks)
+                
+                ### Post-Race
+                - 20-30g protein within 30 minutes
+                - 60-100g carbs within 2 hours
+                - Rehydrate with 20-24 oz fluid per pound lost
+                """)
+        
+        st.write("**Runner's Recipe Book**")
+        st.write("Quick, nutritious recipes optimized for training")
+        if st.button("Download Recipes"):
+            with st.spinner("Preparing download..."):
+                time.sleep(1)
+                st.success("Download ready!")
+                st.download_button(
+                    label="Download Recipe Book",
+                    data="Sample runner's recipe book content. Would contain actual recipes in a real app.",
+                    file_name="runners_recipes.txt",
+                    mime="text/plain"
+                )
+    
+    with col2:
+        st.write("**Training Phase Nutrition Calculator**")
+        st.write("Adjust your nutrition based on your training phase")
+        if st.button("Open Calculator"):
+            st.info("This would open a training phase calculator in a real app.")
+        
+        st.write("**Hydration Calculator**")
+        st.write("Calculate your personal hydration needs")
+        if st.button("Calculate Hydration Needs"):
+            with st.form("hydration_calculator"):
+                weight = st.number_input("Weight (lbs):", min_value=80, max_value=300, value=150)
+                activity_duration = st.number_input("Workout Duration (minutes):", min_value=15, max_value=240, value=60)
+                intensity = st.select_slider("Workout Intensity:", options=["Low", "Moderate", "High", "Very High"])
+                temperature = st.number_input("Temperature (°F):", min_value=40, max_value=110, value=75)
+                
+                submit_button = st.form_submit_button("Calculate")
+                
+                if submit_button:
+                    # Mock calculation
+                    base_fluid = weight * 0.5  # 0.5oz per pound of body weight
+                    
+                    # Adjustments for intensity
+                    intensity_factor = 1.0
+                    if intensity == "Moderate":
+                        intensity_factor = 1.2
+                    elif intensity == "High":
+                        intensity_factor = 1.5
+                    elif intensity == "Very High":
+                        intensity_factor = 1.8
+                    
+                    # Adjustments for temperature
+                    temp_factor = 1.0
+                    if temperature > 80:
+                        temp_factor = 1.3
+                    elif temperature > 90:
+                        temp_factor = 1.5
+                    elif temperature > 100:
+                        temp_factor = 1.8
+                    
+                    # Calculate fluid needs
+                    fluid_needs = base_fluid * intensity_factor * temp_factor * (activity_duration / 60)
+                    
+                    st.success(f"Recommended Fluid Intake: {fluid_needs:.1f} oz during your {activity_duration} minute workout")
+                    st.write(f"This equals approximately {fluid_needs/8:.1f} cups of water")
