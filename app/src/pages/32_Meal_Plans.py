@@ -66,3 +66,102 @@ def delete_meal_plan(meal_id):
     except Exception as e:
         st.error(f"Error: {str(e)}")
         return False
+
+# Create tabs for different meal plan categories
+tab1, tab2, tab3, tab4 = st.tabs(["Current Plans", "Race Day", "Recovery", "Training Phases"])
+
+# Current Plans Tab
+with tab1:
+    st.subheader("Current Meal Plans")
+    
+    # Get existing meal plans
+    meal_plans = get_meal_plans()
+    
+    # Mock meal plans if none are returned
+    if not meal_plans:
+        meal_plans = [
+            {"meal_id": 1, "recipe_id": 1, "recipe_name": "Pre-Run Oatmeal Bowl", "quantity": 1},
+            {"meal_id": 2, "recipe_id": 2, "recipe_name": "Recovery Protein Smoothie", "quantity": 1},
+            {"meal_id": 3, "recipe_id": 3, "recipe_name": "Salmon & Quinoa Dinner", "quantity": 1},
+            {"meal_id": 4, "recipe_id": 4, "recipe_name": "Carb-Loading Pasta", "quantity": 2}
+        ]
+    
+    # Mock recipe data with training phase tags
+    recipes = {
+        1: {
+            "name": "Pre-Run Oatmeal Bowl",
+            "description": "Quick energy oatmeal with banana and honey",
+            "calories": 380,
+            "protein": 12,
+            "carbs": 68,
+            "fat": 8,
+            "phase": "Pre-Workout"
+        },
+        2: {
+            "name": "Recovery Protein Smoothie",
+            "description": "Protein-packed smoothie with berries and banana",
+            "calories": 320,
+            "protein": 30,
+            "carbs": 42,
+            "fat": 5,
+            "phase": "Recovery"
+        },
+        3: {
+            "name": "Salmon & Quinoa Dinner",
+            "description": "Omega-3 rich salmon with quinoa and vegetables",
+            "calories": 450,
+            "protein": 35,
+            "carbs": 40,
+            "fat": 18,
+            "phase": "Maintenance"
+        },
+        4: {
+            "name": "Carb-Loading Pasta",
+            "description": "High-carb pasta dish for pre-race fueling",
+            "calories": 580,
+            "protein": 20,
+            "carbs": 95,
+            "fat": 12,
+            "phase": "Race Day"
+        }
+    }
+    
+    # Display meal plans grouped by training phase
+    if meal_plans:
+        # Group by phase
+        phases = set(recipes[meal["recipe_id"]]["phase"] for meal in meal_plans if meal["recipe_id"] in recipes)
+        
+        for phase in phases:
+            st.write(f"### {phase} Meals")
+            
+            phase_meals = [meal for meal in meal_plans 
+                          if meal["recipe_id"] in recipes and recipes[meal["recipe_id"]]["phase"] == phase]
+            
+            for meal in phase_meals:
+                recipe = recipes.get(meal["recipe_id"])
+                
+                if recipe:
+                    with st.expander(f"{recipe['name']} - {recipe['calories']} calories"):
+                        st.write(f"**Description:** {recipe['description']}")
+                        st.write(f"**Nutrition:** Protein: {recipe['protein']}g | Carbs: {recipe['carbs']}g | Fat: {recipe['fat']}g")
+                        st.write(f"**Servings:** {meal['quantity']}")
+                        
+                        col1, col2 = st.columns(2)
+                        
+                        with col1:
+                            if st.button("View Recipe", key=f"view_{meal['meal_id']}"):
+                                st.session_state.view_recipe = meal['recipe_id']
+                                st.success(f"Viewing recipe for {recipe['name']}")
+                        
+                        with col2:
+                            if st.button("Remove Plan", key=f"remove_{meal['meal_id']}"):
+                                if delete_meal_plan(meal['meal_id']):
+                                    st.success("Meal plan removed successfully!")
+                                    st.cache_data.clear()
+                                    time.sleep(1)
+                                    st.rerun()
+                                else:
+                                    # Mock successful removal
+                                    st.success("Meal plan removed successfully! (Mock)")
+                                    time.sleep(1)
+                                    st.rerun()
