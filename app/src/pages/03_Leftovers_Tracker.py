@@ -1,287 +1,187 @@
 import streamlit as st
 import pandas as pd
 import requests
-import time
 from datetime import datetime, timedelta
-import json
 from modules.nav import SideBarLinks
+
+# Add sidebar navigation
+SideBarLinks(st.session_state.role)
 
 # Authentication check
 if not st.session_state.get('authenticated', False) or st.session_state.role != "busy_student":
     st.warning("Please log in as Ben to access this page")
     st.stop()
 
-# Set up navigation
-SideBarLinks(st.session_state.role)
-
-# Page header
-st.title("🍱 Leftovers Tracker")
+# Page title
+st.title("Leftovers Tracker")
 st.write("Track and manage your leftover meals to reduce food waste")
 
-# Function to get leftovers
-@st.cache_data(ttl=300)
-def get_leftovers():
-    try:
-        response = requests.get("http://web-api:4000/leftovers")
-        
-        if response.status_code == 200:
-            data = response.json()
-            leftovers = []
-            
-            for item in data:
-                # Calculate days left (assuming leftovers last 5 days)
-                # In a real app, this would come from the API
-                created_date = datetime.now().date() - timedelta(days=1)  # Mock date
-                expire_date = created_date + timedelta(days=5)
-                days_left = (expire_date - datetime.now().date()).days
-                
-                leftovers.append({
-                    'id': item.get('leftover_id'),
-                    'name': item.get('recipe_name', 'Unknown'),
-                    'quantity': item.get('quantity', 1),
-                    'is_expired': item.get('is_expired', False),
-                    'created_date': created_date.strftime('%Y-%m-%d'),
-                    'days_left': days_left
-                })
-            
-            return leftovers
-        else:
-            st.error(f"Error fetching leftovers: {response.status_code}")
-            return []
-    except Exception as e:
-        st.error(f"Error: {str(e)}")
-        return []
-
-# Function to update leftover quantity
-def update_leftover(leftover_id, new_quantity):
-    try:
-        data = {'quantity': new_quantity}
-        response = requests.put("http://web-api:4000/leftovers/{leftover_id}", json=data)
-        
-        if response.status_code == 200:
-            st.success("Leftover updated successfully!")
-            st.cache_data.clear()
-            return True
-        else:
-            st.error(f"Error updating leftover: {response.status_code}")
-            return False
-    except Exception as e:
-        st.error(f"Error: {str(e)}")
-        return False
-
-# Function to remove a leftover
-def remove_leftover(leftover_id):
-    try:
-        response = requests.delete("http://web-api:4000/leftovers/{leftover_id}")
-        
-        if response.status_code == 200:
-            st.success("Leftover removed successfully!")
-            st.cache_data.clear()
-            return True
-        else:
-            st.error(f"Error removing leftover: {response.status_code}")
-            return False
-    except Exception as e:
-        st.error(f"Error: {str(e)}")
-        return False
-
-# Get all leftovers
-leftovers = get_leftovers()
-
-# Create two tabs
+# Create tabs
 tab1, tab2 = st.tabs(["Current Leftovers", "Add New Leftover"])
 
 # Current Leftovers Tab
 with tab1:
-    if not leftovers:
-        st.info("No leftovers tracked. Add some to keep track of your prepared meals!")
-    else:
-        # Group leftovers by status
-        good_leftovers = [l for l in leftovers if l['days_left'] > 1 and not l['is_expired']]
-        expiring_soon = [l for l in leftovers if 0 <= l['days_left'] <= 1 and not l['is_expired']]
-        expired = [l for l in leftovers if l['days_left'] < 0 or l['is_expired']]
-        
-        # Display counts
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("Good", len(good_leftovers))
-        with col2:
-            st.metric("Eat Soon", len(expiring_soon))
-        with col3:
-            st.metric("Expired", len(expired))
-        
-        # Display leftovers by group
-        if expired:
-            st.error("⚠️ Expired Leftovers")
-            for item in expired:
-                with st.expander(f"{item['name']} - EXPIRED"):
-                    st.write(f"**Quantity:** {item['quantity']} servings")
-                    st.write(f"**Created:** {item['created_date']}")
+    st.subheader("Current Leftovers")
+    
+    # Get leftovers data
+    try:
+        response = requests.get("http://web-api:4000/leftovers")
+        if response.status_code == 200:
+            data = response.json()
+            
+            # Process leftover data
+            if data:
+                leftovers = []
+                for item in data:
+                    # Calculate days left (assuming leftovers last 5 days)
+                    created_date = datetime.now().date() - timedelta(days=1)  # Mock date
+                    expire_date = created_date + timedelta(days=5)
+                    days_left = (expire_date - datetime.now().date()).days
                     
-                    if st.button("Remove", key=f"remove_{item['id']}"):
-                        if remove_leftover(item['id']):
-                            time.sleep(1)
-                            st.rerun()
-        
-        if expiring_soon:
-            st.warning("⚠️ Eat Soon!")
-            for item in expiring_soon:
-                with st.expander(f"{item['name']} - EAT TODAY!"):
-                    st.write(f"**Quantity:** {item['quantity']} servings")
-                    st.write(f"**Created:** {item['created_date']}")
-                    st.write(f"**Days Left:** {item['days_left']}")
+                    status = "Good"
+                    if days_left <= 0 or item.get('is_expired', False):
+                        status = "Expired"
+                    elif days_left <= 1:
+                        status = "Eat Soon"
                     
-                    new_qty = st.number_input(
-                        "Servings remaining:", 
-                        min_value=0.0, 
-                        max_value=float(item['quantity']),
-                        value=float(item['quantity']),
-                        step=0.5,
-                        key=f"qty_{item['id']}"
-                    )
+                    leftovers.append({
+                        "ID": item.get('leftover_id'),
+                        "Meal": item.get('recipe_name', 'Unknown'),
+                        "Servings": item.get('quantity', 1),
+                        "Days Left": days_left,
+                        "Status": status
+                    })
+                
+                # Group leftovers by status
+                expired = [l for l in leftovers if l['Status'] == "Expired"]
+                eat_soon = [l for l in leftovers if l['Status'] == "Eat Soon"]
+                good = [l for l in leftovers if l['Status'] == "Good"]
+                
+                # Display summary
+                summary_data = [
+                    {"Category": "Good", "Count": len(good)},
+                    {"Category": "Eat Soon", "Count": len(eat_soon)},
+                    {"Category": "Expired", "Count": len(expired)}
+                ]
+                st.subheader("Leftover Summary")
+                st.table(pd.DataFrame(summary_data))
+                
+                # Display leftovers by group
+                if expired:
+                    st.subheader("Expired Leftovers")
+                    st.table(pd.DataFrame(expired))
+                    
+                    if st.button("Remove All Expired Leftovers"):
+                        try:
+                            response = requests.delete("http://web-api:4000/leftovers/expired")
+                            if response.status_code == 200:
+                                st.success("All expired leftovers removed!")
+                                st.rerun()
+                            else:
+                                st.error("Error removing expired leftovers")
+                        except:
+                            st.error("Error removing expired leftovers")
+                
+                if eat_soon:
+                    st.subheader("Eat Soon")
+                    st.table(pd.DataFrame(eat_soon))
+                
+                if good:
+                    st.subheader("Good Leftovers")
+                    st.table(pd.DataFrame(good))
+                
+                # Update or remove leftover form
+                st.subheader("Update or Remove Leftover")
+                with st.form("update_leftover_form"):
+                    leftover_id = st.number_input("Leftover ID:", min_value=1, step=1)
+                    new_quantity = st.number_input("New Quantity (0 to remove):", min_value=0.0, step=0.5)
                     
                     col1, col2 = st.columns(2)
                     with col1:
-                        if st.button("Update", key=f"update_{item['id']}"):
-                            if update_leftover(item['id'], new_qty):
-                                time.sleep(1)
-                                st.rerun()
-                    
+                        update = st.form_submit_button("Update Quantity")
                     with col2:
-                        if st.button("Finished", key=f"finish_{item['id']}"):
-                            if remove_leftover(item['id']):
-                                time.sleep(1)
+                        remove = st.form_submit_button("Remove Leftover")
+                    
+                    if update and new_quantity > 0:
+                        try:
+                            data = {'quantity': new_quantity}
+                            response = requests.put(f"http://web-api:4000/leftovers/{leftover_id}", json=data)
+                            
+                            if response.status_code == 200:
+                                st.success("Leftover updated successfully!")
                                 st.rerun()
-        
-        if good_leftovers:
-            st.subheader("🥗 Good Leftovers")
-            for item in good_leftovers:
-                with st.expander(f"{item['name']} - {item['days_left']} days left"):
-                    st.write(f"**Quantity:** {item['quantity']} servings")
-                    st.write(f"**Created:** {item['created_date']}")
-                    st.write(f"**Days Left:** {item['days_left']}")
+                            else:
+                                st.error("Error updating leftover")
+                        except:
+                            st.error("Error updating leftover")
                     
-                    new_qty = st.number_input(
-                        "Servings remaining:", 
-                        min_value=0.0, 
-                        max_value=float(item['quantity']),
-                        value=float(item['quantity']),
-                        step=0.5,
-                        key=f"qty_{item['id']}"
-                    )
-                    
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        if st.button("Update", key=f"update_{item['id']}"):
-                            if update_leftover(item['id'], new_qty):
-                                time.sleep(1)
+                    if update and new_quantity == 0 or remove:
+                        try:
+                            response = requests.delete(f"http://web-api:4000/leftovers/{leftover_id}")
+                            
+                            if response.status_code == 200:
+                                st.success("Leftover removed successfully!")
                                 st.rerun()
-                    
-                    with col2:
-                        if st.button("Finished", key=f"finish_{item['id']}"):
-                            if remove_leftover(item['id']):
-                                time.sleep(1)
-                                st.rerun()
-
-# Remove all expired button
-        if expired:
-            if st.button("Remove All Expired Leftovers"):
-                try:
-                    response = requests.delete("http://web-api:4000/leftovers/expired")
-                    
-                    if response.status_code == 200:
-                        st.success("All expired leftovers removed!")
-                        st.cache_data.clear()
-                        time.sleep(1)
-                        st.rerun()
-                    else:
-                        st.error(f"Error removing expired leftovers: {response.status_code}")
-                except Exception as e:
-                    st.error(f"Error: {str(e)}")
+                            else:
+                                st.error("Error removing leftover")
+                        except:
+                            st.error("Error removing leftover")
+            else:
+                st.info("No leftovers tracked. Add some to keep track of your prepared meals!")
+        else:
+            st.error("Error fetching leftovers")
+    except:
+        st.error("Error fetching leftovers")
 
 # Add New Leftover Tab
 with tab2:
     st.subheader("Add New Leftover Meal")
     
-    # Function to get recipes
-    @st.cache_data(ttl=600)
-    def get_recipes():
-        try:
-            # Using meal plans API to get recipes
-            response = requests.get("http://web-api:4000/meal-plans")
+    # Get recipes for dropdown
+    try:
+        response = requests.get("http://web-api:4000/meal-plans")
+        if response.status_code == 200:
+            recipes_data = response.json()
             
-            if response.status_code == 200:
-                data = response.json()
+            if recipes_data:
+                # Display available recipes
                 recipes = []
-                
-                for item in data:
+                for recipe in recipes_data:
                     recipes.append({
-                        'id': item.get('recipe_id'),
-                        'name': item.get('recipe_name', 'Unknown Recipe')
+                        "ID": recipe.get('recipe_id'),
+                        "Name": recipe.get('recipe_name', 'Unknown Recipe')
                     })
                 
-                return recipes
+                st.subheader("Available Recipes")
+                st.table(pd.DataFrame(recipes))
+                
+                # Add leftover form
+                with st.form("add_leftover_form"):
+                    recipe_id = st.number_input("Recipe ID:", min_value=1, step=1)
+                    quantity = st.number_input("Number of servings:", min_value=0.5, value=1.0, step=0.5)
+                    
+                    if st.form_submit_button("Add Leftover"):
+                        try:
+                            data = {
+                                'recipe_id': recipe_id,
+                                'quantity': quantity
+                            }
+                            
+                            response = requests.post("http://web-api:4000/leftovers", json=data)
+                            
+                            if response.status_code == 201:
+                                st.success("Added leftover successfully!")
+                                st.rerun()
+                            else:
+                                st.error("Error adding leftover")
+                        except:
+                            st.error("Error adding leftover")
             else:
-                st.error(f"Error fetching recipes: {response.status_code}")
-                return []
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-            return []
-    
-    recipes = get_recipes()
-    
-    if recipes:
-        with st.form("add_leftover_form"):
-            # Recipe selection
-            recipe_names = [r['name'] for r in recipes]
-            recipe_ids = {r['name']: r['id'] for r in recipes}
-            
-            selected_recipe = st.selectbox("Select recipe:", recipe_names)
-            recipe_id = recipe_ids[selected_recipe]
-            
-            # Quantity
-            quantity = st.number_input(
-                "Number of servings:",
-                min_value=0.5,
-                value=1.0,
-                step=0.5
-            )
-            
-            # Submit
-            submit = st.form_submit_button("Add Leftover")
-            
-            if submit:
-                try:
-                    data = {
-                        'recipe_id': recipe_id,
-                        'quantity': quantity
-                    }
-                    
-                    response = requests.post("http://web-api:4000/leftovers", json=data)
-                    
-                    if response.status_code == 201:
-                        st.success(f"Added {quantity} servings of {selected_recipe} to leftovers!")
-                        st.cache_data.clear()
-                    else:
-                        st.error(f"Error adding leftover: {response.status_code}")
-                except Exception as e:
-                    st.error(f"Error: {str(e)}")
-    else:
-        st.warning("No recipes available. Add some meal plans first!")
-        
-        if st.button("Go to Meal Suggestions"):
-            st.switch_page("pages/02_Meal_Suggestions.py")
-
-# Display tips
-st.markdown("---")
-st.subheader("Tips for Leftover Storage")
-tips = [
-    "🕒 Most cooked leftovers stay good for 3-4 days in the refrigerator",
-    "🥶 Freezing leftovers can extend their life to 2-3 months",
-    "🔥 Always reheat leftovers to at least 165°F (74°C) before eating",
-    "📦 Store leftovers in air-tight containers to maintain freshness",
-    "🧊 Cool hot food before refrigerating to prevent bacterial growth"
-]
-
-for tip in tips:
-    st.info(tip)
+                st.warning("No recipes available. Add some meal plans first!")
+                
+                if st.button("Go to Meal Suggestions"):
+                    st.switch_page("pages/02_Meal_Suggestions.py")
+        else:
+            st.error("Error fetching recipes")
+    except:
+        st.error("Error fetching recipes")
