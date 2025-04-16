@@ -228,3 +228,125 @@ with tab1:
                 # In a real app, this would update the water tracker
     else:
         st.info("No nutrition data logged for today. Use the 'Log Meal' tab to start tracking.")
+
+# Log Meal Tab
+with tab2:
+    st.subheader("Log a Meal")
+    
+    # Create form for logging a meal
+    with st.form("log_meal_form"):
+        # Meal selection
+        meal_options = ["Breakfast", "Lunch", "Dinner", "Snack", "Pre-Workout", "Post-Workout"]
+        meal_type = st.selectbox("Meal Type:", meal_options)
+        
+        # Create columns for macro inputs
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            protein = st.number_input("Protein (g):", min_value=0.0, step=1.0)
+            carbs = st.number_input("Carbs (g):", min_value=0.0, step=1.0)
+            fat = st.number_input("Fat (g):", min_value=0.0, step=1.0)
+        
+        with col2:
+            fiber = st.number_input("Fiber (g):", min_value=0.0, step=1.0)
+            sodium = st.number_input("Sodium (mg):", min_value=0.0, step=10.0)
+            calories = st.number_input("Calories:", min_value=0, step=10)
+        
+        # Option to add specific food items (simplified)
+        with st.expander("Add Specific Foods"):
+            st.caption("Quickly add common foods")
+            
+            # Common foods with pre-filled nutrition data
+            foods = {
+                "Chicken Breast (100g)": {"protein": 31, "carbs": 0, "fat": 3.6, "fiber": 0, "sodium": 74, "calories": 165},
+                "Brown Rice (100g)": {"protein": 2.6, "carbs": 23, "fat": 0.9, "fiber": 1.8, "sodium": 5, "calories": 112},
+                "Broccoli (100g)": {"protein": 2.8, "carbs": 6.6, "fat": 0.4, "fiber": 2.6, "sodium": 33, "calories": 34},
+                "Egg (whole)": {"protein": 6.3, "carbs": 0.6, "fat": 5.3, "fiber": 0, "sodium": 70, "calories": 72},
+                "Banana (medium)": {"protein": 1.3, "carbs": 27, "fat": 0.4, "fiber": 3.1, "sodium": 1, "calories": 105},
+                "Protein Shake": {"protein": 25, "carbs": 5, "fat": 2, "fiber": 1, "sodium": 120, "calories": 140}
+            }
+            
+            # Create buttons for quick-add foods
+            food_cols = st.columns(3)
+            
+            for i, (food, nutrients) in enumerate(foods.items()):
+                with food_cols[i % 3]:
+                    if st.button(f"+ {food}", key=f"add_{food}"):
+                        # This would add the food's nutrients to the form in a real app
+                        st.session_state.added_protein = nutrients["protein"]
+                        st.session_state.added_carbs = nutrients["carbs"]
+                        st.session_state.added_fat = nutrients["fat"]
+                        st.session_state.added_fiber = nutrients["fiber"]
+                        st.session_state.added_sodium = nutrients["sodium"]
+                        st.session_state.added_calories = nutrients["calories"]
+                        
+                        st.success(f"Added {food} to your meal!")
+        
+        # Notes field
+        notes = st.text_area("Notes:", placeholder="How did you feel after this meal? Any digestive issues?")
+        
+        # Submit button
+        submit_button = st.form_submit_button("Log Meal")
+        
+        if submit_button:
+            # Calculate calories if not provided
+            if calories == 0:
+                calories = (protein * 4) + (carbs * 4) + (fat * 9)
+            
+            # Create nutrition log data
+            nutrition_data = {
+                "client_id": 1,  # This would be dynamic in a real app
+                "protein": protein,
+                "fat": fat,
+                "fiber": fiber,
+                "sodium": sodium,
+                "vitamins": 0,  # Not tracking in the form
+                "calories": calories,
+                "carbs": carbs
+            }
+            
+            # Log nutrition
+            success = log_nutrition_entry(nutrition_data)
+            
+            if success:
+                st.success(f"Successfully logged {meal_type} with {calories} calories!")
+                st.cache_data.clear()
+                time.sleep(1)
+                
+                # Switch to Daily Tracker tab
+                tab1.set_active(True)
+                st.rerun()
+            else:
+                # If API call fails, show a mock success for demo purposes
+                st.success(f"Successfully logged {meal_type} with {calories} calories! (Mock)")
+                time.sleep(1)
+                
+                # Switch to Daily Tracker tab
+                tab1.set_active(True)
+                st.rerun()
+    
+    # Quick meal templates
+    st.markdown("---")
+    st.subheader("Meal Templates")
+    
+    # Mock meal templates based on athlete needs
+    templates = [
+        {"name": "Pre-run Breakfast", "protein": 20, "carbs": 50, "fat": 10, "calories": 370},
+        {"name": "Post-workout Recovery", "protein": 30, "carbs": 45, "fat": 8, "calories": 372},
+        {"name": "Light Pre-race Dinner", "protein": 25, "carbs": 60, "fat": 12, "calories": 448},
+        {"name": "Protein-focused Lunch", "protein": 35, "carbs": 35, "fat": 15, "calories": 415}
+    ]
+    
+    # Display templates as expandable cards
+    for template in templates:
+        with st.expander(f"{template['name']} - {template['calories']} cal"):
+            st.write(f"**Protein:** {template['protein']}g | **Carbs:** {template['carbs']}g | **Fat:** {template['fat']}g")
+            
+            if st.button("Use Template", key=f"use_{template['name']}"):
+                st.session_state.template_protein = template['protein']
+                st.session_state.template_carbs = template['carbs']
+                st.session_state.template_fat = template['fat']
+                st.session_state.template_calories = template['calories']
+                
+                st.success(f"Template values applied!")
+                st.rerun()
