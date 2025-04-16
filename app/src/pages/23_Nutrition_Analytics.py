@@ -460,3 +460,94 @@ with tab3:
             st.info("Please select at least one metric to compare.")
     else:
         st.info("Please select at least one client to analyze.")
+# Allergy Insights Tab
+with tab4:
+    st.subheader("Allergy & Restriction Analytics")
+    
+    # Mock allergy data and pie chart
+    allergies = {"Dairy": 28, "Gluten": 22, "Nuts": 18, "Shellfish": 12, "Eggs": 10, "Soy": 8, "Fish": 5, "Other": 15}
+    allergy_df = pd.DataFrame({"Allergen": list(allergies.keys()), "Count": list(allergies.values())})
+    fig = px.pie(
+        allergy_df,
+        values="Count",
+        names="Allergen",
+        title="Distribution of Common Allergens",
+        color_discrete_sequence=px.colors.qualitative.Pastel
+    )
+    fig.update_layout(height=400)
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Substitution Compliance
+    st.subheader("Substitution Compliance")
+    substitutions = {"Dairy to Plant Milk": 85, "Gluten to GF Grains": 72, "Eggs to Flax Eggs": 64, "Nuts to Seeds": 78, "Wheat to Almond Flour": 62}
+    subst_df = pd.DataFrame({"Substitution": list(substitutions.keys()), "Compliance (%)": list(substitutions.values())})
+    fig = px.bar(
+        subst_df,
+        y="Substitution",
+        x="Compliance (%)",
+        orientation='h',
+        title="Substitution Compliance",
+        color="Compliance (%)",
+        color_continuous_scale=px.colors.sequential.Viridis,
+        text="Compliance (%)"
+    )
+    fig.update_traces(texttemplate='%{text:.1f}%', textposition='outside')
+    fig.update_layout(height=350, xaxis=dict(range=[0, 100]), xaxis_title="Compliance (%)", yaxis_title="Substitution Type")
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Allergy Impact on Nutrition
+    st.subheader("Allergy Impact on Nutrition")
+    allergen_impacts = {
+        "Dairy Allergy": {"Calcium": -35, "Vitamin D": -28, "Protein": -12, "Calories": -8},
+        "Gluten Allergy": {"Fiber": -25, "B Vitamins": -30, "Calories": -15, "Protein": -10},
+        "Nut Allergy": {"Healthy Fats": -32, "Protein": -15, "Fiber": -18, "Calories": -12}
+    }
+    impact_data = []
+    for allergen, impacts in allergen_impacts.items():
+        for nutrient, impact in impacts.items():
+            impact_data.append({"Allergen": allergen, "Nutrient": nutrient, "Impact (%)": impact})
+    impact_df = pd.DataFrame(impact_data)
+    fig = px.bar(
+        impact_df,
+        x="Allergen",
+        y="Impact (%)",
+        color="Nutrient",
+        barmode="group",
+        title="Nutritional Impact of Allergies",
+        color_discrete_sequence=px.colors.qualitative.Pastel
+    )
+    fig.update_layout(height=400, xaxis_title="Allergen", yaxis_title="Impact (%)")
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Recommendations
+    st.subheader("Key Recommendations")
+    st.write("""
+    Based on the allergy analysis, here are some key recommendations:
+    
+    1. **Dairy Allergies**: Focus on non-dairy calcium sources (fortified plant milks, leafy greens) and consider vitamin D supplementation.
+    2. **Gluten Allergies**: Increase fiber from non-grain sources (vegetables, fruits) and consider B vitamin supplementation.
+    3. **Nut Allergies**: Incorporate more seeds and avocados for healthy fats.
+    4. **Overall Strategy**: Create specialized meal plans for common allergen combinations.
+    """)
+    
+    with st.expander("Allergen Substitution Resources"):
+        st.write("**Downloadable Resources:**")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write("**Dairy Substitution Guide**")
+            if st.button("Download Dairy Guide"):
+                st.download_button(
+                    label="Download Guide",
+                    data="This would be a comprehensive guide to dairy substitutions.",
+                    file_name="dairy_substitution_guide.txt",
+                    mime="text/plain"
+                )
+        with col2:
+            st.write("**Gluten-Free Alternatives Guide**")
+            if st.button("Download Gluten Guide"):
+                st.download_button(
+                    label="Download Guide",
+                    data="This would be a comprehensive guide to gluten-free alternatives.",
+                    file_name="gluten_free_guide.txt",
+                    mime="text/plain"
+                )
