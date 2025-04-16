@@ -348,3 +348,32 @@ with tab3:
                         st.rerun()
     else:
         st.info("No recipes found matching your filters.")
+
+# Nutrition Resources Section
+st.markdown("---")
+st.subheader("📚 Nutrition Resources")
+
+resources = [
+    {"title": "Diet-Specific Meal Planning Guide", "description": "Guidelines for creating meal plans for different diets (keto, vegan, paleo, etc.)"},
+    {"title": "Allergen Substitution Chart", "description": "Reference for allergen-free substitutes in recipes"},
+    {"title": "Nutrient Timing for Athletes", "description": "Optimal timing of nutrients for athletic performance"},
+    {"title": "Meal Prep Templates", "description": "Printable templates for clients to track their meal preparations"}
+]
+
+col1, col2 = st.columns(2)
+with col1:
+    for i in range(0, len(resources), 2):
+        if i < len(resources):
+            with st.container():
+                st.markdown(f"**{resources[i]['title']}**")
+                st.write(resources[i]['description'])
+                st.button("Download", key=f"resource_{i}")
+                st.write("---")
+with col2:
+    for i in range(1, len(resources), 2):
+        if i < len(resources):
+            with st.container():
+                st.markdown(f"**{resources[i]['title']}**")
+                st.write(resources[i]['description'])
+                st.button("Download", key=f"resource_{i}")
+                st.write("---")
