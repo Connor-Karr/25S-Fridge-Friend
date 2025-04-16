@@ -37,4 +37,32 @@ def get_meal_plans(client_id=1):
             return []
     except Exception as e:
         st.error(f"Error: {str(e)}")
-        return [
+        return []
+
+# Function to create meal plan
+def create_meal_plan(data):
+    try:
+        response = requests.post(f"{API_BASE_URL}/meal-plans", json=data)
+        
+        if response.status_code == 201:
+            return response.json(), True
+        else:
+            st.error(f"Error creating meal plan: {response.status_code}")
+            return None, False
+    except Exception as e:
+        st.error(f"Error: {str(e)}")
+        return None, False
+
+# Function to delete meal plan
+def delete_meal_plan(meal_id):
+    try:
+        response = requests.delete(f"{API_BASE_URL}/meal-plans/{meal_id}")
+        
+        if response.status_code == 200:
+            return True
+        else:
+            st.error(f"Error deleting meal plan: {response.status_code}")
+            return False
+    except Exception as e:
+        st.error(f"Error: {str(e)}")
+        return False
