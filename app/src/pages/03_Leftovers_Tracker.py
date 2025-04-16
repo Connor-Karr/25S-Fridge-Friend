@@ -54,3 +54,36 @@ def get_leftovers():
     except Exception as e:
         st.error(f"Error: {str(e)}")
         return []
+
+# Function to update leftover quantity
+def update_leftover(leftover_id, new_quantity):
+    try:
+        data = {'quantity': new_quantity}
+        response = requests.put(f"{API_BASE_URL}/leftovers/{leftover_id}", json=data)
+        
+        if response.status_code == 200:
+            st.success("Leftover updated successfully!")
+            st.cache_data.clear()
+            return True
+        else:
+            st.error(f"Error updating leftover: {response.status_code}")
+            return False
+    except Exception as e:
+        st.error(f"Error: {str(e)}")
+        return False
+
+# Function to remove a leftover
+def remove_leftover(leftover_id):
+    try:
+        response = requests.delete(f"{API_BASE_URL}/leftovers/{leftover_id}")
+        
+        if response.status_code == 200:
+            st.success("Leftover removed successfully!")
+            st.cache_data.clear()
+            return True
+        else:
+            st.error(f"Error removing leftover: {response.status_code}")
+            return False
+    except Exception as e:
+        st.error(f"Error: {str(e)}")
+        return False
