@@ -87,3 +87,101 @@ def remove_leftover(leftover_id):
     except Exception as e:
         st.error(f"Error: {str(e)}")
         return False
+
+# Get all leftovers
+leftovers = get_leftovers()
+
+# Create two tabs
+tab1, tab2 = st.tabs(["Current Leftovers", "Add New Leftover"])
+
+# Current Leftovers Tab
+with tab1:
+    if not leftovers:
+        st.info("No leftovers tracked. Add some to keep track of your prepared meals!")
+    else:
+        # Group leftovers by status
+        good_leftovers = [l for l in leftovers if l['days_left'] > 1 and not l['is_expired']]
+        expiring_soon = [l for l in leftovers if 0 <= l['days_left'] <= 1 and not l['is_expired']]
+        expired = [l for l in leftovers if l['days_left'] < 0 or l['is_expired']]
+        
+        # Display counts
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Good", len(good_leftovers))
+        with col2:
+            st.metric("Eat Soon", len(expiring_soon))
+        with col3:
+            st.metric("Expired", len(expired))
+        
+        # Display leftovers by group
+        if expired:
+            st.error("⚠️ Expired Leftovers")
+            for item in expired:
+                with st.expander(f"{item['name']} - EXPIRED"):
+                    st.write(f"**Quantity:** {item['quantity']} servings")
+                    st.write(f"**Created:** {item['created_date']}")
+                    
+                    if st.button("Remove", key=f"remove_{item['id']}"):
+                        if remove_leftover(item['id']):
+                            time.sleep(1)
+                            st.rerun()
+        
+        if expiring_soon:
+            st.warning("⚠️ Eat Soon!")
+            for item in expiring_soon:
+                with st.expander(f"{item['name']} - EAT TODAY!"):
+                    st.write(f"**Quantity:** {item['quantity']} servings")
+                    st.write(f"**Created:** {item['created_date']}")
+                    st.write(f"**Days Left:** {item['days_left']}")
+                    
+                    new_qty = st.number_input(
+                        "Servings remaining:", 
+                        min_value=0.0, 
+                        max_value=float(item['quantity']),
+                        value=float(item['quantity']),
+                        step=0.5,
+                        key=f"qty_{item['id']}"
+                    )
+                    
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if st.button("Update", key=f"update_{item['id']}"):
+                            if update_leftover(item['id'], new_qty):
+                                time.sleep(1)
+                                st.rerun()
+                    
+                    with col2:
+                        if st.button("Finished", key=f"finish_{item['id']}"):
+                            if remove_leftover(item['id']):
+                                time.sleep(1)
+                                st.rerun()
+        
+        if good_leftovers:
+            st.subheader("🥗 Good Leftovers")
+            for item in good_leftovers:
+                with st.expander(f"{item['name']} - {item['days_left']} days left"):
+                    st.write(f"**Quantity:** {item['quantity']} servings")
+                    st.write(f"**Created:** {item['created_date']}")
+                    st.write(f"**Days Left:** {item['days_left']}")
+                    
+                    new_qty = st.number_input(
+                        "Servings remaining:", 
+                        min_value=0.0, 
+                        max_value=float(item['quantity']),
+                        value=float(item['quantity']),
+                        step=0.5,
+                        key=f"qty_{item['id']}"
+                    )
+                    
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if st.button("Update", key=f"update_{item['id']}"):
+                            if update_leftover(item['id'], new_qty):
+                                time.sleep(1)
+                                st.rerun()
+                    
+                    with col2:
+                        if st.button("Finished", key=f"finish_{item['id']}"):
+                            if remove_leftover(item['id']):
+                                time.sleep(1)
+                                st.rerun()
