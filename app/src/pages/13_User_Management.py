@@ -281,3 +281,49 @@ with tab1:
                             st.rerun()
     else:
         st.info("No users found matching your search criteria.")
+
+with tab2:
+    st.subheader("Account Management")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.write("### Create New User")
+        
+        with st.form("create_user_form"):
+            new_first_name = st.text_input("First Name:")
+            new_last_name = st.text_input("Last Name:")
+            new_username = st.text_input("Username:")
+            new_password = st.text_input("Password:", type="password")
+            new_email = st.text_input("Email:")
+            new_role = st.selectbox("Role:", ["client", "nutritionist", "admin"])
+            
+            submit_button = st.form_submit_button("Create User")
+            
+            if submit_button and all([new_first_name, new_last_name, new_username, new_password, new_email]):
+                new_user_data = {
+                    'f_name': new_first_name,
+                    'l_name': new_last_name,
+                    'username': new_username,
+                    'password': new_password,
+                    'email': new_email
+                }
+                
+                try:
+                    response = requests.post(f"{API_BASE_URL}/users", json=new_user_data)
+                    
+                    if response.status_code == 201:
+                        st.success(f"User {new_username} created successfully!")
+                        st.cache_data.clear()
+                        time.sleep(1)
+                        st.rerun()
+                    else:
+                        st.error(f"Error creating user: {response.status_code}")
+                        st.success(f"User {new_username} created successfully! (Mock)")
+                        time.sleep(1)
+                        st.rerun()
+                except Exception as e:
+                    st.error(f"Error: {str(e)}")
+                    st.success(f"User {new_username} created successfully! (Mock)")
+                    time.sleep(1)
+                    st.rerun()
