@@ -52,3 +52,5 @@ else:
         days = (datetime.now().date() - start_of_year).days
 
     date_range = (datetime.now().date() - timedelta(days=days), datetime.now().date())
+# Create different tabs
+tab1, tab2, tab3, tab4 = st.tabs(["Diet Compliance", "Nutrient Analysis", "Client Comparisons", "Allergy Insights"])
