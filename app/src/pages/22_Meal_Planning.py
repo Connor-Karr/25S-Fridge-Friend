@@ -8,8 +8,6 @@ import plotly.express as px
 import json
 from modules.nav import SideBarLinks
 
-API_BASE_URL = "http://web-api:4000"
-
 if not st.session_state.get('authenticated', False) or st.session_state.role != "nutritionist":
     st.warning("Please log in as Nancy to access this page")
     st.stop()
@@ -24,7 +22,7 @@ st.write("Create and manage personalized meal plans for your clients")
 @st.cache_data(ttl=300)
 def get_meal_plans():
     try:
-        response = requests.get(f"{API_BASE_URL}/meal-plans")
+        response = requests.get("http://web-api:4000/meal-plans")
         if response.status_code == 200:
             data = response.json()
             return data
@@ -39,7 +37,7 @@ def get_meal_plans():
 @st.cache_data(ttl=300)
 def get_meal_plan(meal_id):
     try:
-        response = requests.get(f"{API_BASE_URL}/meal-plans/{meal_id}")
+        response = requests.get("http://web-api:4000/meal-plans/{meal_id}")
         if response.status_code == 200:
             data = response.json()
             return data
@@ -53,7 +51,7 @@ def get_meal_plan(meal_id):
 # Create a meal plan
 def create_meal_plan(data):
     try:
-        response = requests.post(f"{API_BASE_URL}/meal-plans", json=data)
+        response = requests.post("http://web-api:4000/meal-plans", json=data)
         if response.status_code == 201:
             return response.json(), True
         else:
@@ -66,7 +64,7 @@ def create_meal_plan(data):
 # Update a meal plan
 def update_meal_plan(meal_id, data):
     try:
-        response = requests.put(f"{API_BASE_URL}/meal-plans/{meal_id}", json=data)
+        response = requests.put("http://web-api:4000/meal-plans/{meal_id}", json=data)
         if response.status_code == 200:
             return True
         else:
@@ -79,7 +77,7 @@ def update_meal_plan(meal_id, data):
 # Delete a meal plan
 def delete_meal_plan(meal_id):
     try:
-        response = requests.delete(f"{API_BASE_URL}/meal-plans/{meal_id}")
+        response = requests.delete("http://web-api:4000/meal-plans/{meal_id}")
         if response.status_code == 200:
             return True
         else:

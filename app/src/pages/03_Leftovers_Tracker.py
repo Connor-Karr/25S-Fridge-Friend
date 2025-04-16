@@ -6,9 +6,6 @@ from datetime import datetime, timedelta
 import json
 from modules.nav import SideBarLinks
 
-# API base URL
-API_BASE_URL = "http://web-api:4000"
-
 # Authentication check
 if not st.session_state.get('authenticated', False) or st.session_state.role != "busy_student":
     st.warning("Please log in as Ben to access this page")
@@ -25,7 +22,7 @@ st.write("Track and manage your leftover meals to reduce food waste")
 @st.cache_data(ttl=300)
 def get_leftovers():
     try:
-        response = requests.get(f"{API_BASE_URL}/leftovers")
+        response = requests.get("http://web-api:4000/leftovers")
         
         if response.status_code == 200:
             data = response.json()
@@ -59,7 +56,7 @@ def get_leftovers():
 def update_leftover(leftover_id, new_quantity):
     try:
         data = {'quantity': new_quantity}
-        response = requests.put(f"{API_BASE_URL}/leftovers/{leftover_id}", json=data)
+        response = requests.put("http://web-api:4000/leftovers/{leftover_id}", json=data)
         
         if response.status_code == 200:
             st.success("Leftover updated successfully!")
@@ -75,7 +72,7 @@ def update_leftover(leftover_id, new_quantity):
 # Function to remove a leftover
 def remove_leftover(leftover_id):
     try:
-        response = requests.delete(f"{API_BASE_URL}/leftovers/{leftover_id}")
+        response = requests.delete("http://web-api:4000/leftovers/{leftover_id}")
         
         if response.status_code == 200:
             st.success("Leftover removed successfully!")
@@ -190,7 +187,7 @@ with tab1:
         if expired:
             if st.button("Remove All Expired Leftovers"):
                 try:
-                    response = requests.delete(f"{API_BASE_URL}/leftovers/expired")
+                    response = requests.delete("http://web-api:4000/leftovers/expired")
                     
                     if response.status_code == 200:
                         st.success("All expired leftovers removed!")
@@ -211,7 +208,7 @@ with tab2:
     def get_recipes():
         try:
             # Using meal plans API to get recipes
-            response = requests.get(f"{API_BASE_URL}/meal-plans")
+            response = requests.get("http://web-api:4000/meal-plans")
             
             if response.status_code == 200:
                 data = response.json()
@@ -260,7 +257,7 @@ with tab2:
                         'quantity': quantity
                     }
                     
-                    response = requests.post(f"{API_BASE_URL}/leftovers", json=data)
+                    response = requests.post("http://web-api:4000/leftovers", json=data)
                     
                     if response.status_code == 201:
                         st.success(f"Added {quantity} servings of {selected_recipe} to leftovers!")

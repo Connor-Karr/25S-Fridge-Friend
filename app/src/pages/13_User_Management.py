@@ -1,8 +1,6 @@
 import streamlit as st
-
 from modules.nav import SideBarLinks
 
-API_BASE_URL = "http://web-api:4000"
 if not st.session_state.get('authenticated', False) or st.session_state.role != "admin":
     st.warning("Please log in as Alvin to access this page")
     st.stop()
@@ -15,7 +13,7 @@ st.write("Manage user accounts, roles, and permissions")
 @st.cache_data(ttl=300)
 def get_users():
     try:
-        response = requests.get(f"{API_BASE_URL}/users")
+        response = requests.get("http://web-api:4000/users")
         
         if response.status_code == 200:
             data = response.json()
@@ -30,7 +28,7 @@ def get_users():
 @st.cache_data(ttl=300)
 def get_user_details(user_id):
     try:
-        response = requests.get(f"{API_BASE_URL}/users/{user_id}")
+        response = requests.get("http://web-api:4000/users/{user_id}")
         
         if response.status_code == 200:
             data = response.json()
@@ -44,7 +42,7 @@ def get_user_details(user_id):
     
 def update_user(user_id, data):
     try:
-        response = requests.put(f"{API_BASE_URL}/users/{user_id}", json=data)
+        response = requests.put("http://web-api:4000/users/{user_id}", json=data)
         
         if response.status_code == 200:
             return True
@@ -310,7 +308,7 @@ with tab2:
                 }
                 
                 try:
-                    response = requests.post(f"{API_BASE_URL}/users", json=new_user_data)
+                    response = requests.post("http://web-api:4000/users", json=new_user_data)
                     
                     if response.status_code == 201:
                         st.success(f"User {new_username} created successfully!")

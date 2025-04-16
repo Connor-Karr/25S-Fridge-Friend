@@ -7,9 +7,6 @@ from datetime import datetime, timedelta
 import json
 from modules.nav import SideBarLinks
 
-# API base URL
-API_BASE_URL = "http://web-api:4000"
-
 # Authentication check
 if not st.session_state.get('authenticated', False) or st.session_state.role != "admin":
     st.warning("Please log in as Alvin to access this page")
@@ -30,7 +27,7 @@ tab1, tab2, tab3 = st.tabs(["Ingredient Database", "Add New Ingredient", "Update
 @st.cache_data(ttl=300)
 def get_ingredients():
     try:
-        response = requests.get(f"{API_BASE_URL}/ingredients")
+        response = requests.get("http://web-api:4000/ingredients")
         
         if response.status_code == 200:
             data = response.json()
@@ -55,7 +52,7 @@ def get_ingredients():
 @st.cache_data(ttl=300)
 def get_ingredient_details(ingredient_id):
     try:
-        response = requests.get(f"{API_BASE_URL}/ingredients/{ingredient_id}")
+        response = requests.get("http://web-api:4000/ingredients/{ingredient_id}")
         
         if response.status_code == 200:
             return response.json()
@@ -68,7 +65,7 @@ def get_ingredient_details(ingredient_id):
 # Function to update ingredient
 def update_ingredient(ingredient_id, data):
     try:
-        response = requests.put(f"{API_BASE_URL}/ingredients/{ingredient_id}", json=data)
+        response = requests.put("http://web-api:4000/ingredients/{ingredient_id}", json=data)
         
         if response.status_code == 200:
             st.success("Ingredient updated successfully!")
@@ -84,7 +81,7 @@ def update_ingredient(ingredient_id, data):
 # Function to delete ingredient
 def delete_ingredient(ingredient_id):
     try:
-        response = requests.delete(f"{API_BASE_URL}/ingredients/{ingredient_id}")
+        response = requests.delete("http://web-api:4000/ingredients/{ingredient_id}")
         
         if response.status_code == 200:
             st.success("Ingredient deleted successfully!")
@@ -100,7 +97,7 @@ def delete_ingredient(ingredient_id):
 # Function to update macronutrients
 def update_macros(macro_id, data):
     try:
-        response = requests.put(f"{API_BASE_URL}/macros/{macro_id}", json=data)
+        response = requests.put("http://web-api:4000/macros/{macro_id}", json=data)
         
         if response.status_code == 200:
             st.success("Macronutrients updated successfully!")
@@ -213,7 +210,7 @@ with tab2:
                         'calories': calories
                     }
                 }
-                response = requests.post(f"{API_BASE_URL}/ingredients", json=ingredient_data)
+                response = requests.post("http://web-api:4000/ingredients", json=ingredient_data)
                 if response.status_code == 201:
                     st.success(f"Added {ingredient_name} to the database!")
                     st.cache_data.clear()

@@ -8,8 +8,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 from modules.nav import SideBarLinks
 
-API_BASE_URL = "http://web-api:4000"
-
 if not st.session_state.get('authenticated', False) or st.session_state.role != "admin":
     st.warning("Please log in as Alvin to access this page")
     st.stop()
@@ -24,7 +22,7 @@ tab1, tab2, tab3 = st.tabs(["Error Logs", "Food Scan Logs", "Analytics"])
 @st.cache_data(ttl=300)
 def get_error_logs():
     try:
-        response = requests.get(f"{API_BASE_URL}/logs/errors")
+        response = requests.get("http://web-api:4000/logs/errors")
         if response.status_code == 200:
             data = response.json()
             return [{
@@ -44,7 +42,7 @@ def get_error_logs():
 @st.cache_data(ttl=300)
 def get_scan_logs():
     try:
-        response = requests.get(f"{API_BASE_URL}/logs/scans")
+        response = requests.get("http://web-api:4000/logs/scans")
         if response.status_code == 200:
             data = response.json()
             return [{

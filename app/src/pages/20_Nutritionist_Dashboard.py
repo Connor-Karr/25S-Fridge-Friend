@@ -8,9 +8,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 from modules.nav import SideBarLinks
 
-# API base URL
-API_BASE_URL = "http://web-api:4000"
-
 # Authentication check
 if not st.session_state.get('authenticated', False) or st.session_state.role != "nutritionist":
     st.warning("Please log in as Nancy to access this page")

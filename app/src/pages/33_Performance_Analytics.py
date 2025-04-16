@@ -9,9 +9,6 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from modules.nav import SideBarLinks
 
-# API base URL
-API_BASE_URL = "http://web-api:4000"
-
 # Authentication check
 if not st.session_state.get('authenticated', False) or st.session_state.role != "athlete":
     st.warning("Please log in as Riley to access this page")

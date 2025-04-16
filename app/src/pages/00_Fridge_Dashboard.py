@@ -11,7 +11,7 @@ SideBarLinks(st.session_state.role)
 if not st.session_state.get('authenticated', False) or st.session_state.role != "busy_student":
     st.warning("Please log in as Ben to access this page")
     st.stop()
-    
+
 st.title(f"Welcome, {st.session_state.first_name}! 👋")
 st.write("Manage your fridge, plan meals, and stay on budget!")
 
@@ -23,7 +23,7 @@ with col1:
     @st.cache_data(ttl=300)
     def get_expiring_items():
         try:
-            response = requests.get(f"{API_BASE_URL}/fridge?client_id=1")
+            response = requests.get("http://web-api:4000/fridge?client_id=1")
             if response.status_code != 200:
                 st.error(f"Error fetching data: {response.status_code}")
                 return []
@@ -64,7 +64,7 @@ with col1:
 
     if st.button("Update Expired Status"):
         try:
-            response = requests.put(f"{API_BASE_URL}/fridge/expired")
+            response = requests.put("http://web-api:4000/fridge/expired")
             if response.status_code == 200:
                 st.success("Updated expired item status!")
                 st.cache_data.clear()
@@ -81,7 +81,7 @@ with col2:
     @st.cache_data(ttl=300)
     def get_meal_suggestions():
         try:
-            response = requests.get(f"{API_BASE_URL}/meal-plans?client_id=1")
+            response = requests.get("http://web-api:4000/meal-plans?client_id=1")
             if response.status_code != 200:
                 st.error(f"Error fetching meal suggestions: {response.status_code}")
                 return []
@@ -113,7 +113,7 @@ with col2:
                 if st.button(f"Save as Leftover #{i+1}", key=f"leftover_{i}"):
                     try:
                         leftover_data = {'recipe_id': meal['meal_id'], 'quantity': 1}
-                        response = requests.post(f"{API_BASE_URL}/leftovers", json=leftover_data)
+                        response = requests.post("http://web-api:4000/leftovers", json=leftover_data)
 
                         if response.status_code == 201:
                             st.success(f"Saved {meal['name']} as leftover!")

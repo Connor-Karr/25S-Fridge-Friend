@@ -7,9 +7,6 @@ from datetime import datetime, timedelta
 import json
 from modules.nav import SideBarLinks
 
-# API base URL
-API_BASE_URL = "http://web-api:4000"
-
 # Authentication check
 if not st.session_state.get('authenticated', False) or st.session_state.role != "busy_student":
     st.warning("Please log in as Ben to access this page")
@@ -26,7 +23,7 @@ st.write("Find recipes based on what's in your fridge and your budget")
 @st.cache_data(ttl=300)
 def get_fridge_inventory():
     try:
-        response = requests.get(f"{API_BASE_URL}/fridge?client_id=1")
+        response = requests.get("http://web-api:4000/fridge?client_id=1")
         
         if response.status_code == 200:
             data = response.json()
@@ -42,7 +39,7 @@ def get_fridge_inventory():
 @st.cache_data(ttl=300)
 def get_meal_plans():
     try:
-        response = requests.get(f"{API_BASE_URL}/meal-plans?client_id=1")
+        response = requests.get("http://web-api:4000/meal-plans?client_id=1")
         
         if response.status_code == 200:
             data = response.json()

@@ -8,9 +8,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 from modules.nav import SideBarLinks
 
-
-API_BASE_URL = "http://web-api:4000"
-
 if not st.session_state.get('authenticated', False) or st.session_state.role != "admin":
     st.warning("Please log in as an admin to access this page")
     st.stop()
@@ -64,7 +61,7 @@ with col2:
     @st.cache_data(ttl=600)
     def get_ingredient_count():
         try:
-            res = requests.get(f"{API_BASE_URL}/ingredients")
+            res = requests.get("http://web-api:4000/ingredients")
             return len(res.json()) if res.status_code == 200 else "N/A"
         except:
             return "N/A"
@@ -72,7 +69,7 @@ with col2:
     @st.cache_data(ttl=600)
     def get_users_count():
         try:
-            res = requests.get(f"{API_BASE_URL}/users")
+            res = requests.get("http://web-api:4000/users")
             return len(res.json()) if res.status_code == 200 else "N/A"
         except:
             return "N/A"
@@ -80,7 +77,7 @@ with col2:
     @st.cache_data(ttl=600)
     def get_error_logs_count():
         try:
-            res = requests.get(f"{API_BASE_URL}/logs/errors")
+            res = requests.get("http://web-api:4000/logs/errors")
             return len(res.json()) if res.status_code == 200 else "N/A"
         except:
             return "N/A"
@@ -124,7 +121,7 @@ act1, act2, act3, act4 = st.columns(4)
 with act1:
     if st.button("Update Expired Status", use_container_width=True):
         try:
-            res = requests.put(f"{API_BASE_URL}/fridge/expired")
+            res = requests.put("http://web-api:4000/fridge/expired")
             st.success("Expired status updated successfully!") if res.status_code == 200 else st.error(f"Error: {res.status_code}")
         except Exception as e:
             st.error(f"Error: {str(e)}")
@@ -132,7 +129,7 @@ with act1:
 with act2:
     if st.button("Remove Expired Items", use_container_width=True):
         try:
-            res = requests.delete(f"{API_BASE_URL}/fridge/expired")
+            res = requests.delete("http://web-api:4000/fridge/expired")
             st.success("Expired items removed successfully!") if res.status_code == 200 else st.error(f"Error: {res.status_code}")
         except Exception as e:
             st.error(f"Error: {str(e)}")
@@ -155,7 +152,7 @@ st.subheader("📜 Recent System Logs")
 @st.cache_data(ttl=300)
 def get_error_logs():
     try:
-        res = requests.get(f"{API_BASE_URL}/logs/errors")
+        res = requests.get("http://web-api:4000/logs/errors")
         if res.status_code == 200:
             return [{
                 'error_id': log.get('error_id'),

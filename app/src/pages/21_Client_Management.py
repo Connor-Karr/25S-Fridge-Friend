@@ -8,8 +8,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 from modules.nav import SideBarLinks
 
-API_BASE_URL = "http://web-api:4000"
-
 if not st.session_state.get('authenticated', False) or st.session_state.role != "nutritionist":
     st.warning("Please log in as Nancy to access this page")
     st.stop()
@@ -19,7 +17,7 @@ SideBarLinks(st.session_state.role)
 @st.cache_data(ttl=300)
 def get_users():
     try:
-        response = requests.get(f"{API_BASE_URL}/users")
+        response = requests.get("http://web-api:4000/users")
         if response.status_code == 200:
             data = response.json()
             return data
@@ -34,7 +32,7 @@ def get_users():
 @st.cache_data(ttl=300)
 def get_user_details(user_id):
     try:
-        response = requests.get(f"{API_BASE_URL}/users/{user_id}")
+        response = requests.get("http://web-api:4000/users/{user_id}")
         if response.status_code == 200:
             data = response.json()
             return data
@@ -48,7 +46,7 @@ def get_user_details(user_id):
 # Update user constraints
 def update_user_constraints(pc_id, data):
     try:
-        response = requests.put(f"{API_BASE_URL}/users/constraints/{pc_id}", json=data)
+        response = requests.put("http://web-api:4000/users/constraints/{pc_id}", json=data)
         if response.status_code == 200:
             return True
         else:
@@ -61,7 +59,7 @@ def update_user_constraints(pc_id, data):
 # Create user constraints
 def create_user_constraints(data):
     try:
-        response = requests.post(f"{API_BASE_URL}/users/constraints", json=data)
+        response = requests.post("http://web-api:4000/users/constraints", json=data)
         if response.status_code == 201:
             return response.json(), True
         else:

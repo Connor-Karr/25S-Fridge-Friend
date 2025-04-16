@@ -6,9 +6,6 @@ from datetime import datetime, timedelta
 import json
 from modules.nav import SideBarLinks
 
-# API base URL
-API_BASE_URL = "http://web-api:4000"
-
 # Authentication check
 if not st.session_state.get('authenticated', False) or st.session_state.role != "busy_student":
     st.warning("Please log in as Ben to access this page")
@@ -32,7 +29,7 @@ with tab1:
     @st.cache_data(ttl=300)
     def get_fridge_inventory():
         try:
-            response = requests.get(f"{API_BASE_URL}/fridge?client_id=1")
+            response = requests.get("http://web-api:4000/fridge?client_id=1")
             
             if response.status_code == 200:
                 data = response.json()
@@ -137,7 +134,7 @@ with tab2:
     @st.cache_data(ttl=600)
     def get_available_ingredients():
         try:
-            response = requests.get(f"{API_BASE_URL}/ingredients")
+            response = requests.get("http://web-api:4000/ingredients")
             
             if response.status_code == 200:
                 data = response.json()
@@ -196,7 +193,7 @@ with tab2:
                     
                     # Make API call
                     response = requests.post(
-                        f"{API_BASE_URL}/fridge/{ingredient_id}",
+                        "http://web-api:4000/fridge/{ingredient_id}",
                         json=data
                     )
                     
@@ -231,7 +228,7 @@ with tab2:
                 }
                 
                 response = requests.post(
-                    f"{API_BASE_URL}/ingredients",
+                    "http://web-api:4000/ingredients",
                     json=ingredient_data
                 )
                 
@@ -245,7 +242,7 @@ with tab2:
                     }
                     
                     fridge_response = requests.post(
-                        f"{API_BASE_URL}/fridge/{ingredient_id}",
+                        "http://web-api:4000/fridge/{ingredient_id}",
                         json=fridge_data
                     )
                     
@@ -274,7 +271,7 @@ with tab3:
         
         if st.button("Remove All Expired Items"):
             try:
-                response = requests.delete(f"{API_BASE_URL}/fridge/expired")
+                response = requests.delete("http://web-api:4000/fridge/expired")
                 
                 if response.status_code == 200:
                     st.success("All expired items removed!")
