@@ -15,3 +15,10 @@ API_BASE_URL = "http://web-api:4000"
 if not st.session_state.get('authenticated', False) or st.session_state.role != "athlete":
     st.warning("Please log in as Riley to access this page")
     st.stop()
+
+# Set up navigation
+SideBarLinks(st.session_state.role)
+
+# Page header
+st.title("📊 Nutrition Tracking")
+st.write("Track and analyze your nutrition to optimize performance")
