@@ -837,3 +837,102 @@ if selected_client_id:
                         file_name=f"progress_report_{client['name'].replace(' ', '_')}.txt",
                         mime="text/plain"
                     )
+else:
+    st.title("Client Management")
+    
+    search_term = st.text_input("Search clients:", placeholder="Enter name, goal, or diet type...")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        goal_filter = st.selectbox(
+            "Filter by goal:",
+            ["All Goals", "Weight Loss", "Muscle Gain", "Maintenance", "Performance", "Health"]
+        )
+    with col2:
+        diet_filter = st.selectbox(
+            "Filter by diet type:",
+            ["All Diets", "Low Carb", "High Protein", "Balanced", "Keto", "Mediterranean", "Vegan", "Vegetarian"]
+        )
+    
+    filtered_clients = clients
+    if search_term:
+        filtered_clients = [
+            client for client in filtered_clients 
+            if search_term.lower() in client['name'].lower() or 
+               search_term.lower() in client['goal'].lower() or 
+               search_term.lower() in client['diet'].lower()
+        ]
+    if goal_filter != "All Goals":
+        filtered_clients = [
+            client for client in filtered_clients 
+            if client['goal'] == goal_filter
+        ]
+    if diet_filter != "All Diets":
+        filtered_clients = [
+            client for client in filtered_clients 
+            if client['diet'] == diet_filter
+        ]
+    
+    if filtered_clients:
+        st.write(f"Showing {len(filtered_clients)} clients")
+        for client in filtered_clients:
+            with st.container(border=True):
+                col1, col2, col3 = st.columns([2, 2, 1])
+                with col1:
+                    st.subheader(client['name'])
+                    st.write(f"**Goal:** {client['goal']}")
+                    st.write(f"**Diet:** {client['diet']}")
+                with col2:
+                    st.write(f"**Age:** {client['age']}")
+                    st.write(f"**Allergies:** {client['allergies']}")
+                    st.write(f"**Activity Level:** {client['activity_level']}")
+                with col3:
+                    st.write("")
+                    if st.button("View Profile", key=f"view_{client['id']}"):
+                        st.session_state.selected_client_id = client['id']
+                        st.session_state.selected_client_name = client['name']
+                        st.rerun()
+    else:
+        st.info("No clients match your search criteria.")
+    
+    st.markdown("---")
+    if st.button("+ Add New Client"):
+        st.session_state.add_client = True
+    
+    if st.session_state.get('add_client', False):
+        st.subheader("Add New Client")
+        with st.form("add_client_form"):
+            col1, col2 = st.columns(2)
+            with col1:
+                first_name = st.text_input("First Name:")
+                last_name = st.text_input("Last Name:")
+                age = st.number_input("Age:", min_value=16, max_value=100, value=30)
+                email = st.text_input("Email:")
+            with col2:
+                phone = st.text_input("Phone:")
+                height = st.text_input("Height (e.g., 5'10\"):")
+                weight = st.text_input("Weight (lbs):")
+                activity_level = st.selectbox(
+                    "Activity Level:",
+                    ["Sedentary", "Light", "Moderate", "Active", "Very Active"]
+                )
+            col1, col2 = st.columns(2)
+            with col1:
+                goal = st.selectbox(
+                    "Primary Goal:",
+                    ["Weight Loss", "Muscle Gain", "Maintenance", "Performance", "Health"]
+                )
+                diet = st.selectbox(
+                    "Diet Type:",
+                    ["Low Carb", "High Protein", "Balanced", "Keto", "Mediterranean", "Vegan", "Vegetarian"]
+                )
+            with col2:
+                allergies = st.text_input("Allergies/Intolerances (comma-separated):")
+                budget = st.number_input("Weekly Budget ($):", min_value=50.0, max_value=500.0, value=100.0, step=10.0)
+            submit_button = st.form_submit_button("Add Client")
+            if submit_button and first_name and last_name and email:
+                st.success(f"Client {first_name} {last_name} added successfully!")
+                if 'add_client' in st.session_state:
+                    del st.session_state.add_client
+                time.sleep(1)
+                st.rerun()
