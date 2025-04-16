@@ -165,3 +165,83 @@ with tab1:
                                     st.success("Meal plan removed successfully! (Mock)")
                                     time.sleep(1)
                                     st.rerun()
+
+# Check if viewing a recipe
+        if st.session_state.get('view_recipe'):
+            recipe_id = st.session_state.view_recipe
+            recipe = recipes.get(recipe_id)
+            
+            if recipe:
+                st.markdown("---")
+                st.subheader(f"Recipe: {recipe['name']}")
+                
+                # Mock recipe details
+                st.write(f"**Description:** {recipe['description']}")
+                st.write(f"**Total Time:** 20 minutes")
+                st.write(f"**Servings:** 1")
+                
+                st.write("**Nutrition (per serving):**")
+                st.write(f"Calories: {recipe['calories']} | Protein: {recipe['protein']}g | Carbs: {recipe['carbs']}g | Fat: {recipe['fat']}g")
+                
+                st.write("**Ingredients:**")
+                
+                # Mock ingredients based on the recipe
+                if recipe['name'] == "Pre-Run Oatmeal Bowl":
+                    st.write("- 1 cup rolled oats")
+                    st.write("- 1 ripe banana, sliced")
+                    st.write("- 1 tbsp honey")
+                    st.write("- 1 tbsp almond butter")
+                    st.write("- 1 cup almond milk")
+                    st.write("- Pinch of cinnamon")
+                elif recipe['name'] == "Recovery Protein Smoothie":
+                    st.write("- 1 scoop protein powder")
+                    st.write("- 1 banana")
+                    st.write("- 1 cup mixed berries")
+                    st.write("- 1 cup almond milk")
+                    st.write("- 1 tbsp honey")
+                    st.write("- Ice cubes")
+                elif recipe['name'] == "Salmon & Quinoa Dinner":
+                    st.write("- 5 oz salmon fillet")
+                    st.write("- 1/2 cup cooked quinoa")
+                    st.write("- 1 cup roasted vegetables")
+                    st.write("- 1 tbsp olive oil")
+                    st.write("- Lemon and herbs to taste")
+                elif recipe['name'] == "Carb-Loading Pasta":
+                    st.write("- 2 cups pasta")
+                    st.write("- 1/2 cup marinara sauce")
+                    st.write("- 2 tbsp olive oil")
+                    st.write("- 1/4 cup parmesan cheese")
+                    st.write("- Fresh basil")
+                
+                st.write("**Instructions:**")
+                
+                # Mock instructions based on the recipe
+                if recipe['name'] == "Pre-Run Oatmeal Bowl":
+                    st.write("1. Cook oats with almond milk according to package directions")
+                    st.write("2. Stir in honey and almond butter")
+                    st.write("3. Top with sliced banana and cinnamon")
+                    st.write("4. Eat 1-2 hours before your run")
+                elif recipe['name'] == "Recovery Protein Smoothie":
+                    st.write("1. Add all ingredients to a blender")
+                    st.write("2. Blend until smooth")
+                    st.write("3. Consume within 30 minutes after your workout")
+                elif recipe['name'] == "Salmon & Quinoa Dinner":
+                    st.write("1. Cook salmon fillet in the oven at 400°F for 12-15 minutes")
+                    st.write("2. Prepare quinoa according to package directions")
+                    st.write("3. Toss vegetables with olive oil and roast at 425°F for 20 minutes")
+                    st.write("4. Plate quinoa, top with salmon and vegetables")
+                    st.write("5. Season with lemon and herbs")
+                elif recipe['name'] == "Carb-Loading Pasta":
+                    st.write("1. Cook pasta according to package directions")
+                    st.write("2. Heat marinara sauce in a pan")
+                    st.write("3. Toss pasta with sauce and olive oil")
+                    st.write("4. Top with parmesan and fresh basil")
+                    st.write("5. Consume 12-24 hours before race day")
+                
+                # Button to return to list
+                if st.button("Back to Meal Plans"):
+                    if 'view_recipe' in st.session_state:
+                        del st.session_state.view_recipe
+                    st.rerun()
+    else:
+        st.info("No meal plans found. Add some meal plans for different training phases!")
