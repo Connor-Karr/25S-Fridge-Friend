@@ -110,3 +110,110 @@ recipes = [
 ]
 # Create different tabs
 tab1, tab2, tab3 = st.tabs(["Current Meal Plans", "Create New Plan", "Recipe Database"])
+# Current Meal Plans Tab
+with tab1:
+    st.subheader("Current Meal Plans")
+    
+    meal_plans = get_meal_plans()
+    if not meal_plans:
+        meal_plans = [
+            {"meal_id": 1, "pc_id": 1, "recipe_id": 1, "quantity": 1, "recipe_name": "Grilled Chicken Salad"},
+            {"meal_id": 2, "pc_id": 1, "recipe_id": 4, "quantity": 1, "recipe_name": "Greek Yogurt Parfait"},
+            {"meal_id": 3, "pc_id": 2, "recipe_id": 2, "quantity": 1, "recipe_name": "Salmon with Quinoa"},
+            {"meal_id": 4, "pc_id": 2, "recipe_id": 6, "quantity": 1, "recipe_name": "Beef and Vegetable Stew"},
+            {"meal_id": 5, "pc_id": 3, "recipe_id": 3, "quantity": 1, "recipe_name": "Vegetable Stir Fry"},
+            {"meal_id": 6, "pc_id": 4, "recipe_id": 5, "quantity": 1, "recipe_name": "Spinach and Feta Omelette"},
+            {"meal_id": 7, "pc_id": 5, "recipe_id": 7, "quantity": 1, "recipe_name": "Mediterranean Salad"}
+        ]
+    
+    # Filter options for clients
+    client_names = ["All Clients"] + [client["name"] for client in clients]
+    selected_client = st.selectbox("Filter by client:", client_names)
+    
+    if selected_client != "All Clients":
+        client_id = next((client["id"] for client in clients if client["name"] == selected_client), None)
+        filtered_plans = [plan for plan in meal_plans if plan.get("pc_id") == client_id]
+    else:
+        filtered_plans = meal_plans
+    
+    # Display meal plans with actions
+    if filtered_plans:
+        for plan in filtered_plans:
+            with st.expander(f"{plan['recipe_name']} (Servings: {plan['quantity']})"):
+                # Identify client name
+                client_name = next((c["name"] for c in clients if c["id"] == plan.get("pc_id")), "Unknown")
+                st.write(f"**Client:** {client_name}")
+                
+                # Find corresponding recipe
+                recipe = next((r for r in recipes if r["id"] == plan.get("recipe_id")), None)
+                if recipe:
+                    st.write(f"**Calories:** {recipe['calories']} per serving")
+                    st.write(f"**Protein:** {recipe['protein']}g | **Carbs:** {recipe['carbs']}g | **Fat:** {recipe['fat']}g")
+                    st.write(f"**Tags:** {', '.join(recipe['tags'])}")
+                
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    if st.button("Edit", key=f"edit_{plan['meal_id']}"):
+                        st.session_state.edit_meal_id = plan['meal_id']
+                        st.session_state.edit_meal_data = plan
+                        st.rerun()
+                with col2:
+                    if st.button("Delete", key=f"delete_{plan['meal_id']}"):
+                        if delete_meal_plan(plan['meal_id']):
+                            st.success("Meal plan deleted successfully!")
+                            st.cache_data.clear()
+                            time.sleep(1)
+                            st.rerun()
+                with col3:
+                    if st.button("Print", key=f"print_{plan['meal_id']}"):
+                        with st.spinner("Generating printable version..."):
+                            time.sleep(2)
+                            st.success("Meal plan ready for printing!")
+                            printable_content = f"""
+                            # Meal Plan: {plan['recipe_name']}
+                            
+                            **Client:** {client_name}
+                            **Servings:** {plan['quantity']}
+                            
+                            ## Nutritional Information (per serving)
+                            - Calories: {recipe['calories'] if recipe else 'N/A'}
+                            - Protein: {recipe['protein'] if recipe else 'N/A'}g
+                            - Carbs: {recipe['carbs'] if recipe else 'N/A'}g
+                            - Fat: {recipe['fat'] if recipe else 'N/A'}g
+                            
+                            ## Preparation Instructions
+                            1. Step 1: Prepare ingredients
+                            2. Step 2: Cook according to recipe
+                            3. Step 3: Serve and enjoy!
+                            """
+                            st.download_button(
+                                label="Download Plan",
+                                data=printable_content,
+                                file_name=f"meal_plan_{plan['meal_id']}.txt",
+                                mime="text/plain"
+                            )
+        
+        # Edit meal plan form
+        if 'edit_meal_id' in st.session_state and 'edit_meal_data' in st.session_state:
+            meal_id = st.session_state.edit_meal_id
+            meal_data = st.session_state.edit_meal_data
+            st.subheader(f"Edit Meal Plan: {meal_data['recipe_name']}")
+            
+            with st.form("edit_meal_form"):
+                new_quantity = st.number_input("Number of servings:", min_value=1, value=meal_data['quantity'])
+                submit_button = st.form_submit_button("Update Meal Plan")
+                if submit_button:
+                    update_data = {'quantity': new_quantity}
+                    if update_meal_plan(meal_id, update_data):
+                        st.success("Meal plan updated successfully!")
+                        st.cache_data.clear()
+                        del st.session_state.edit_meal_id
+                        del st.session_state.edit_meal_data
+                        time.sleep(1)
+                        st.rerun()
+            if st.button("Cancel Edit"):
+                del st.session_state.edit_meal_id
+                del st.session_state.edit_meal_data
+                st.rerun()
+    else:
+        st.info("No meal plans found. Create a new meal plan in the 'Create New Plan' tab.")
