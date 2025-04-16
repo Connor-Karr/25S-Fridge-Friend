@@ -572,3 +572,268 @@ if selected_client_id:
                         file_name="allergen_food_label_guide.txt",
                         mime="text/plain"
                     )
+        # Progress Tab
+        with tab4:
+            st.subheader("Client Progress")
+            
+            # Time period selection
+            progress_period = st.selectbox(
+                "View progress for:",
+                ["Last 30 Days", "Last 3 Months", "Last 6 Months", "Last Year", "All Time"]
+            )
+            
+            if progress_period == "Last 30 Days":
+                days = 30
+            elif progress_period == "Last 3 Months":
+                days = 90
+            elif progress_period == "Last 6 Months":
+                days = 180
+            elif progress_period == "Last Year":
+                days = 365
+            else:
+                days = 365
+            
+            dates = [(datetime.now() - timedelta(days=x)).strftime('%Y-%m-%d') for x in range(days)]
+            dates.reverse()
+            
+            start_weight = float(client['weight'].split()[0])
+            if client['goal'] == "Weight Loss":
+                weekly_change = -np.random.uniform(0.8, 1.5)
+            elif client['goal'] == "Muscle Gain":
+                weekly_change = np.random.uniform(0.4, 0.8)
+            else:
+                weekly_change = np.random.uniform(-0.2, 0.2)
+            
+            daily_change = weekly_change / 7
+            np.random.seed(42)
+            weights = []
+            current_weight = start_weight
+            for i in range(days):
+                fluctuation = np.random.normal(0, 0.5)
+                current_weight += daily_change + fluctuation
+                weights.append(max(current_weight, start_weight * 0.7))
+            
+            weight_data = pd.DataFrame({
+                'Date': dates,
+                'Weight (lbs)': weights
+            })
+            
+            fig = px.line(
+                weight_data,
+                x='Date',
+                y='Weight (lbs)',
+                title=f'Weight Progress ({progress_period})',
+                markers=True
+            )
+            
+            if client['goal'] in ["Weight Loss", "Muscle Gain"]:
+                goal_weight = start_weight * 0.85 if client['goal'] == "Weight Loss" else start_weight * 1.1
+                fig.add_hline(
+                    y=goal_weight,
+                    line_dash="dash",
+                    line_color="red",
+                    annotation_text="Goal Weight",
+                    annotation_position="bottom right"
+                )
+            
+            fig.update_layout(height=400, margin=dict(l=20, r=20, t=40, b=20))
+            st.plotly_chart(fig, use_container_width=True)
+            
+            if client['goal'] in ["Weight Loss", "Muscle Gain"]:
+                st.subheader("Body Composition Changes")
+                if client['goal'] == "Weight Loss":
+                    initial_fat, final_fat = 28, 22
+                    initial_muscle, final_muscle = 30, 33
+                else:
+                    initial_fat, final_fat = 18, 19
+                    initial_muscle, final_muscle = 35, 42
+                
+                fat_daily_change = (final_fat - initial_fat) / days
+                muscle_daily_change = (final_muscle - initial_muscle) / days
+                
+                fat_percentages, muscle_percentages = [], []
+                current_fat, current_muscle = initial_fat, initial_muscle
+                for i in range(days):
+                    current_fat += fat_daily_change + np.random.normal(0, 0.2)
+                    current_muscle += muscle_daily_change + np.random.normal(0, 0.1)
+                    fat_percentages.append(current_fat)
+                    muscle_percentages.append(current_muscle)
+                
+                composition_data = pd.DataFrame({
+                    'Date': dates,
+                    'Body Fat %': fat_percentages,
+                    'Muscle %': muscle_percentages
+                })
+                
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(x=composition_data['Date'], y=composition_data['Body Fat %'],
+                                         mode='lines', name='Body Fat %', line=dict(color='orange')))
+                fig.add_trace(go.Scatter(x=composition_data['Date'], y=composition_data['Muscle %'],
+                                         mode='lines', name='Muscle %', line=dict(color='blue')))
+                fig.update_layout(
+                    title='Body Composition Changes',
+                    xaxis_title='Date',
+                    yaxis_title='Percentage',
+                    height=400,
+                    margin=dict(l=20, r=20, t=40, b=20),
+                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                )
+                st.plotly_chart(fig, use_container_width=True)
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.write("**Starting Metrics:**")
+                    st.write(f"Weight: {start_weight} lbs")
+                    st.write(f"Body Fat: {initial_fat:.1f}%")
+                    st.write(f"Muscle Mass: {initial_muscle:.1f}%")
+                with col2:
+                    st.write("**Current Metrics:**")
+                    st.write(f"Weight: {weights[-1]:.1f} lbs")
+                    st.write(f"Body Fat: {fat_percentages[-1]:.1f}%")
+                    st.write(f"Muscle Mass: {muscle_percentages[-1]:.1f}%")
+                
+                st.write("**Changes:**")
+                weight_change = weights[-1] - start_weight
+                fat_change = fat_percentages[-1] - initial_fat
+                muscle_change = muscle_percentages[-1] - initial_muscle
+                st.write(f"Weight: {'+' if weight_change > 0 else ''}{weight_change:.1f} lbs")
+                st.write(f"Body Fat: {'+' if fat_change > 0 else ''}{fat_change:.1f}%")
+                st.write(f"Muscle Mass: {'+' if muscle_change > 0 else ''}{muscle_change:.1f}%")
+            
+            st.subheader("Key Metrics")
+            metric_tabs = st.tabs(["Adherence", "Nutrition", "Outcomes"])
+            
+            with metric_tabs[0]:
+                adherence_data = {
+                    "Meal Logging": 85,
+                    "Following Meal Plan": 78,
+                    "Meeting Protein Goals": 82,
+                    "Staying Within Calorie Range": 75,
+                    "Avoiding Restricted Foods": 95
+                }
+                adherence_df = pd.DataFrame({
+                    'Metric': list(adherence_data.keys()),
+                    'Adherence (%)': list(adherence_data.values())
+                })
+                fig = px.bar(
+                    adherence_df,
+                    y='Metric',
+                    x='Adherence (%)',
+                    orientation='h',
+                    title='Client Adherence Metrics',
+                    color='Adherence (%)',
+                    color_continuous_scale=px.colors.sequential.Viridis,
+                    range_x=[0, 100]
+                )
+                fig.update_layout(height=350, margin=dict(l=20, r=20, t=40, b=20),
+                                  yaxis={'categoryorder':'total ascending'})
+                st.plotly_chart(fig, use_container_width=True)
+            
+            with metric_tabs[1]:
+                np.random.seed(43)
+                protein_compliance = np.clip(np.random.normal(85, 10, days), 0, 100)
+                calorie_compliance = np.clip(np.random.normal(80, 15, days), 0, 100)
+                carb_compliance = np.clip(np.random.normal(75, 20, days), 0, 100)
+                nutrition_df = pd.DataFrame({
+                    'Date': dates,
+                    'Protein': protein_compliance,
+                    'Calories': calorie_compliance,
+                    'Carbs': carb_compliance
+                })
+                fig = px.line(
+                    nutrition_df,
+                    x='Date',
+                    y=['Protein', 'Calories', 'Carbs'],
+                    title='Daily Nutrition Target Compliance (%)',
+                    labels={'value': 'Compliance (%)'}
+                )
+                fig.add_hline(y=80, line_dash="dash", line_color="green",
+                              annotation_text="Target Compliance Level", annotation_position="bottom right")
+                fig.update_layout(height=400, margin=dict(l=20, r=20, t=40, b=20),
+                                  legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+                                  yaxis_range=[0, 100])
+                st.plotly_chart(fig, use_container_width=True)
+            
+            with metric_tabs[2]:
+                st.write("**Progress Towards Goals:**")
+                if client['goal'] == "Weight Loss":
+                    outcomes = {"Weight Loss": 68, "Body Fat Reduction": 72, "Energy Levels": 85, "Fitness Improvement": 60}
+                elif client['goal'] == "Muscle Gain":
+                    outcomes = {"Muscle Gain": 75, "Strength Increase": 80, "Recovery Time": 65, "Protein Intake": 90}
+                elif client['goal'] == "Performance":
+                    outcomes = {"Endurance": 82, "Energy During Workouts": 75, "Recovery Time": 70, "Performance Metrics": 78}
+                else:
+                    outcomes = {"Overall Wellness": 85, "Energy Levels": 80, "Diet Sustainability": 90, "Health Markers": 75}
+                outcome_cols = st.columns(2)
+                for i, (outcome, value) in enumerate(outcomes.items()):
+                    with outcome_cols[i % 2]:
+                        fig = go.Figure(go.Indicator(
+                            mode="gauge+number",
+                            value=value,
+                            title={'text': outcome},
+                            gauge={
+                                'axis': {'range': [0, 100]},
+                                'bar': {'color': "darkblue"},
+                                'steps': [
+                                    {'range': [0, 50], 'color': "lightgray"},
+                                    {'range': [50, 75], 'color': "gray"},
+                                    {'range': [75, 100], 'color': "lightblue"}
+                                ],
+                                'threshold': {
+                                    'line': {'color': "red", 'width': 4},
+                                    'thickness': 0.75,
+                                    'value': 90
+                                }
+                            }
+                        ))
+                        fig.update_layout(height=250, margin=dict(l=20, r=20, t=30, b=20))
+                        st.plotly_chart(fig, use_container_width=True)
+            
+            st.subheader("Progress Notes")
+            notes = [
+                {"date": "2025-04-01", "note": "Client has been consistent with protein intake. Energy levels improved."},
+                {"date": "2025-03-15", "note": "Missed several tracking days due to travel. Getting back on track now."},
+                {"date": "2025-03-01", "note": "Adjusted meal plan to accommodate new work schedule."},
+                {"date": "2025-02-15", "note": "Client reports improved sleep quality and morning energy."}
+            ]
+            for note in notes:
+                st.write(f"**{note['date']}:** {note['note']}")
+            
+            with st.form("add_note_form"):
+                st.subheader("Add Progress Note")
+                new_note = st.text_area("Note:", placeholder="Enter progress note...")
+                submit_button = st.form_submit_button("Add Note")
+                if submit_button and new_note:
+                    today = datetime.now().strftime('%Y-%m-%d')
+                    st.success("Progress note added successfully!")
+                    st.write(f"**{today}:** {new_note}")
+            
+            if st.button("Generate Progress Report"):
+                with st.spinner("Generating report..."):
+                    time.sleep(2)
+                    report_text = f"# Progress Report for {client['name']}\n\n"
+                    report_text += f"**Report Period:** {progress_period}\n"
+                    report_text += f"**Generated on:** {datetime.now().strftime('%Y-%m-%d')}\n\n"
+                    report_text += f"## Weight Progress\n"
+                    report_text += f"Starting Weight: {start_weight} lbs\n"
+                    report_text += f"Current Weight: {weights[-1]:.1f} lbs\n"
+                    report_text += f"Change: {weights[-1] - start_weight:.1f} lbs\n\n"
+                    report_text += f"## Adherence Metrics\n"
+                    for metric, value in adherence_data.items():
+                        report_text += f"- {metric}: {value}%\n"
+                    report_text += "\n"
+                    report_text += f"## Progress Notes\n"
+                    for note in notes:
+                        report_text += f"**{note['date']}:** {note['note']}\n"
+                    report_text += "\n"
+                    report_text += f"## Recommendations\n"
+                    report_text += "1. Continue focusing on protein intake consistency\n"
+                    report_text += "2. Increase water intake to support metabolism\n"
+                    report_text += "3. Consider adding one additional strength training session per week\n"
+                    
+                    st.download_button(
+                        label="Download Progress Report",
+                        data=report_text,
+                        file_name=f"progress_report_{client['name'].replace(' ', '_')}.txt",
+                        mime="text/plain"
+                    )
