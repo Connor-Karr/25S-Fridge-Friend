@@ -402,20 +402,17 @@ with tab2:
                     
                     if submit and new_permission:
                         st.success(f"Permission '{new_permission}' added to {role} role! (Mock)")
-# System Stats Tab
+
 with tab3:
     st.subheader("System Statistics")
     
-    # User statistics
     st.write("### User Statistics")
     
-    # Calculate statistics
     total_users = len(users)
     active_users = len([user for user in users if user.get('status') == 'active'])
     inactive_users = len([user for user in users if user.get('status') == 'inactive'])
     test_users = len([user for user in users if user.get('status') == 'test'])
     
-    # Role counts
     role_counts = {}
     for user in users:
         role = user.get('role', 'unknown')
@@ -424,7 +421,6 @@ with tab3:
         else:
             role_counts[role] = 1
     
-    # Display metrics
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
@@ -439,27 +435,22 @@ with tab3:
     with col4:
         st.metric("Test Users", test_users)
     
-    # User growth chart (mock data)
     st.write("### User Growth")
     
-    # Generate mock data for past 12 months
     months = 12
     month_labels = [(datetime.now() - timedelta(days=30*x)).strftime('%b %Y') for x in range(months)]
-    month_labels.reverse()  # Oldest to newest
+    month_labels.reverse() 
     
-    # Generate cumulative user growth
     np.random.seed(42)
     monthly_new_users = np.random.randint(3, 15, months)
     cumulative_users = np.cumsum(monthly_new_users)
     
-    # Create a dataframe
     growth_data = pd.DataFrame({
         'Month': month_labels,
         'New Users': monthly_new_users,
         'Total Users': cumulative_users
     })
     
-    # Create a dual-axis chart
     fig = px.bar(
         growth_data,
         x='Month',
@@ -475,7 +466,6 @@ with tab3:
         yaxis='y2'
     )
     
-    # Set up dual y-axes
     fig.update_layout(
         yaxis=dict(title='New Users'),
         yaxis2=dict(
@@ -488,3 +478,151 @@ with tab3:
     )
     
     st.plotly_chart(fig, use_container_width=True)
+
+    st.write("### User Distribution by Role")
+    
+    role_data = pd.DataFrame({
+        'Role': list(role_counts.keys()),
+        'Count': list(role_counts.values())
+    })
+    
+    fig = px.pie(
+        role_data,
+        values='Count',
+        names='Role',
+        title='User Distribution by Role',
+        color_discrete_sequence=px.colors.qualitative.Set3
+    )
+    
+    fig.update_layout(height=400)
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+    st.write("### User Activity")
+    
+    days = 30
+    day_labels = [(datetime.now() - timedelta(days=x)).strftime('%Y-%m-%d') for x in range(days)]
+    day_labels.reverse()  
+    
+    np.random.seed(43)
+    logins = np.random.randint(10, 30, days)
+    active_sessions = np.random.randint(20, 50, days)
+    api_calls = np.random.randint(100, 300, days)
+    
+    activity_data = pd.DataFrame({
+        'Date': day_labels,
+        'Logins': logins,
+        'Active Sessions': active_sessions,
+        'API Calls': api_calls
+    })
+    
+    fig = px.line(
+        activity_data,
+        x='Date',
+        y=['Logins', 'Active Sessions'],
+        title='Daily User Activity',
+        markers=True
+    )
+    
+    fig.update_layout(
+        height=400,
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+    st.write("### User Retention")
+    
+    retention_data = {
+        "Week 1": 100,
+        "Week 2": 82,
+        "Week 3": 68,
+        "Week 4": 61,
+        "Week 5": 57,
+        "Week 6": 52,
+        "Week 7": 48,
+        "Week 8": 45
+    }
+    
+    retention_df = pd.DataFrame({
+        'Week': list(retention_data.keys()),
+        'Retention (%)': list(retention_data.values())
+    })
+    
+    fig = px.bar(
+        retention_df,
+        x='Week',
+        y='Retention (%)',
+        title='User Retention Over Time',
+        color='Retention (%)',
+        color_continuous_scale=px.colors.sequential.Viridis,
+        text='Retention (%)'
+    )
+    
+    fig.update_layout(
+        height=400,
+        yaxis_range=[0, 100]
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+st.markdown("---")
+st.subheader("⚙️ System Actions")
+
+action_col1, action_col2, action_col3, action_col4 = st.columns(4)
+
+with action_col1:
+    if st.button("Export User Data", use_container_width=True):
+        with st.spinner("Exporting user data..."):
+            time.sleep(2)
+            
+            user_csv = pd.DataFrame(users).to_csv(index=False)
+            
+            st.success("User data exported successfully!")
+            st.download_button(
+                label="Download CSV",
+                data=user_csv,
+                file_name="user_data_export.csv",
+                mime="text/csv"
+            )
+
+with action_col2:
+    if st.button("Synchronize User Data", use_container_width=True):
+        with st.spinner("Synchronizing user data..."):
+            time.sleep(3)
+            st.success("User data synchronized successfully!")
+
+with action_col3:
+    if st.button("Backup User Database", use_container_width=True):
+        with st.spinner("Creating backup..."):
+            time.sleep(4)
+            st.success("Database backup created successfully!")
+
+with action_col4:
+    if st.button("Generate User Report", use_container_width=True):
+        with st.spinner("Generating report..."):
+            time.sleep(2)
+            
+            report_content = f"""
+            # FridgeFriend User Report
+            Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+            
+            ## User Statistics
+            - Total Users: {total_users}
+            - Active Users: {active_users}
+            - Inactive Users: {inactive_users}
+            - Test Users: {test_users}
+            
+            ## User Distribution by Role
+            """
+            
+            for role, count in role_counts.items():
+                report_content += f"- {role.capitalize()}: {count} users\n"
+            
+            st.success("User report generated successfully!")
+            st.download_button(
+                label="Download Report",
+                data=report_content,
+                file_name="user_report.txt",
+                mime="text/plain"
+            )
