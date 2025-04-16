@@ -209,3 +209,79 @@ if selected_client_id:
             # Nutrition overview column
             with col2:
                 st.subheader("Nutrition Overview")
+            # Edit profile form
+            if st.session_state.get('edit_profile', False):
+                st.markdown("---")
+                st.subheader("Edit Client Profile")
+                
+                with st.form("edit_profile_form"):
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        new_age = st.number_input("Age:", min_value=16, max_value=100, value=client['age'])
+                        new_height = st.text_input("Height:", value=client['height'])
+                        new_weight = st.text_input("Weight:", value=client['weight'])
+                    
+                    with col2:
+                        new_email = st.text_input("Email:", value=client['email'])
+                        new_phone = st.text_input("Phone:", value=client['phone'])
+                        new_activity = st.selectbox(
+                            "Activity Level:",
+                            ["Sedentary", "Light", "Moderate", "Active", "Very Active"],
+                            index=["Sedentary", "Light", "Moderate", "Active", "Very Active"].index(client['activity_level']) if client['activity_level'] in ["Sedentary", "Light", "Moderate", "Active", "Very Active"] else 0
+                        )
+                    
+                    # Dietary preferences
+                    st.subheader("Dietary Information")
+                    
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        new_goal = st.selectbox(
+                            "Goal:",
+                            ["Weight Loss", "Muscle Gain", "Maintenance", "Performance", "Health"],
+                            index=["Weight Loss", "Muscle Gain", "Maintenance", "Performance", "Health"].index(client['goal']) if client['goal'] in ["Weight Loss", "Muscle Gain", "Maintenance", "Performance", "Health"] else 0
+                        )
+                        
+                        new_diet = st.selectbox(
+                            "Diet Type:",
+                            ["Low Carb", "High Protein", "Balanced", "Keto", "Mediterranean", "Vegan", "Vegetarian"],
+                            index=["Low Carb", "High Protein", "Balanced", "Keto", "Mediterranean", "Vegan", "Vegetarian"].index(client['diet']) if client['diet'] in ["Low Carb", "High Protein", "Balanced", "Keto", "Mediterranean", "Vegan", "Vegetarian"] else 0
+                        )
+                    
+                    with col2:
+                        new_allergies = st.text_input("Allergies (comma-separated):", value=client['allergies'])
+                        new_budget = st.number_input("Weekly Budget ($):", min_value=50.0, max_value=500.0, value=float(client['constraints']['budget']), step=10.0)
+                        new_age_group = st.selectbox(
+                            "Age Group:",
+                            ["child", "teen", "adult", "older-adult"],
+                            index=["child", "teen", "adult", "older-adult"].index(client['constraints']['age_group']) if client['constraints']['age_group'] in ["child", "teen", "adult", "older-adult"] else 0
+                        )
+                    
+                    # Submit and cancel buttons
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        submit_button = st.form_submit_button("Save Changes")
+                    
+                    with col2:
+                        cancel_button = st.form_submit_button("Cancel")
+                    
+                    if submit_button:
+                        constraints_data = {
+                            'dietary_restrictions': new_allergies.lower(),
+                            'personal_diet': new_diet.lower().replace(' ', '-'),
+                            'age_group': new_age_group,
+                            'budget': new_budget
+                        }
+                        
+                        st.success("Client profile updated successfully!")
+                        if 'edit_profile' in st.session_state:
+                            del st.session_state.edit_profile
+                        time.sleep(1)
+                        st.rerun()
+                    
+                    if cancel_button:
+                        if 'edit_profile' in st.session_state:
+                            del st.session_state.edit_profile
+                        st.rerun()
