@@ -402,3 +402,89 @@ with tab2:
                     
                     if submit and new_permission:
                         st.success(f"Permission '{new_permission}' added to {role} role! (Mock)")
+# System Stats Tab
+with tab3:
+    st.subheader("System Statistics")
+    
+    # User statistics
+    st.write("### User Statistics")
+    
+    # Calculate statistics
+    total_users = len(users)
+    active_users = len([user for user in users if user.get('status') == 'active'])
+    inactive_users = len([user for user in users if user.get('status') == 'inactive'])
+    test_users = len([user for user in users if user.get('status') == 'test'])
+    
+    # Role counts
+    role_counts = {}
+    for user in users:
+        role = user.get('role', 'unknown')
+        if role in role_counts:
+            role_counts[role] += 1
+        else:
+            role_counts[role] = 1
+    
+    # Display metrics
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric("Total Users", total_users)
+    
+    with col2:
+        st.metric("Active Users", active_users)
+    
+    with col3:
+        st.metric("Inactive Users", inactive_users)
+    
+    with col4:
+        st.metric("Test Users", test_users)
+    
+    # User growth chart (mock data)
+    st.write("### User Growth")
+    
+    # Generate mock data for past 12 months
+    months = 12
+    month_labels = [(datetime.now() - timedelta(days=30*x)).strftime('%b %Y') for x in range(months)]
+    month_labels.reverse()  # Oldest to newest
+    
+    # Generate cumulative user growth
+    np.random.seed(42)
+    monthly_new_users = np.random.randint(3, 15, months)
+    cumulative_users = np.cumsum(monthly_new_users)
+    
+    # Create a dataframe
+    growth_data = pd.DataFrame({
+        'Month': month_labels,
+        'New Users': monthly_new_users,
+        'Total Users': cumulative_users
+    })
+    
+    # Create a dual-axis chart
+    fig = px.bar(
+        growth_data,
+        x='Month',
+        y='New Users',
+        title='User Growth Over Time'
+    )
+    
+    fig.add_scatter(
+        x=growth_data['Month'],
+        y=growth_data['Total Users'],
+        mode='lines+markers',
+        name='Total Users',
+        yaxis='y2'
+    )
+    
+    # Set up dual y-axes
+    fig.update_layout(
+        yaxis=dict(title='New Users'),
+        yaxis2=dict(
+            title='Total Users',
+            overlaying='y',
+            side='right'
+        ),
+        height=400,
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
