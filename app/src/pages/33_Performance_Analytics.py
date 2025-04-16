@@ -360,3 +360,337 @@ with tab1:
     
     st.plotly_chart(fig, use_container_width=True)
     
+# Workout distribution
+    st.subheader("Workout Distribution")
+    
+    # Calculate workout counts
+    workout_counts = filtered_data['Workout'].value_counts().reset_index()
+    workout_counts.columns = ['Workout Type', 'Count']
+    
+    # Create pie chart
+    fig = px.pie(
+        workout_counts,
+        values='Count',
+        names='Workout Type',
+        title='Workout Type Distribution',
+        hole=0.4,
+        color_discrete_sequence=px.colors.qualitative.Set2
+    )
+    
+    fig.update_layout(height=400)
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Performance metrics over time
+    st.subheader("Performance Metrics")
+    
+    # Select metrics to display
+    metrics = st.multiselect(
+        "Select metrics to display:",
+        ["Energy (1-10)", "Recovery (1-10)", "Sleep (1-10)", "RPE (0-10)"],
+        default=["Energy (1-10)", "Recovery (1-10)"]
+    )
+    
+    if metrics:
+        # Create line chart
+        fig = go.Figure()
+        
+        for metric in metrics:
+            fig.add_trace(
+                go.Scatter(
+                    x=filtered_data['Date'], 
+                    y=filtered_data[metric],
+                    mode='lines+markers',
+                    name=metric
+                )
+            )
+        
+        # Update layout
+        fig.update_layout(
+            title="Performance Metrics Over Time",
+            xaxis_title="Date",
+            yaxis_title="Score",
+            height=400,
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # Training load and fatigue
+    st.subheader("Training Load & Recovery")
+    
+    # Calculate training load using RPE * Duration
+    filtered_data['Training Load'] = filtered_data['RPE (0-10)'] * filtered_data['Duration (min)'] / 60
+    
+    # Calculate 7-day rolling average for acute load
+    filtered_data['Acute Load'] = filtered_data['Training Load'].rolling(7).mean()
+    
+    # Calculate 28-day rolling average for chronic load
+    filtered_data['Chronic Load'] = filtered_data['Training Load'].rolling(28).mean()
+    
+    # Calculate acute:chronic workload ratio (ACWR)
+    filtered_data['ACWR'] = filtered_data['Acute Load'] / filtered_data['Chronic Load']
+    
+    # Create figure
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    
+    # Add load lines
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_data['Date'],
+            y=filtered_data['Acute Load'],
+            name="7-day Load",
+            line=dict(color='royalblue')
+        ),
+        secondary_y=False
+    )
+    
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_data['Date'],
+            y=filtered_data['Chronic Load'],
+            name="28-day Load",
+            line=dict(color='green')
+        ),
+        secondary_y=False
+    )
+    
+    # Add ACWR line
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_data['Date'],
+            y=filtered_data['ACWR'],
+            name="Acute:Chronic Ratio",
+            line=dict(color='firebrick')
+        ),
+        secondary_y=True
+    )
+    
+    # Add safety zones for ACWR
+    fig.add_hrect(
+        y0=0.8, y1=1.3,
+        line_width=0,
+        fillcolor="green", opacity=0.1,
+        secondary_y=True
+    )
+    
+    fig.add_hrect(
+        y0=1.3, y1=1.5,
+        line_width=0,
+        fillcolor="yellow", opacity=0.1,
+        secondary_y=True
+    )
+    
+    fig.add_hrect(
+        y0=1.5, y1=2.0,
+        line_width=0,
+        fillcolor="red", opacity=0.1,
+        secondary_y=True
+    )
+    
+    # Set titles
+    fig.update_layout(
+        title_text="Training Load & Recovery",
+        height=400,
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+    )
+    
+    # Set axis titles
+    fig.update_xaxes(title_text="Date")
+    fig.update_yaxes(title_text="Training Load (RPE * Hours)", secondary_y=False)
+    fig.update_yaxes(title_text="Acute:Chronic Workload Ratio", secondary_y=True)
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Show interpretation
+    with st.expander("Understanding Training Load"):
+        st.write("""
+        **Acute Load (7-day average)**: Represents your short-term training stress.
+        
+        **Chronic Load (28-day average)**: Represents your longer-term training adaptation.
+        
+        **Acute:Chronic Workload Ratio (ACWR)**:
+        - **0.8-1.3**: Optimal training zone (green)
+        - **1.3-1.5**: Caution zone - increased injury risk (yellow)
+        - **>1.5**: Danger zone - high injury risk (red)
+        
+        Maintaining an ACWR in the "sweet spot" (0.8-1.3) helps balance training adaptations with recovery, reducing injury risk while optimizing performance.
+        """)
+
+# Nutrition Impact Tab
+with tab2:
+    st.subheader("Nutrition's Impact on Performance")
+    
+    # Performance metric selection
+    performance_metric = st.selectbox(
+        "Select performance metric:",
+        ["Energy (1-10)", "Recovery (1-10)", "RPE (0-10)", "Sleep (1-10)"]
+    )
+    
+    # Nutrition metric selection
+    nutrition_metric = st.selectbox(
+        "Select nutrition metric:",
+        ["Calories", "Carbs (g)", "Protein (g)", "Fat (g)", "Water (L)"]
+    )
+    
+    # Scatter plot of relationship
+    fig = px.scatter(
+        combined_data,
+        x=nutrition_metric,
+        y=performance_metric,
+        title=f"{nutrition_metric} vs. {performance_metric}",
+        trendline="ols",
+        hover_data=["Date", "Workout"]
+    )
+    
+    # Update layout
+    fig.update_layout(height=500)
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Calculate correlation
+    correlation = combined_data[[nutrition_metric, performance_metric]].corr().iloc[0, 1]
+    
+    # Interpret correlation
+    if abs(correlation) < 0.2:
+        relationship = "very weak"
+    elif abs(correlation) < 0.4:
+        relationship = "weak"
+    elif abs(correlation) < 0.6:
+        relationship = "moderate"
+    elif abs(correlation) < 0.8:
+        relationship = "strong"
+    else:
+        relationship = "very strong"
+    
+    direction = "positive" if correlation > 0 else "negative"
+    
+    st.info(f"**Analysis:** There is a {relationship} {direction} relationship (correlation = {correlation:.2f}) between {nutrition_metric} and {performance_metric}.")
+    
+    # Advanced analysis with time lag
+    st.subheader("Time-Lagged Nutrition Impact")
+    
+    st.write("""
+    This analysis shows how nutrition from previous days affects your performance metrics, 
+    accounting for the delayed effect of nutrition on performance.
+    """)
+    
+    # Calculate lagged correlations
+    lag_days = 3  # Check up to 3 days of lag
+    
+    lag_correlations = []
+    for lag in range(0, lag_days+1):
+        # Create lagged nutrition data
+        lagged_data = combined_data.copy()
+        
+        if lag > 0:
+            # Shift nutrition metrics back by 'lag' days
+            lagged_nutrition = nutrition_data.copy()
+            lagged_nutrition['Date'] = pd.to_datetime(lagged_nutrition['Date'])
+            lagged_nutrition['Date'] = lagged_nutrition['Date'] + timedelta(days=lag)
+            lagged_nutrition['Date'] = lagged_nutrition['Date'].dt.strftime('%Y-%m-%d')
+            
+            # Merge with performance data
+            lagged_combined = pd.merge(
+                performance_data,
+                lagged_nutrition,
+                on='Date',
+                how='left'
+            )
+            
+            # Calculate correlation
+            if performance_metric in lagged_combined.columns and nutrition_metric in lagged_combined.columns:
+                lag_corr = lagged_combined[[nutrition_metric, performance_metric]].corr().iloc[0, 1]
+                lag_correlations.append({
+                    "Lag (days)": lag,
+                    "Correlation": lag_corr
+                })
+            else:
+                lag_correlations.append({
+                    "Lag (days)": lag,
+                    "Correlation": np.nan
+                })
+        else:
+            # No lag (same day)
+            if performance_metric in combined_data.columns and nutrition_metric in combined_data.columns:
+                lag_corr = combined_data[[nutrition_metric, performance_metric]].corr().iloc[0, 1]
+                lag_correlations.append({
+                    "Lag (days)": lag,
+                    "Correlation": lag_corr
+                })
+            else:
+                lag_correlations.append({
+                    "Lag (days)": lag,
+                    "Correlation": np.nan
+                })
+    
+    # Create lag correlation DataFrame
+    lag_df = pd.DataFrame(lag_correlations)
+    
+    # Create bar chart
+    fig = px.bar(
+        lag_df,
+        x="Lag (days)",
+        y="Correlation",
+        title=f"Impact of {nutrition_metric} on {performance_metric} (by days of lag)",
+        color="Correlation",
+        color_continuous_scale=px.colors.diverging.RdBu,
+        range_color=[-1, 1],
+        labels={"Lag (days)": "Days Before Performance", "Correlation": "Correlation Strength"}
+    )
+    
+    fig.update_layout(height=350)
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Find the strongest lag correlation
+    max_lag_corr = lag_df.loc[lag_df["Correlation"].abs().idxmax()]
+    max_lag = max_lag_corr["Lag (days)"]
+    max_corr = max_lag_corr["Correlation"]
+    
+    st.info(f"**Insight:** The strongest relationship between {nutrition_metric} and {performance_metric} occurs with a lag of {max_lag:.0f} days (correlation = {max_corr:.2f}).")
+    
+    # Performance metrics by workout type
+    st.subheader("Nutrition & Performance by Workout Type")
+    
+    # Group data by workout type
+    workout_groups = combined_data.groupby("Workout").agg({
+        nutrition_metric: "mean",
+        performance_metric: "mean",
+        "RPE (0-10)": "mean",
+        "Distance (miles)": "mean"
+    }).reset_index()
+    
+    # Create bar chart
+    fig = px.bar(
+        workout_groups,
+        x="Workout",
+        y=[nutrition_metric, performance_metric],
+        title=f"Average {nutrition_metric} and {performance_metric} by Workout Type",
+        barmode="group"
+    )
+    
+    fig.update_layout(height=400)
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Find the optimal nutrition level
+    st.subheader("Optimal Nutrition Levels")
+    
+    # Group data by nutrition levels
+    if nutrition_metric == "Calories":
+        bin_size = 200
+        min_val = (combined_data[nutrition_metric].min() // bin_size) * bin_size
+        max_val = ((combined_data[nutrition_metric].max() // bin_size) + 1) * bin_size
+    elif nutrition_metric in ["Carbs (g)", "Protein (g)"]:
+        bin_size = 20
+        min_val = (combined_data[nutrition_metric].min() // bin_size) * bin_size
+        max_val = ((combined_data[nutrition_metric].max() // bin_size) + 1) * bin_size
+    elif nutrition_metric == "Fat (g)":
+        bin_size = 10
+        min_val = (combined_data[nutrition_metric].min() // bin_size) * bin_size
+        max_val = ((combined_data[nutrition_metric].max() // bin_size) + 1) * bin_size
+    else:  # Water
+        bin_size = 0.5
+        min_val = (combined_data[nutrition_metric].min() // bin_size) * bin_size
+        max_val = ((combined_data[nutrition_metric].max() // bin_size) + 1) * bin_size
