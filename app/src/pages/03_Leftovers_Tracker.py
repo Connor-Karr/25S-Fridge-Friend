@@ -185,3 +185,19 @@ with tab1:
                             if remove_leftover(item['id']):
                                 time.sleep(1)
                                 st.rerun()
+
+# Remove all expired button
+        if expired:
+            if st.button("Remove All Expired Leftovers"):
+                try:
+                    response = requests.delete(f"{API_BASE_URL}/leftovers/expired")
+                    
+                    if response.status_code == 200:
+                        st.success("All expired leftovers removed!")
+                        st.cache_data.clear()
+                        time.sleep(1)
+                        st.rerun()
+                    else:
+                        st.error(f"Error removing expired leftovers: {response.status_code}")
+                except Exception as e:
+                    st.error(f"Error: {str(e)}")
