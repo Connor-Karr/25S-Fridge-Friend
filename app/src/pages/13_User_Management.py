@@ -139,3 +139,28 @@ with tab1:
             use_container_width=True,
             height=400
         )
+
+        selected_user_id = st.selectbox(
+            "Select user to manage:",
+            options=[user.get('user_id') for user in filtered_users],
+            format_func=lambda x: f"{next((u['f_name'] + ' ' + u['l_name'] for u in filtered_users if u['user_id'] == x), '')} ({x})"
+        )
+        
+        if selected_user_id:
+            st.session_state.selected_user_id = selected_user_id
+            
+            selected_user = next((u for u in filtered_users if u['user_id'] == selected_user_id), None)
+            
+            if selected_user:
+                with st.expander("User Details", expanded=True):
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        st.write(f"**ID:** {selected_user.get('user_id')}")
+                        st.write(f"**Name:** {selected_user.get('f_name')} {selected_user.get('l_name')}")
+                        st.write(f"**Username:** {selected_user.get('username')}")
+                    
+                    with col2:
+                        st.write(f"**Email:** {selected_user.get('email')}")
+                        st.write(f"**Role:** {selected_user.get('role', '').capitalize()}")
+                        st.write(f"**Status:** {selected_user.get('status', '').capitalize()}")
