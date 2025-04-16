@@ -285,3 +285,179 @@ if selected_client_id:
                         if 'edit_profile' in st.session_state:
                             del st.session_state.edit_profile
                         st.rerun()
+        # Nutrition Plan Tab
+        with tab2:
+            st.subheader("Client Nutrition Plan")
+            
+            st.write("### Macronutrient Targets")
+            
+            # Calculate macros based on client profile
+            weight_lbs = float(client['weight'].split()[0])
+            weight_kg = weight_lbs * 0.453592
+            
+            activity_multipliers = {
+                "Sedentary": 1.2,
+                "Light": 1.375,
+                "Moderate": 1.55,
+                "Active": 1.725,
+                "Very Active": 1.9
+            }
+            
+            if client['age'] < 30:
+                bmr = 25 * weight_kg if client['height'].split("'")[0] > "5" else 24 * weight_kg
+            else:
+                bmr = 23 * weight_kg if client['height'].split("'")[0] > "5" else 22 * weight_kg
+            
+            activity_factor = activity_multipliers.get(client['activity_level'], 1.55)
+            tdee = bmr * activity_factor
+            
+            if client['goal'] == "Weight Loss":
+                calorie_target = tdee * 0.85
+                protein_target = weight_kg * 2.2
+                fat_target = weight_kg * 1.0
+            elif client['goal'] == "Muscle Gain":
+                calorie_target = tdee * 1.1
+                protein_target = weight_kg * 2.5
+                fat_target = weight_kg * 1.0
+            elif client['goal'] == "Performance":
+                calorie_target = tdee * 1.05
+                protein_target = weight_kg * 2.0
+                fat_target = weight_kg * 1.1
+            else:
+                calorie_target = tdee
+                protein_target = weight_kg * 1.8
+                fat_target = weight_kg * 1.1
+            
+            protein_calories = protein_target * 4
+            fat_calories = fat_target * 9
+            carb_calories = calorie_target - protein_calories - fat_calories
+            carb_target = carb_calories / 4
+            
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.metric("Daily Calories", f"{calorie_target:.0f} kcal")
+            with col2:
+                st.metric("Protein", f"{protein_target:.0f}g")
+            with col3:
+                st.metric("Carbs", f"{carb_target:.0f}g")
+            
+            st.write("### Daily Meal Plan")
+            
+            # Mock meal plan
+            meals = [
+                {"name": "Breakfast", "description": "Greek yogurt with berries and granola", "calories": 350, "protein": 20, "carbs": 40, "fat": 10},
+                {"name": "Snack", "description": "Apple with almond butter", "calories": 200, "protein": 5, "carbs": 25, "fat": 10},
+                {"name": "Lunch", "description": "Grilled chicken salad with olive oil dressing", "calories": 450, "protein": 35, "carbs": 20, "fat": 25},
+                {"name": "Snack", "description": "Protein shake with banana", "calories": 250, "protein": 25, "carbs": 30, "fat": 3},
+                {"name": "Dinner", "description": "Salmon with quinoa and roasted vegetables", "calories": 550, "protein": 40, "carbs": 45, "fat": 22}
+            ]
+            
+            for meal in meals:
+                with st.expander(f"{meal['name']} - {meal['calories']} calories"):
+                    st.write(f"**{meal['description']}**")
+                    st.write(f"**Protein:** {meal['protein']}g | **Carbs:** {meal['carbs']}g | **Fat:** {meal['fat']}g")
+                    
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if st.button("Edit", key=f"edit_{meal['name']}"):
+                            st.session_state.edit_meal = meal['name']
+                    with col2:
+                        if st.button("View Recipe", key=f"recipe_{meal['name']}"):
+                            st.info(f"This would show the detailed recipe for {meal['description']}")
+            
+            if st.button("+ Add Meal"):
+                st.session_state.add_meal = True
+            
+            # Meal edit form
+            if st.session_state.get('edit_meal'):
+                meal_name = st.session_state.edit_meal
+                meal = next((m for m in meals if m['name'] == meal_name), None)
+                
+                if meal:
+                    st.markdown("---")
+                    st.subheader(f"Edit {meal_name}")
+                    
+                    with st.form("edit_meal_form"):
+                        new_description = st.text_input("Description:", value=meal['description'])
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            new_calories = st.number_input("Calories:", min_value=0, value=meal['calories'])
+                        with col2:
+                            new_protein = st.number_input("Protein (g):", min_value=0.0, value=float(meal['protein']))
+                        with col3:
+                            new_carbs = st.number_input("Carbs (g):", min_value=0.0, value=float(meal['carbs']))
+                            new_fat = st.number_input("Fat (g):", min_value=0.0, value=float(meal['fat']))
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            submit = st.form_submit_button("Save Changes")
+                        with col2:
+                            cancel = st.form_submit_button("Cancel")
+                        
+                        if submit:
+                            st.success(f"{meal_name} updated successfully!")
+                            if 'edit_meal' in st.session_state:
+                                del st.session_state.edit_meal
+                            time.sleep(1)
+                            st.rerun()
+                        if cancel:
+                            if 'edit_meal' in st.session_state:
+                                del st.session_state.edit_meal
+                            st.rerun()
+            
+            # Add meal form
+            if st.session_state.get('add_meal', False):
+                st.markdown("---")
+                st.subheader("Add New Meal")
+                
+                with st.form("add_meal_form"):
+                    new_meal_name = st.text_input("Meal Name:")
+                    new_description = st.text_input("Description:")
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        new_calories = st.number_input("Calories:", min_value=0, value=0)
+                    with col2:
+                        new_protein = st.number_input("Protein (g):", min_value=0.0, value=0.0)
+                    with col3:
+                        new_carbs = st.number_input("Carbs (g):", min_value=0.0, value=0.0)
+                        new_fat = st.number_input("Fat (g):", min_value=0.0, value=0.0)
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        submit = st.form_submit_button("Add Meal")
+                    with col2:
+                        cancel = st.form_submit_button("Cancel")
+                    
+                    if submit and new_meal_name and new_description:
+                        st.success(f"{new_meal_name} added successfully!")
+                        if 'add_meal' in st.session_state:
+                            del st.session_state.add_meal
+                        time.sleep(1)
+                        st.rerun()
+                    if cancel:
+                        if 'add_meal' in st.session_state:
+                            del st.session_state.add_meal
+                        st.rerun()
+            
+            # Export Meal Plan
+            st.markdown("---")
+            if st.button("Export Meal Plan"):
+                with st.spinner("Generating meal plan..."):
+                    time.sleep(2)
+                    meal_plan_text = f"# Meal Plan for {client['name']}\n\n"
+                    meal_plan_text += f"**Daily Targets:**\n"
+                    meal_plan_text += f"- Calories: {calorie_target:.0f} kcal\n"
+                    meal_plan_text += f"- Protein: {protein_target:.0f}g\n"
+                    meal_plan_text += f"- Carbs: {carb_target:.0f}g\n"
+                    meal_plan_text += f"- Fat: {fat_target:.0f}g\n\n"
+                    meal_plan_text += f"**Meals:**\n\n"
+                    for meal in meals:
+                        meal_plan_text += f"### {meal['name']} ({meal['calories']} calories)\n"
+                        meal_plan_text += f"{meal['description']}\n"
+                        meal_plan_text += f"Protein: {meal['protein']}g | Carbs: {meal['carbs']}g | Fat: {meal['fat']}g\n\n"
+                    
+                    st.download_button(
+                        label="Download Meal Plan",
+                        data=meal_plan_text,
+                        file_name=f"meal_plan_{client['name'].replace(' ', '_')}.txt",
+                        mime="text/plain"
+                    )
