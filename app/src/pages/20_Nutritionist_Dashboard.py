@@ -38,7 +38,7 @@ with col1:
     st.subheader("👥 Active Clients")
 
     for client in clients:
-        with st.container():
+        with st.container(border=True):
             col_a, col_b, col_c, col_d, col_e = st.columns([3, 2, 2, 2, 1])
 
             with col_a:
@@ -55,9 +55,7 @@ with col1:
                     st.session_state.selected_client_name = client['name']
                     st.switch_page("pages/21_Client_Management.py")
 
-            st.write("---")
-
-    if st.button("+ Add New Client"):
+    if st.button("+ Add New Client", type="primary"):
         st.switch_page("pages/21_Client_Management.py")
 
 
@@ -106,7 +104,7 @@ with tab1:
         values='Percentage',
         names='Macronutrient',
         title=f"Average Macronutrient Distribution for {selected_goal} Clients",
-        color_discrete_sequence=px.colors.qualitative.Set2
+        color_discrete_sequence=px.colors.qualitative.Pastel
     )
 
     fig.update_layout(height=400, margin=dict(l=20, r=20, t=40, b=20))
@@ -264,7 +262,3 @@ activities = [
 
 for activity in activities:
     st.write(f"**{activity['time']}:** {activity['activity']}")
-
-
-
-
