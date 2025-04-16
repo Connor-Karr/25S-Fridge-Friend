@@ -288,3 +288,63 @@ with tab2:
                 time.sleep(1)
                 tab1.set_active(True)
                 st.rerun()
+# Recipe Database Tab
+with tab3:
+    st.subheader("Recipe Database")
+    
+    search_term = st.text_input("Search recipes:", key="recipe_search")
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        diet_options = ["All"] + list(set(tag for recipe in recipes for tag in recipe['tags']))
+        selected_diet = st.selectbox("Filter by diet:", diet_options)
+    with col2:
+        meal_type_options = ["All", "Breakfast", "Lunch", "Dinner", "Snack"]
+        selected_meal_type = st.selectbox("Filter by meal type:", meal_type_options)
+    with col3:
+        sort_options = ["Name", "Calories (Low to High)", "Calories (High to Low)", "Protein (High to Low)"]
+        sort_by = st.selectbox("Sort by:", sort_options)
+    
+    filtered_recipes = recipes.copy()
+    if search_term:
+        filtered_recipes = [r for r in filtered_recipes if search_term.lower() in r['name'].lower()]
+    if selected_diet != "All":
+        filtered_recipes = [r for r in filtered_recipes if selected_diet in r['tags']]
+    if selected_meal_type != "All":
+        filtered_recipes = [r for r in filtered_recipes if selected_meal_type.lower() in r['name'].lower() or selected_meal_type.lower() in " ".join(r['tags']).lower()]
+    if sort_by == "Calories (Low to High)":
+        filtered_recipes.sort(key=lambda x: x['calories'])
+    elif sort_by == "Calories (High to Low)":
+        filtered_recipes.sort(key=lambda x: x['calories'], reverse=True)
+    elif sort_by == "Protein (High to Low)":
+        filtered_recipes.sort(key=lambda x: x['protein'], reverse=True)
+    else:
+        filtered_recipes.sort(key=lambda x: x['name'])
+    
+    if filtered_recipes:
+        for i in range(0, len(filtered_recipes), 2):
+            col1, col2 = st.columns(2)
+            with col1:
+                if i < len(filtered_recipes):
+                    recipe = filtered_recipes[i]
+                    st.subheader(recipe['name'])
+                    st.write(f"**Calories:** {recipe['calories']} | **Protein:** {recipe['protein']}g")
+                    st.write(f"**Carbs:** {recipe['carbs']}g | **Fat:** {recipe['fat']}g")
+                    st.write(f"**Tags:** {', '.join(recipe['tags'])}")
+                    if st.button("Add to Meal Plan", key=f"add_{recipe['id']}"):
+                        st.session_state.selected_recipe_id = recipe['id']
+                        tab2.set_active(True)
+                        st.rerun()
+            with col2:
+                if i + 1 < len(filtered_recipes):
+                    recipe = filtered_recipes[i + 1]
+                    st.subheader(recipe['name'])
+                    st.write(f"**Calories:** {recipe['calories']} | **Protein:** {recipe['protein']}g")
+                    st.write(f"**Carbs:** {recipe['carbs']}g | **Fat:** {recipe['fat']}g")
+                    st.write(f"**Tags:** {', '.join(recipe['tags'])}")
+                    if st.button("Add to Meal Plan", key=f"add_{recipe['id']}"):
+                        st.session_state.selected_recipe_id = recipe['id']
+                        tab2.set_active(True)
+                        st.rerun()
+    else:
+        st.info("No recipes found matching your filters.")
