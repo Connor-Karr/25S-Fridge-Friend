@@ -501,3 +501,39 @@ with tab3:
     
     # Generate some insights based on the data
     insights = []
+
+# Protein insights
+    if avg_protein < targets["Protein"] * 0.9:
+        insights.append("❌ Protein intake is consistently below your target. Consider adding more lean protein sources to support muscle recovery.")
+    elif avg_protein > targets["Protein"] * 1.1:
+        insights.append("⚠️ Protein intake is consistently above your target. While adequate protein is important for runners, excessive amounts may be unnecessary.")
+    else:
+        insights.append("✅ Protein intake is well-balanced and consistent, supporting muscle repair and recovery.")
+    
+    # Carb insights
+    if avg_carbs < targets["Carbs"] * 0.9:
+        insights.append("❌ Carbohydrate intake is lower than optimal for your training volume. Consider increasing carbs to fuel your workouts more effectively.")
+    elif avg_carbs > targets["Carbs"] * 1.1:
+        insights.append("⚠️ Carbohydrate intake is higher than your target. Ensure timing aligns with your training schedule for optimal performance.")
+    else:
+        insights.append("✅ Carbohydrate intake is well-aligned with your training needs, providing adequate energy for workouts.")
+    
+    # Fat insights
+    if avg_fat < targets["Fat"] * 0.8:
+        insights.append("❌ Fat intake is too low, which may impact hormone production and vitamin absorption. Consider adding healthy fats like avocados, nuts, and olive oil.")
+    elif avg_fat > targets["Fat"] * 1.2:
+        insights.append("⚠️ Fat intake is higher than optimal. While healthy fats are important, they are calorie-dense and may impact performance if excessive.")
+    else:
+        insights.append("✅ Fat intake is in the optimal range, supporting hormone production and overall health.")
+    
+    # Calorie insights
+    if avg_calories < targets["Calories"] * 0.9:
+        insights.append("❌ Calorie intake is below your estimated needs. This may impact energy levels, recovery, and long-term performance.")
+    elif avg_calories > targets["Calories"] * 1.1:
+        insights.append("⚠️ Calorie intake is higher than your estimated needs. This may impact body composition over time.")
+    else:
+        insights.append("✅ Calorie intake is well-balanced, supporting your training needs and recovery.")
+    
+    # Display insights
+    for insight in insights:
+        st.write(insight)
