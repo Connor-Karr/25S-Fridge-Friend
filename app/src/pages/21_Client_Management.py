@@ -461,3 +461,114 @@ if selected_client_id:
                         file_name=f"meal_plan_{client['name'].replace(' ', '_')}.txt",
                         mime="text/plain"
                     )
+        # Allergy Management Tab
+        with tab3:
+            st.subheader("Allergy & Dietary Restriction Management")
+            
+            current_allergies = client['allergies']
+            current_diet = client['diet']
+            st.write(f"**Current Allergies/Intolerances:** {current_allergies}")
+            st.write(f"**Current Diet Type:** {current_diet}")
+            
+            # Update restrictions form
+            with st.form("edit_restrictions_form"):
+                st.subheader("Update Dietary Restrictions")
+                all_allergens = ["Dairy", "Eggs", "Peanuts", "Tree Nuts", "Shellfish", "Fish", "Soy", "Wheat", "Gluten"]
+                current_allergen_list = [a.strip() for a in current_allergies.split(",")]
+                selected_allergens = []
+                for allergen in all_allergens:
+                    if any(a.lower() == allergen.lower() for a in current_allergen_list):
+                        selected_allergens.append(allergen)
+                
+                new_allergens = st.multiselect(
+                    "Select Allergies/Intolerances:",
+                    all_allergens,
+                    default=selected_allergens
+                )
+                
+                diet_types = ["Low Carb", "High Protein", "Balanced", "Keto", "Mediterranean", "Vegan", "Vegetarian"]
+                new_diet = st.selectbox(
+                    "Diet Type:",
+                    diet_types,
+                    index=diet_types.index(current_diet) if current_diet in diet_types else 0
+                )
+                
+                special_instructions = st.text_area(
+                    "Special Instructions:",
+                    placeholder="Enter any additional dietary considerations or notes..."
+                )
+                
+                submit_button = st.form_submit_button("Update Restrictions")
+                
+                if submit_button:
+                    new_allergies_string = ", ".join(new_allergens) if new_allergens else "None"
+                    st.success(f"Dietary restrictions updated successfully!")
+                    st.write(f"New allergies: {new_allergies_string}")
+                    st.write(f"New diet type: {new_diet}")
+                    
+                    client['allergies'] = new_allergies_string
+                    client['diet'] = new_diet
+                    
+                    constraints_data = {
+                        'dietary_restrictions': new_allergies_string.lower(),
+                        'personal_diet': new_diet.lower().replace(' ', '-')
+                    }
+                    
+                    pc_id = client['constraints']['pc_id']
+                    time.sleep(1)
+                    st.rerun()
+            
+            # Substitution chart
+            st.markdown("---")
+            st.subheader("Substitution Chart")
+            allergen_substitutes = {
+                "Dairy": ["Almond milk", "Coconut milk", "Cashew cheese", "Nutritional yeast"],
+                "Eggs": ["Flax egg (1 tbsp ground flax + 3 tbsp water)", "Chia egg", "Applesauce", "Mashed banana"],
+                "Gluten": ["Rice flour", "Almond flour", "Gluten-free oats", "Quinoa"],
+                "Peanuts": ["Sunflower seed butter", "Almond butter", "Pumpkin seeds", "Cashews"],
+                "Shellfish": ["White fish", "Tofu", "Tempeh", "Jackfruit"]
+            }
+            
+            relevant_allergens = []
+            for allergen in client['allergies'].split(','):
+                allergen = allergen.strip().capitalize()
+                if allergen in allergen_substitutes:
+                    relevant_allergens.append(allergen)
+            
+            if relevant_allergens:
+                substitute_data = []
+                for allergen in relevant_allergens:
+                    for substitute in allergen_substitutes.get(allergen, []):
+                        substitute_data.append({"Allergen": allergen, "Substitute": substitute})
+                if substitute_data:
+                    substitute_df = pd.DataFrame(substitute_data)
+                    st.dataframe(substitute_df, use_container_width=True)
+            else:
+                st.info("No specific allergens requiring substitution.")
+            
+            # Food label guide
+            st.markdown("---")
+            st.subheader("Food Label Guide")
+            st.write("""
+            Help your client look for these alternative names on food labels:
+            
+            **Dairy:** Casein, Whey, Lactose, Lactalbumin, Ghee
+            
+            **Eggs:** Albumin, Globulin, Ovoglobulin, Livetin, Vitellin
+            
+            **Gluten:** Wheat, Barley, Rye, Malt, Semolina, Farina
+            
+            **Peanuts:** Arachis oil, Beer nuts, Artificial nuts
+            
+            **Shellfish:** Scampi, Surimi, Crevette, Bouillabaisse
+            """)
+            
+            if st.button("Download Complete Food Label Guide"):
+                with st.spinner("Preparing download..."):
+                    time.sleep(1)
+                    st.download_button(
+                        label="Download Guide",
+                        data="This would be a complete guide to food labeling for allergens.",
+                        file_name="allergen_food_label_guide.txt",
+                        mime="text/plain"
+                    )
