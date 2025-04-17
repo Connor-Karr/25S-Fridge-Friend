@@ -173,7 +173,7 @@ with col1:
         st.session_state.user_id = student_id
         logger.info("Logging in as a Student")
             
-        st.switch_page("pages/00_Fridge_Dashboard.py")
+        st.switch_page("pages/00_Dashboard_Overview.py")
 
 # Alvin (Admin)
 with col2:
