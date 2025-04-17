@@ -1,7 +1,5 @@
 # Fridge Friend 
 
-This repo is a template for your semester project. It includes an overview and the infrastructure setup (containers). Explore it fully and ask questions!
-
 ## Our Project 
 
 FridgeFriend is a data-driven mobile application designed to streamline healthy eating by intelligently combining real-time fridge inventory management, personalized nutrition tracking, and dynamic meal suggestions. In today’s fast-paced world, many people struggle to balance health goals with daily responsibilities, often leading to poor eating habits, food waste, and reliance on takeout. FridgeFriend tackles these challenges by creating a holistic solution that eliminates the need for juggling multiple apps for grocery lists, recipe planning, and macro tracking. At its core, FridgeFriend leverages user-inputted and scanned food inventory data to provide tailored recipe recommendations based on what’s actually available in the user’s kitchen. The app continuously calculates intake throughout the day and aligns suggested meals with the user’s dietary goals, preferences, and restrictions, reducing decision fatigue around meal planning
