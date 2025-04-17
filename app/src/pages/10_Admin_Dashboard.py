@@ -32,7 +32,6 @@ def get_api_data(endpoint):
         return []
 
 # Quick Actions Section
-st.subheader("⚡ Quick Actions")
 actions_cols = st.columns(2)
 
 with actions_cols[0]:
