@@ -175,26 +175,3 @@ if nutrition_summary:
 else:
     st.info("No nutrition data available for analysis.")
 
-# Quick actions section
-st.markdown("### ⚡ Quick Actions")
-
-# Create action buttons
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    if st.button("Create Meal Plan", use_container_width=True):
-        st.session_state.create_meal_plan = True
-        # This would navigate to the meal planning page
-        st.info("Navigating to meal planning page...")
-
-with col2:
-    if st.button("Add Client Notes", use_container_width=True):
-        st.session_state.add_client_notes = True
-        # This would navigate to the client notes page
-        st.info("Navigating to client notes page...")
-
-with col3:
-    if st.button("View Progress Reports", use_container_width=True):
-        st.session_state.view_progress = True
-        # This would navigate to the progress reports page
-        st.info("Navigating to progress reports page...")
