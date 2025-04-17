@@ -8,7 +8,7 @@ import os
 
 API_BASE_URL = os.getenv("API_BASE_URL", "http://web-api:4000")
 
-# Auth check 
+# --- Auth check ---
 if not st.session_state.get('authenticated', False) or st.session_state.role != "athlete":
     st.warning("Please log in as an athlete to access this page")
     st.stop()
@@ -23,7 +23,7 @@ if not client_id:
     st.warning("User ID not found.")
     st.stop()
 
-# Fetch logs 
+# --- Fetch logs ---
 try:
     res = requests.get(f"{API_BASE_URL}/logs/nutrition/{client_id}")
     res.raise_for_status()
@@ -34,9 +34,9 @@ except Exception as e:
 
 if df.empty:
     st.info("No nutrition data available.")
-    df = pd.DataFrame(columns=["date", "protein", "carbs", "fat", "calories"])
+    df = pd.DataFrame(columns=["id", "date", "protein", "carbs", "fat", "calories"])
 
-# Clean data
+# --- Clean data ---
 df["date"] = pd.to_datetime(df.get("date", pd.Timestamp.now()))
 for col in ["protein", "carbs", "fat", "calories"]:
     if col in df.columns:
@@ -44,38 +44,60 @@ for col in ["protein", "carbs", "fat", "calories"]:
 df.fillna(0, inplace=True)
 df = df.sort_values(by="date", ascending=False)
 
-# Add Entry Form (POST only) 
-st.markdown("## ✍️ Add Nutrient Log")
+# --- Add or Update Entry Form ---
+st.markdown("## ✍️ Add or Edit Nutrient Log")
+
+edit_mode = st.checkbox("Edit Existing Entry")
+
+if edit_mode and not df.empty:
+    df['label'] = df['date'].dt.strftime("%Y-%m-%d") + " | " + df["calories"].astype(str) + " cal"
+    selected_row = st.selectbox("Select entry to edit", df[['date', 'label']].itertuples(index=False), format_func=lambda x: x.label)
+    selected_log = df[df["date"] == selected_row.date].iloc[0]
+    entry_date = selected_log["date"].date()
+    protein = selected_log["protein"]
+    carbs = selected_log["carbs"]
+    fat = selected_log["fat"]
+    calories = selected_log["calories"]
+    log_id = selected_log["id"]
+else:
+    entry_date = datetime.today()
+    protein = carbs = fat = calories = 0
+    log_id = None
 
 with st.form("log_form"):
-    entry_date = st.date_input("Date", datetime.today())
-    protein = st.number_input("Protein (g)", min_value=0)
-    carbs = st.number_input("Carbs (g)", min_value=0)
-    fat = st.number_input("Fat (g)", min_value=0)
-    calories = st.number_input("Calories", min_value=0)
+    entry_date_input = st.date_input("Date", entry_date)
+    protein_input = st.number_input("Protein (g)", min_value=0, value=int(protein))
+    carbs_input = st.number_input("Carbs (g)", min_value=0, value=int(carbs))
+    fat_input = st.number_input("Fat (g)", min_value=0, value=int(fat))
+    calories_input = st.number_input("Calories", min_value=0, value=int(calories))
 
     submitted = st.form_submit_button("Submit Entry")
     if submitted:
         payload = {
             "client_id": client_id,
-            "date": str(entry_date),
-            "protein": protein,
-            "carbs": carbs,
-            "fat": fat,
-            "calories": calories
+            "date": str(entry_date_input),
+            "protein": protein_input,
+            "carbs": carbs_input,
+            "fat": fat_input,
+            "calories": calories_input
         }
 
         try:
-            r = requests.post(f"{API_BASE_URL}/logs/nutrition", json=payload)
-            r.raise_for_status()
-            st.success("Log submitted successfully!")
+            if edit_mode and log_id:
+                r = requests.put(f"{API_BASE_URL}/logs/{log_id}", json=payload)
+                r.raise_for_status()
+                st.success("Log updated successfully!")
+            else:
+                r = requests.post(f"{API_BASE_URL}/logs/nutrition", json=payload)
+                r.raise_for_status()
+                st.success("New log submitted successfully!")
         except Exception as e:
             st.error(f"Error saving data: {e}")
 
-# Tabs for Visualization
+# --- Tabs for Visualization ---
 tab1, tab2 = st.tabs(["Nutrition Summary", "Performance"])
 
-# Tab 1: Nutrition Summary 
+# --- Tab 1: Nutrition Summary ---
 with tab1:
     st.header("Nutrition Overview")
 
@@ -97,7 +119,7 @@ with tab1:
         st.subheader("Fat Over Time")
         st.plotly_chart(px.line(df, x="date", y="fat", markers=True))
 
-# Tab 2: Performance Breakdown 
+# --- Tab 2: Performance Breakdown ---
 with tab2:
     st.header("Macro-Driven Performance Insights")
 
@@ -121,7 +143,7 @@ with tab2:
     daily_summary["% Carbs"] = (daily_summary["carbs_cal"] / daily_summary["total_macro_cal"] * 100).round(1)
     daily_summary["% Fat"] = (daily_summary["fat_cal"] / daily_summary["total_macro_cal"] * 100).round(1)
 
-    st.subheader("Macro Performance Table (Grouped by Date)")
+    st.subheader("Macro Performance Table")
     display_cols = [
         "date", "calories", "protein", "carbs", "fat",
         "protein_cal", "carbs_cal", "fat_cal",
