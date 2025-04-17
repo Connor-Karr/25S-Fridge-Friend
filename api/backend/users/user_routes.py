@@ -283,3 +283,27 @@ def get_health_auth(health_id):
     response.status_code = 200
     return response
 
+# Add this to your user_routes.py file
+
+@users.route('/fridge/<int:user_id>', methods=['GET'])
+def get_user_fridge(user_id):
+    """Get a user's fridge ID"""
+    cursor = db.get_db().cursor()
+    
+    query = '''
+    SELECT c.fridge_id
+    FROM Client c
+    WHERE c.user_id = %s
+    '''
+    
+    cursor.execute(query, (user_id,))
+    result = cursor.fetchone()
+    
+    if not result:
+        response = make_response(jsonify({"error": "User not found or no fridge assigned"}))
+        response.status_code = 404
+        return response
+    
+    response = make_response(jsonify(result))
+    response.status_code = 200
+    return response
