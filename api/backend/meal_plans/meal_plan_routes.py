@@ -149,22 +149,4 @@ def delete_meal_plan(meal_id):
         response = make_response(jsonify({"error": "Could not delete meal plan"}))
         response.status_code = 500
         return response
-    
-@meal_plans.route('/recipe/<int:recipe_id>', methods=['DELETE'])
-def delete_outdated_meal_plans(recipe_id):
-    """Delete outdated meal plans by recipe - Used by Riley to remove past phase meal plans [Riley-2]"""
-    cursor = db.get_db().cursor()
-    
-    try:
-        cursor.execute('DELETE FROM Meal_Plan WHERE recipe_id = %s', (recipe_id,))
-        db.get_db().commit()
-        
-        count = cursor.rowcount
-        response = make_response(jsonify({"message": f"{count} meal plans deleted"}))
-        response.status_code = 200
-        return response
-    except Exception as e:
-        current_app.logger.error(f"Error deleting meal plans: {str(e)}")
-        response = make_response(jsonify({"error": "Could not delete meal plans"}))
-        response.status_code = 500
-        return response
+   
