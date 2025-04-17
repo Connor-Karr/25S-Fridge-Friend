@@ -41,9 +41,9 @@ def _add_student_links():
     st.sidebar.markdown("### Student Navigation")
     
     st.sidebar.page_link("pages/00_Dashboard_Overview.py", label="Dashboard Overview")
-    st.sidebar.page_link("pages/01_Manage_Ingredients.py", label="Manage Ingredients")
-    st.sidebar.page_link("pages/02_Macronutrient_Stats.py", label="Macronutrient Stats")
-    st.sidebar.page_link("pages/03_Leftovers_Overview.py", label="Leftovers Overview")
+    st.sidebar.page_link("pages/01_Manage_Ingredients.py", label="Fridge Inventory")
+    st.sidebar.page_link("pages/02_Macronutrient_Stats.py", label="Meal Suggestions")
+    st.sidebar.page_link("pages/03_Leftovers_Overview.py", label="Leftovers Tracker")
 
 
 def _add_admin_links():
