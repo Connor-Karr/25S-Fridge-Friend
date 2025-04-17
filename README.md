@@ -13,9 +13,10 @@ Aarushi Attray, Harshini Gaddam, Jessica Jain, Connor Karr, Sneha Kondru
 ### How to Build the Containers
 
 1. Make sure you have your choice of IDE and Docker open.
-2. Fill in the .env file with DB_NAME=fridgefriend and then your choice for the SECRET_KEY and MYSQL_ROOT_PASSWORD
-3. Then run docker-compose down --volumes (only if there is an old version of the container in docker)
-4. Then run docker-compose up --build
+2. Clone this repo.
+3. Fill in the .env file with DB_NAME=fridgefriend and then your choice for the SECRET_KEY and MYSQL_ROOT_PASSWORD
+4. Then run docker-compose down --volumes (only if there is an old version of the container in docker)
+5. Then run docker-compose up --build
 
 ### Video Demo
 
