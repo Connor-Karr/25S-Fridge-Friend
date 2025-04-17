@@ -6,7 +6,7 @@ from modules.nav import SideBarLinks
 import os
 
 # Base URL defaults to local Flask if environment variable not set
-API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:4000")
+API_BASE_URL = os.getenv("API_BASE_URL", "http://web-api:4000")
 
 # --- Auth Check ---
 if not st.session_state.get('authenticated', False) or st.session_state.role != "athlete":
