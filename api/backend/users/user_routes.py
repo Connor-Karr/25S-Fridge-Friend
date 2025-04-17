@@ -238,17 +238,6 @@ def get_student_auth(student_id):
     cursor.execute(query, (student_id,))
     result = cursor.fetchall()
     
-    if not result:
-        # If not found, return a default student
-        default_data = [{
-            "firstName": "Ben",
-            "lastName": "Student",
-            "dietaryPreferences": "Budget-friendly"
-        }]
-        response = make_response(jsonify({"data": default_data}))
-        response.status_code = 200
-        return response
-    
     response = make_response(jsonify({"data": result}))
     response.status_code = 200
     return response
@@ -270,16 +259,6 @@ def get_admin_auth(admin_id):
     cursor.execute(query, (admin_id,))
     result = cursor.fetchall()
     
-    if not result:
-        # If not found, return a default admin
-        default_data = [{
-            "firstName": "Alvin",
-            "lastName": "Admin"
-        }]
-        response = make_response(jsonify({"data": default_data}))
-        response.status_code = 200
-        return response
-    
     response = make_response(jsonify({"data": result}))
     response.status_code = 200
     return response
@@ -299,16 +278,6 @@ def get_nutritionist_auth(nutritionist_id):
     
     cursor.execute(query, (nutritionist_id,))
     result = cursor.fetchall()
-    
-    if not result:
-        # If not found, return a default nutritionist
-        default_data = [{
-            "firstName": "Nancy",
-            "lastName": "Nutritionist"
-        }]
-        response = make_response(jsonify({"data": default_data}))
-        response.status_code = 200
-        return response
     
     response = make_response(jsonify({"data": result}))
     response.status_code = 200
@@ -331,16 +300,6 @@ def get_athlete_auth(athlete_id):
     
     cursor.execute(query, (athlete_id,))
     result = cursor.fetchall()
-    
-    if not result:
-        # If not found, return a default athlete
-        default_data = [{
-            "firstName": "Riley",
-            "lastName": "Athlete"
-        }]
-        response = make_response(jsonify({"data": default_data}))
-        response.status_code = 200
-        return response
     
     response = make_response(jsonify({"data": result}))
     response.status_code = 200
