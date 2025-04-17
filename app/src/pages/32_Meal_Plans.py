@@ -15,7 +15,7 @@ if not st.session_state.get('authenticated', False) or st.session_state.role != 
 
 SideBarLinks(st.session_state.role)
 
-st.title("📈 Performance Analytics")
+st.title("🍽️ Meal Plans")
 st.write("Track your nutrition and macro breakdown over time")
 
 client_id = st.session_state.get("user_id")
