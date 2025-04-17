@@ -307,3 +307,37 @@ def get_user_fridge(user_id):
     response = make_response(jsonify(result))
     response.status_code = 200
     return response
+
+@users.route('/<int:client_id>/advisor-suggestions', methods=['GET'])
+def get_advisor_suggestions(client_id):
+    """Get meal suggestions from health advisors for a client"""
+    cursor = db.get_db().cursor()
+    
+    try:
+        # Find meal plans recommended by the client's health advisors
+        query = '''
+        SELECT mp.meal_id, mp.recipe_id, r.name AS recipe_name, 
+               u.f_name AS advisor_first_name, u.l_name AS advisor_last_name,
+               CONCAT(u.f_name, ' ', u.l_name) AS advisor_name
+        FROM Client_Health_Advisor cha
+        JOIN Health_Advisor ha ON cha.advisor_id = ha.advisor_id
+        JOIN User u ON ha.user_id = u.user_id
+        JOIN Client c ON cha.client_id = c.client_id
+        JOIN Personal_Constraints pc ON c.pc_id = pc.pc_id
+        JOIN Meal_Plan mp ON pc.pc_id = mp.pc_id
+        JOIN Recipe r ON mp.recipe_id = r.recipe_id
+        WHERE cha.client_id = %s
+        ORDER BY mp.meal_id DESC
+        '''
+        
+        cursor.execute(query, (client_id,))
+        suggestions = cursor.fetchall()
+        
+        response = make_response(jsonify(suggestions))
+        response.status_code = 200
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error fetching advisor suggestions: {str(e)}")
+        response = make_response(jsonify({"error": "Could not fetch advisor suggestions"}))
+        response.status_code = 500
+        return response

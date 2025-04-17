@@ -4,209 +4,164 @@ import requests
 from datetime import datetime
 from modules.nav import SideBarLinks
 
-# Add sidebar navigation
-SideBarLinks(st.session_state.role)
+# API base URL
+API_BASE_URL = "http://web-api:4000"
 
 # Authentication check
 if not st.session_state.get('authenticated', False) or st.session_state.role != "busy_student":
-    st.warning("Please log in as Ben to access this page")
+    st.warning("Please log in as a student to access this page")
     st.stop()
 
+# Set up navigation
+SideBarLinks(st.session_state.role)
+
 # Page header
-st.title("Meal Suggestions")
+st.title("🍲 Meal Suggestions")
 
-# Get fridge inventory
-try:
-    response = requests.get("http://web-api:4000/fridge?client_id=1")
-    if response.status_code == 200:
-        inventory = response.json()
-    else:
-        inventory = []
-except:
-    inventory = []
+# Function to get fridge inventory
+def get_fridge_inventory(client_id=1):
+    try:
+        response = requests.get(f"{API_BASE_URL}/fridge?client_id={client_id}")
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return []
+    except Exception as e:
+        st.error(f"Error: {str(e)}")
+        return []
 
-# Use mock data if no inventory
-if not inventory:
-    inventory = [
-        {"ingredient_id": 1, "name": "Chicken Breast", "quantity": 2, "expiration_date": "2025-04-20"},
-        {"ingredient_id": 2, "name": "Rice", "quantity": 1.5, "expiration_date": "2025-06-15"},
-        {"ingredient_id": 3, "name": "Broccoli", "quantity": 1, "expiration_date": "2025-04-18"},
-        {"ingredient_id": 4, "name": "Eggs", "quantity": 8, "expiration_date": "2025-04-25"},
-        {"ingredient_id": 5, "name": "Milk", "quantity": 1, "expiration_date": "2025-04-19"},
-        {"ingredient_id": 6, "name": "Bread", "quantity": 0.5, "expiration_date": "2025-04-17"},
-        {"ingredient_id": 7, "name": "Pasta", "quantity": 1, "expiration_date": "2025-05-30"},
-        {"ingredient_id": 8, "name": "Tomatoes", "quantity": 3, "expiration_date": "2025-04-16"}
-    ]
+# Function to get meal plans
+def get_meal_plans(client_id=1):
+    try:
+        response = requests.get(f"{API_BASE_URL}/meal-plans?client_id={client_id}")
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return []
+    except Exception as e:
+        st.error(f"Error: {str(e)}")
+        return []
 
-# Recipe data
-recipes = [
-    {
-        "id": 1, 
-        "name": "Chicken and Rice Bowl", 
-        "ingredients": [1, 2], 
-        "prep_time": 20, 
-        "cost": 3.50,
-        "instructions": "Cook rice. Grill chicken. Serve together."
-    },
-    {
-        "id": 2, 
-        "name": "Veggie Pasta", 
-        "ingredients": [7, 8, 3], 
-        "prep_time": 15, 
-        "cost": 2.75,
-        "instructions": "Boil pasta. Sauté vegetables. Mix together."
-    },
-    {
-        "id": 3, 
-        "name": "Breakfast Scramble", 
-        "ingredients": [4, 5], 
-        "prep_time": 10, 
-        "cost": 1.50,
-        "instructions": "Beat eggs with milk. Cook in pan. Season and serve."
-    },
-    {
-        "id": 4, 
-        "name": "Chicken Stir Fry", 
-        "ingredients": [1, 3], 
-        "prep_time": 25, 
-        "cost": 4.00,
-        "instructions": "Cut chicken. Stir-fry with broccoli. Season and serve."
-    },
-    {
-        "id": 5, 
-        "name": "Simple Sandwich", 
-        "ingredients": [6], 
-        "prep_time": 5, 
-        "cost": 1.25,
-        "instructions": "Toast bread. Add toppings. Enjoy!"
-    }
-]
+# Function to get health advisor suggestions
+def get_advisor_suggestions(client_id=1):
+    try:
+        response = requests.get(f"{API_BASE_URL}/users/{client_id}/advisor-suggestions")
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return []
+    except Exception as e:
+        return []
+
+# Get data
+inventory = get_fridge_inventory()
+meal_plans = get_meal_plans()
+advisor_suggestions = get_advisor_suggestions()
 
 # Create tabs
-tab1, tab2, tab3 = st.tabs(["Quick Meals", "Budget-Friendly", "Using Expiring Items"])
+tab1, tab2, tab3, tab4 = st.tabs(["Your Meals", "Advisor Suggestions", "Fridge Inventory", "Expiring Items"])
 
-# Tab 1: Quick Meals
+# Your Meals Tab
 with tab1:
-    st.subheader("Quick Meals (Under 15 Minutes)")
+    st.markdown("### 🍽️ Your Meal Plans")
+    st.markdown("---")
     
-    # Filter recipes by prep time
-    quick_recipes = [recipe for recipe in recipes if recipe["prep_time"] <= 15]
-    
-    # Create dataframe
-    if quick_recipes:
-        quick_data = []
-        for recipe in quick_recipes:
-            quick_data.append({
-                "Name": recipe["name"],
-                "Prep Time": f"{recipe['prep_time']} mins",
-                "Cost": f"${recipe['cost']:.2f}",
-                "Instructions": recipe["instructions"]
-            })
-        
-        # Display table
-        st.table(pd.DataFrame(quick_data))
-    else:
-        st.info("No quick recipes available")
-
-# Tab 2: Budget-Friendly
-with tab2:
-    st.subheader("Budget-Friendly Meals (Under $3)")
-    
-    # Filter recipes by cost
-    budget_recipes = [recipe for recipe in recipes if recipe["cost"] <= 3.00]
-    
-    # Create dataframe
-    if budget_recipes:
-        budget_data = []
-        for recipe in budget_recipes:
-            budget_data.append({
-                "Name": recipe["name"],
-                "Cost": f"${recipe['cost']:.2f}",
-                "Prep Time": f"{recipe['prep_time']} mins",
-                "Instructions": recipe["instructions"]
-            })
-        
-        # Display table
-        st.table(pd.DataFrame(budget_data))
-    else:
-        st.info("No budget-friendly recipes available")
-    
-    # Budget overview
-    st.subheader("Budget Overview")
-    budget_total = 100
-    budget_used = 62.35
-    budget_remaining = budget_total - budget_used
-    
-    budget_data = [
-        {"Category": "Total Budget", "Amount": f"${budget_total:.2f}"},
-        {"Category": "Used", "Amount": f"${budget_used:.2f}"},
-        {"Category": "Remaining", "Amount": f"${budget_remaining:.2f}"}
-    ]
-    
-    st.table(pd.DataFrame(budget_data))
-
-# Tab 3: Using Expiring Items
-with tab3:
-    st.subheader("Recipes Using Soon-to-Expire Items")
-    
-    # Find expiring items
-    today = datetime.now().date()
-    expiring_items = []
-    
-    for item in inventory:
-        if item.get("expiration_date"):
-            try:
-                exp_date = datetime.strptime(item["expiration_date"], '%Y-%m-%d').date()
-                days_left = (exp_date - today).days
-                
-                if 0 <= days_left <= 3:
-                    expiring_items.append({
-                        "ingredient_id": item["ingredient_id"],
-                        "name": item["name"],
-                        "days_left": days_left
-                    })
-            except:
-                pass
-    
-    # Display expiring items table
-    if expiring_items:
-        expiring_data = []
-        for item in expiring_items:
-            expiring_data.append({
-                "Ingredient": item["name"],
-                "Days Until Expiration": item["days_left"]
-            })
-        
-        st.subheader("Expiring Ingredients")
-        st.table(pd.DataFrame(expiring_data))
-        
-        # Find recipes using expiring items
-        expiring_ids = [item["ingredient_id"] for item in expiring_items]
-        recipes_using_expiring = []
-        
-        for recipe in recipes:
-            if any(ing_id in expiring_ids for ing_id in recipe["ingredients"]):
-                # Find which expiring ingredients are used
-                used_ingredients = []
-                for ing_id in recipe["ingredients"]:
-                    if ing_id in expiring_ids:
-                        for item in expiring_items:
-                            if item["ingredient_id"] == ing_id:
-                                used_ingredients.append(item["name"])
-                
-                recipes_using_expiring.append({
-                    "Name": recipe["name"],
-                    "Prep Time": f"{recipe['prep_time']} mins",
-                    "Cost": f"${recipe['cost']:.2f}",
-                    "Uses Expiring": ", ".join(used_ingredients),
-                    "Instructions": recipe["instructions"]
-                })
-        
-        # Display recipes using expiring items
-        if recipes_using_expiring:
-            st.subheader("Recipes Using Expiring Ingredients")
-            st.table(pd.DataFrame(recipes_using_expiring))
+    if meal_plans:
+        meals_df = pd.DataFrame(meal_plans)
+        if 'recipe_name' in meals_df.columns and 'quantity' in meals_df.columns:
+            # Rename columns for better display
+            renamed_df = meals_df[['recipe_name', 'quantity']].copy()
+            renamed_df.columns = ['Recipe Name', 'Servings']
+            st.table(renamed_df)
         else:
-            st.info("No recipes found using your expiring ingredients")
+            st.info("No meal plans available.")
     else:
-        st.success("No items expiring soon. Your fridge is in good shape!")
+        st.info("No meal plans available.")
+
+# Advisor Suggestions Tab
+with tab2:
+    st.markdown("### 👩‍⚕️ Health Advisor Recommendations")
+    st.markdown("---")
+    
+    if advisor_suggestions:
+        suggestions_df = pd.DataFrame(advisor_suggestions)
+        if 'recipe_name' in suggestions_df.columns:
+            display_cols = ['recipe_name']
+            if 'advisor_name' in suggestions_df.columns:
+                display_cols.append('advisor_name')
+            
+            # Rename columns for better display
+            renamed_df = suggestions_df[display_cols].copy()
+            column_mapping = {
+                'recipe_name': 'Recipe Name', 
+                'advisor_name': 'Recommended By'
+            }
+            renamed_df.columns = [column_mapping.get(col, col) for col in display_cols]
+            
+            st.table(renamed_df)
+        else:
+            st.info("No advisor recommendations available.")
+    else:
+        st.info("No advisor recommendations available.")
+
+# Fridge Inventory Tab
+with tab3:
+    st.markdown("### 🧊 Current Fridge Inventory")
+    st.markdown("---")
+    
+    if inventory:
+        inventory_df = pd.DataFrame(inventory)
+        
+        if 'name' in inventory_df.columns and 'quantity' in inventory_df.columns:
+            display_cols = ['name', 'quantity']
+            if 'expiration_date' in inventory_df.columns:
+                display_cols.append('expiration_date')
+            
+            # Rename columns for better display
+            renamed_df = inventory_df[display_cols].copy()
+            column_mapping = {
+                'name': 'Ingredient', 
+                'quantity': 'Amount',
+                'expiration_date': 'Expires On'
+            }
+            renamed_df.columns = [column_mapping.get(col, col) for col in display_cols]
+            
+            st.table(renamed_df)
+        else:
+            st.info("No inventory available.")
+    else:
+        st.info("No inventory available.")
+
+# Expiring Items Tab
+with tab4:
+    st.markdown("### ⚠️ Items Expiring Soon")
+    st.markdown("---")
+    
+    if inventory and any('expiration_date' in item for item in inventory):
+        today = datetime.now().date()
+        expiring_soon = []
+        
+        for item in inventory:
+            if item.get("expiration_date"):
+                try:
+                    exp_date = datetime.strptime(item["expiration_date"], '%Y-%m-%d').date()
+                    days_left = (exp_date - today).days
+                    
+                    if 0 <= days_left <= 3 and not item.get("is_expired", False):
+                        item['days_left'] = days_left
+                        expiring_soon.append(item)
+                except:
+                    pass
+        
+        if expiring_soon:
+            expiring_df = pd.DataFrame(expiring_soon)
+            
+            # Rename columns for better display
+            renamed_df = expiring_df[['name', 'expiration_date', 'days_left']].copy()
+            renamed_df.columns = ['Ingredient', 'Expiration Date', 'Days Left']
+            
+            st.table(renamed_df)
+        else:
+            st.success("No items expiring soon!")
+    else:
+        st.info("No expiration data available.")
