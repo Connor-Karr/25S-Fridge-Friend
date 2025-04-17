@@ -16,7 +16,7 @@ st.title("Athlete Dashboard")
 st.subheader("Welcome, Riley!")
 
 # API config
-API_BASE_URL = "http://localhost:4000"
+API_BASE_URL = "http://web-api:4000"
 CLIENT_ID = st.session_state.get("client_id", 11)
 
 def get_api_data(endpoint, params=None):
