@@ -17,7 +17,7 @@ if not st.session_state.get('authenticated', False) or st.session_state.role != 
 SideBarLinks(st.session_state.role)
 
 # --- Page Header ---
-st.title("📊 Nutrition Tracking")
+st.title("Nutrition Tracking")
 st.write("Track and analyze your nutrition based on logged intake")
 
 # --- Identify User ---
@@ -52,19 +52,19 @@ df['date'] = pd.to_datetime(df.get('date', pd.Timestamp.now()))
 df = df.sort_values(by='date', ascending=False)
 
 # --- Section: Latest Entry ---
-st.markdown("## 🔍 Most Recent Entry")
+st.markdown("## Most Recent Entry")
 latest = df.iloc[0]
 nutrients = {k: latest[k] for k in df.columns if k in numeric_cols}
 nutrient_df = pd.DataFrame.from_dict(nutrients, orient='index', columns=["Consumed"])
 st.dataframe(nutrient_df)
 
 # --- Section: Log History ---
-st.markdown("## 📜 Recent Nutrition Logs")
+st.markdown("## Recent Nutrition Logs")
 display_cols = ["date"] + [col for col in numeric_cols if col in df.columns]
 st.dataframe(df[display_cols], use_container_width=True)
 
 # --- Section: Weekly Summary ---
-st.markdown("## 📈 Weekly Summary (Last 7 Days)")
+st.markdown("## Weekly Summary (Last 7 Days)")
 last_7_days = df[df['date'] >= (datetime.now() - timedelta(days=7))]
 
 if not last_7_days.empty:
