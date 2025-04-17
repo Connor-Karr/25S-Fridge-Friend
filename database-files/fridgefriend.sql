@@ -231,50 +231,58 @@ CREATE TABLE Error_Log (
 );
 
 -- MOCK DATA
-
+-- Insert Users (1–40), each ID auto-incremented as PK
 INSERT INTO User (
     f_name, l_name, username, password, email
 ) VALUES 
-    ('Heather', 'Bradford', 'heather231', 'g6ASy6N4(2', 'heather.bradford@example.com'),
-    ('Nicholas', 'Miller', 'nicholas928', 't4DSCGrg)I', 'nicholas.miller@example.com'),
-    ('George', 'Hall', 'george636', '(lHN^3AyN1', 'george.hall@example.com'),
-    ('Kelly', 'Thomas', 'kelly742', '_d31KO@p+!', 'kelly.thomas@example.com'),
-    ('Olivia', 'Hernandez', 'olivia693', '5a2FykmV*H', 'olivia.hernandez@example.com'),
-    ('James', 'Porter', 'james817', '(9zKCkpvfp', 'james.porter@example.com'),
-    ('Donald', 'Alvarez', 'donald903', 'XbY&0Jqm_5', 'donald.alvarez@example.com'),
-    ('Steve', 'Barnes', 'steve492', '_R8HNVlE34', 'steve.barnes@example.com'),
-    ('Timothy', 'Cowan', 'timothy874', 'EP6Mup0_M!', 'timothy.cowan@example.com'),
-    ('Emily', 'Grimes', 'emily866', 'I^k18H4vLk', 'emily.grimes@example.com'),
-    ('Virginia', 'Rogers', 'virginia559', 'cD_#2Aem!k', 'virginia.rogers@example.com'),
-    ('Olivia', 'Johnson', 'olivia366', 'E)3sK&n6@y', 'olivia.johnson@example.com'),
-    ('Isaac', 'Hurley', 'isaac147', 'T1VmsQ69@)', 'isaac.hurley@example.com'),
-    ('Aaron', 'Adams', 'aaron126', '+LVC35rzn2', 'aaron.adams@example.com'),
-    ('Kendra', 'Jefferson', 'kendra510', 'zp#nzeNe%8', 'kendra.jefferson@example.com'),
-    ('Michelle', 'Armstrong', 'michelle561', '_9zEUw9BT2', 'michelle.armstrong@example.com'),
-    ('Courtney', 'Jones', 'courtney264', '5*^v5UirjQ', 'courtney.jones@example.com'),
-    ('Steven', 'Murphy', 'steven560', 'Qi(3eSm3X0', 'steven.murphy@example.com'),
-    ('Michael', 'Burns', 'michael737', '5@xY3k!j%*', 'michael.burns@example.com'),
-    ('Caleb', 'Blankenship', 'caleb199', '+M*9Cu)P2q', 'caleb.blankenship@example.com'),
-    ('Brittney', 'Gilmore', 'brittney509', 'm1_i5MtD(7', 'brittney.gilmore@example.com'),
-    ('Brittney', 'Rivera', 'brittney544', 'Z17GtsiGM&', 'brittney.rivera@example.com'),
-    ('Robert', 'Roman', 'robert428', 'B2)53H4n%y', 'robert.roman@example.com'),
-    ('Tina', 'Jennings', 'tina825', 'T)2#e3AwY4', 'tina.jennings@example.com'),
-    ('Edward', 'Valenzuela', 'edward846', ')+YD3XSoF8', 'edward.valenzuela@example.com'),
-    ('Tara', 'Patterson', 'tara479', 'v+)43ODn(X', 'tara.patterson@example.com'),
-    ('Cynthia', 'Miller', 'cynthia729', '(7uKl&9kEt', 'cynthia.miller@example.com'),
-    ('Kelsey', 'Porter', 'kelsey313', '+v_i)SYS%2', 'kelsey.porter@example.com'),
-    ('Daniel', 'Foster', 'daniel761', '#1IFlO6vGj', 'daniel.foster@example.com'),
-    ('Aaron', 'Smith', 'aaron690', '@0O_w@zn%9', 'aaron.smith@example.com'),
-    ('David', 'Serrano', 'david572', 's#_7Xwj!Z6', 'david.serrano@example.com'),
-    ('Patricia', 'Cox', 'patricia336', 'f3NU0C)s)a', 'patricia.cox@example.com'),
-    ('Christopher', 'Meadows', 'christopher164', 'zD0Tmn#p%p', 'christopher.meadows@example.com'),
-    ('Jason', 'Taylor', 'jason401', ')U26AunhDv', 'jason.taylor@example.com'),
-    ('Ryan', 'Lopez', 'ryan737', 'ufFsUnn6&8', 'ryan.lopez@example.com'),
-    ('Roger', 'Valencia', 'roger652', '*IsZWMqp3d', 'roger.valencia@example.com'),
-    ('Patricia', 'Jimenez', 'patricia197', '9t#A#1Hq_k', 'patricia.jimenez@example.com'),
-    ('Todd', 'Howell', 'todd513', 'jpHilSk+%4', 'todd.howell@example.com'),
-    ('Heather', 'Rogers', 'heather174', 'h5uQc4Z8#D', 'heather.rogers@example.com'),
-    ('Jared', 'Park', 'jared210', 'Q_8UFyiGmS', 'jared.park@example.com');
+-- Admins (1–10)
+('Heather', 'Bradford', 'heather231', 'g6ASy6N4(2', 'heather.bradford@example.com'),
+('Alvin', 'Miller', 'alvin928', 't4DSCGrg)I', 'alvin.admin@example.com'),
+('George', 'Hall', 'george636', '(lHN^3AyN1', 'george.hall@example.com'),
+('Kelly', 'Thomas', 'kelly742', '_d31KO@p+!', 'kelly.thomas@example.com'),
+('Olivia', 'Hernandez', 'olivia693', '5a2FykmV*H', 'olivia.hernandez@example.com'),
+('James', 'Porter', 'james817', '(9zKCkpvfp', 'james.porter@example.com'),
+('Donald', 'Alvarez', 'donald903', 'XbY&0Jqm_5', 'donald.alvarez@example.com'),
+('Steve', 'Barnes', 'steve492', '_R8HNVlE34', 'steve.barnes@example.com'),
+('Timothy', 'Cowan', 'timothy874', 'EP6Mup0_M!', 'timothy.cowan@example.com'),
+('Emily', 'Grimes', 'emily866', 'I^k18H4vLk', 'emily.grimes@example.com'),
+
+-- Clients (11–20)
+('Ben', 'Rogers', 'benbusy11', 'cD_#2Aem!k', 'busy.ben@example.com'),
+('Olivia', 'Johnson', 'olivia366', 'E)3sK&n6@y', 'olivia.johnson@example.com'),
+('Isaac', 'Hurley', 'isaac147', 'T1VmsQ69@)', 'isaac.hurley@example.com'),
+('Aaron', 'Adams', 'aaron126', '+LVC35rzn2', 'aaron.adams@example.com'),
+('Kendra', 'Jefferson', 'kendra510', 'zp#nzeNe%8', 'kendra.jefferson@example.com'),
+('Michelle', 'Armstrong', 'michelle561', '_9zEUw9BT2', 'michelle.armstrong@example.com'),
+('Courtney', 'Jones', 'courtney264', '5*^v5UirjQ', 'courtney.jones@example.com'),
+('Steven', 'Murphy', 'steven560', 'Qi(3eSm3X0', 'steven.murphy@example.com'),
+('Michael', 'Burns', 'michael737', '5@xY3k!j%*', 'michael.burns@example.com'),
+('Caleb', 'Blankenship', 'caleb199', '+M*9Cu)P2q', 'caleb.blankenship@example.com'),
+
+-- Advisors (21–30)
+('Nancy', 'Grimes', 'nancy.nutri', 'I^k18H4vLk', 'nancy.nutritionist@example.com'),
+('Brittney', 'Gilmore', 'brittney509', 'm1_i5MtD(7', 'brittney.gilmore@example.com'),
+('Brittney', 'Rivera', 'brittney544', 'Z17GtsiGM&', 'brittney.rivera@example.com'),
+('Robert', 'Roman', 'robert428', 'B2)53H4n%y', 'robert.roman@example.com'),
+('Tina', 'Jennings', 'tina825', 'T)2#e3AwY4', 'tina.jennings@example.com'),
+('Edward', 'Valenzuela', 'edward846', ')+YD3XSoF8', 'edward.valenzuela@example.com'),
+('Tara', 'Patterson', 'tara479', 'v+)43ODn(X', 'tara.patterson@example.com'),
+('Cynthia', 'Miller', 'cynthia729', '(7uKl&9kEt', 'cynthia.miller@example.com'),
+('Kelsey', 'Porter', 'kelsey313', '+v_i)SYS%2', 'kelsey.porter@example.com'),
+('Daniel', 'Foster', 'daniel761', '#1IFlO6vGj', 'daniel.foster@example.com'),
+
+-- Athletes (31–40)
+('Riley', 'Runner', 'riley.runner', 'Run!2025*', 'riley.runner@example.com'),
+('Aaron', 'Smith', 'aaron690', '@0O_w@zn%9', 'aaron.smith@example.com'),
+('David', 'Serrano', 'david572', 's#_7Xwj!Z6', 'david.serrano@example.com'),
+('Patricia', 'Cox', 'patricia336', 'f3NU0C)s)a', 'patricia.cox@example.com'),
+('Christopher', 'Meadows', 'christopher164', 'zD0Tmn#p%p', 'christopher.meadows@example.com'),
+('Jason', 'Taylor', 'jason401', ')U26AunhDv', 'jason.taylor@example.com'),
+('Ryan', 'Lopez', 'ryan737', 'ufFsUnn6&8', 'ryan.lopez@example.com'),
+('Roger', 'Valencia', 'roger652', '*IsZWMqp3d', 'roger.valencia@example.com'),
+('Patricia', 'Jimenez', 'patricia197', '9t#A#1Hq_k', 'patricia.jimenez@example.com'),
+('Todd', 'Howell', 'todd513', 'jpHilSk+%4', 'todd.howell@example.com');
+
 
 INSERT INTO Admin (user_id) VALUES 
     (1), (2), (3), (4), (5),
