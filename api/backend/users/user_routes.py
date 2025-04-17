@@ -118,6 +118,105 @@ def update_user(user_id):
         response = make_response(jsonify({"error": "Could not update user"}))
         response.status_code = 500
         return response
+    
+@users.route('/constraints/<int:pc_id>', methods=['PUT'])
+def update_constraints(pc_id):
+    """Update user dietary constraints"""
+    data = request.json
+    
+    cursor = db.get_db().cursor()
+    
+    # Check if personal constraints exist
+    cursor.execute('SELECT * FROM Personal_Constraints WHERE pc_id = %s', (pc_id,))
+    if not cursor.fetchone():
+        response = make_response(jsonify({"error": "Personal constraints not found"}))
+        response.status_code = 404
+        return response
+    
+    update_fields = []
+    params = []
+    
+    if 'budget' in data:
+        update_fields.append('budget = %s')
+        params.append(data['budget'])
+    
+    if 'dietary_restrictions' in data:
+        update_fields.append('dietary_restrictions = %s')
+        params.append(data['dietary_restrictions'])
+    
+    if 'personal_diet' in data:
+        update_fields.append('personal_diet = %s')
+        params.append(data['personal_diet'])
+    
+    if 'age_group' in data:
+        update_fields.append('age_group = %s')
+        params.append(data['age_group'])
+    
+    if not update_fields:
+        response = make_response(jsonify({"error": "No fields to update"}))
+        response.status_code = 400
+        return response
+    
+    query = f"UPDATE Personal_Constraints SET {', '.join(update_fields)} WHERE pc_id = %s"
+    params.append(pc_id)
+    
+    try:
+        cursor.execute(query, params)
+        db.get_db().commit()
+        
+        response = make_response(jsonify({"message": "Personal constraints updated successfully"}))
+        response.status_code = 200
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error updating personal constraints: {str(e)}")
+        response = make_response(jsonify({"error": "Could not update personal constraints"}))
+        response.status_code = 500
+        return response
+    
+@users.route('/constraints', methods=['POST'])
+def create_constraints():
+    """Create personal constraints"""
+    data = request.json
+    
+    budget = data.get('budget')
+    dietary_restrictions = data.get('dietary_restrictions')
+    personal_diet = data.get('personal_diet')
+    age_group = data.get('age_group')
+    
+    cursor = db.get_db().cursor()
+    
+    try:
+        cursor.execute(
+            '''INSERT INTO Personal_Constraints 
+               (budget, dietary_restrictions, personal_diet, age_group) 
+               VALUES (%s, %s, %s, %s)''',
+            (budget, dietary_restrictions, personal_diet, age_group)
+        )
+        db.get_db().commit()
+        
+        pc_id = cursor.lastrowid
+        
+        # If client_id is provided, link these constraints to the client
+        client_id = data.get('client_id')
+        if client_id:
+            cursor.execute(
+                'UPDATE Client SET pc_id = %s WHERE client_id = %s',
+                (pc_id, client_id)
+            )
+            db.get_db().commit()
+        
+        response = make_response(jsonify({
+            "message": "Personal constraints created successfully",
+            "pc_id": pc_id
+        }))
+        response.status_code = 201
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error creating personal constraints: {str(e)}")
+        response = make_response(jsonify({"error": "Could not create personal constraints"}))
+        response.status_code = 500
+        return response
+    
 
 
 @users.route('/auth/student/<int:student_id>', methods=['GET'])
