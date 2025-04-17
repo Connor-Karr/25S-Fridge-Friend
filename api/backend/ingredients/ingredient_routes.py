@@ -156,13 +156,24 @@ def delete_ingredient(ingredient_id):
     cursor = db.get_db().cursor()
 
     try:
-        # Delete from fridge inventory first (foreign key constraint)
-        cursor.execute('DELETE FROM Fridge_Ingredient WHERE ingredient_id = %s', (ingredient_id,))
-
-        # Delete from macronutrients
-        cursor.execute('DELETE FROM Macronutrients WHERE ingredient_id = %s', (ingredient_id,))
+        # Delete from Error_Log entries connected to Food_Scan_Log
+        cursor.execute('''
+            DELETE el FROM Error_Log el
+            JOIN Food_Scan_Log fsl ON el.log_id = fsl.log_id
+            WHERE fsl.ingredient_id = %s
+        ''', (ingredient_id,))
         
-        # Delete the ingredient
+        # Delete from Food_Scan_Log
+        cursor.execute('DELETE FROM Food_Scan_Log WHERE ingredient_id = %s', (ingredient_id,))
+        
+        # Delete from all other tables with foreign key relationships to Ingredient
+        cursor.execute('DELETE FROM Fridge_Ingredient WHERE ingredient_id = %s', (ingredient_id,))
+        cursor.execute('DELETE FROM Recipe_Ingredient WHERE ingredient_id = %s', (ingredient_id,))
+        cursor.execute('DELETE FROM Ingredient_Macronutrient WHERE ingredient_id = %s', (ingredient_id,))
+        cursor.execute('DELETE FROM Macronutrients WHERE ingredient_id = %s', (ingredient_id,))
+        cursor.execute('DELETE FROM ShoppingList_Ingredient WHERE ingredient_id = %s', (ingredient_id,))
+        
+        # Now delete the ingredient itself
         cursor.execute('DELETE FROM Ingredient WHERE ingredient_id = %s', (ingredient_id,))
         db.get_db().commit()
 

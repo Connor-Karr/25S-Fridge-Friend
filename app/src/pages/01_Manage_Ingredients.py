@@ -313,24 +313,7 @@ with tab2:
            value=1.0,
            step=0.1
        )
-      
-       custom_submit = st.form_submit_button("Add Custom Ingredient")
-      
-       if custom_submit and new_name:
-           # First add the ingredient
-           ingredient_id, success = add_new_ingredient(
-               new_name,
-               expiration_date.strftime('%Y-%m-%d')
-           )
-          
-           if success and ingredient_id:
-               # Then add to fridge
-               success = add_ingredient_to_fridge(ingredient_id, new_quantity)
-              
-               if success:
-                   st.success(f"Added custom ingredient {new_name}!")
-                   time.sleep(1)
-                   st.rerun()
+
 
 
 # Remove Expired Tab
