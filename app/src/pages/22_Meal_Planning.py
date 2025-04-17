@@ -1,11 +1,5 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import requests
-import time
-from datetime import datetime, timedelta
-import plotly.express as px
-import json
 from modules.nav import SideBarLinks
 
 if not st.session_state.get('authenticated', False) or st.session_state.role != "nutritionist":
@@ -15,341 +9,188 @@ if not st.session_state.get('authenticated', False) or st.session_state.role != 
 SideBarLinks(st.session_state.role)
 
 # Page header
-st.title("🍽️ Meal Planning")
+st.title("Meal Planning")
 st.write("Create and manage personalized meal plans for your clients")
 
-# Get meal plans
-@st.cache_data(ttl=300)
-def get_meal_plans():
-    try:
-        response = requests.get("http://web-api:4000/meal-plans")
-        if response.status_code == 200:
-            data = response.json()
-            return data
-        else:
-            st.error(f"Error fetching meal plans: {response.status_code}")
-            return []
-    except Exception as e:
-        st.error(f"Error: {str(e)}")
-        return []
-
-# Get a specific meal plan
-@st.cache_data(ttl=300)
-def get_meal_plan(meal_id):
-    try:
-        response = requests.get("http://web-api:4000/meal-plans/{meal_id}")
-        if response.status_code == 200:
-            data = response.json()
-            return data
-        else:
-            st.error(f"Error fetching meal plan: {response.status_code}")
-            return None
-    except Exception as e:
-        st.error(f"Error: {str(e)}")
-        return None
-
-# Create a meal plan
-def create_meal_plan(data):
-    try:
-        response = requests.post("http://web-api:4000/meal-plans", json=data)
-        if response.status_code == 201:
-            return response.json(), True
-        else:
-            st.error(f"Error creating meal plan: {response.status_code}")
-            return None, False
-    except Exception as e:
-        st.error(f"Error: {str(e)}")
-        return None, False
-
-# Update a meal plan
-def update_meal_plan(meal_id, data):
-    try:
-        response = requests.put("http://web-api:4000/meal-plans/{meal_id}", json=data)
-        if response.status_code == 200:
-            return True
-        else:
-            st.error(f"Error updating meal plan: {response.status_code}")
-            return False
-    except Exception as e:
-        st.error(f"Error: {str(e)}")
-        return False
-
-# Delete a meal plan
-def delete_meal_plan(meal_id):
-    try:
-        response = requests.delete("http://web-api:4000/meal-plans/{meal_id}")
-        if response.status_code == 200:
-            return True
-        else:
-            st.error(f"Error deleting meal plan: {response.status_code}")
-            return False
-    except Exception as e:
-        st.error(f"Error: {str(e)}")
-        return False
 # Mock client data
 clients = [
-    {"id": 1, "name": "John D.", "age": 27, "goal": "Weight Loss", "diet": "Low Carb", "allergies": "Peanuts"},
-    {"id": 2, "name": "Sarah M.", "age": 34, "goal": "Muscle Gain", "diet": "High Protein", "allergies": "Dairy"},
-    {"id": 3, "name": "Michael R.", "age": 42, "goal": "Maintenance", "diet": "Balanced", "allergies": "None"},
-    {"id": 4, "name": "Emma L.", "age": 19, "goal": "Performance", "diet": "Keto", "allergies": "Gluten"},
-    {"id": 5, "name": "David W.", "age": 55, "goal": "Health", "diet": "Mediterranean", "allergies": "Shellfish"}
+    {"id": 1, "name": "John D.", "goal": "Weight Loss", "diet": "Low Carb", "allergies": "Peanuts"},
+    {"id": 2, "name": "Sarah M.", "goal": "Muscle Gain", "diet": "High Protein", "allergies": "Dairy"},
+    {"id": 3, "name": "Michael R.", "goal": "Maintenance", "diet": "Balanced", "allergies": "None"},
+    {"id": 4, "name": "Emma L.", "goal": "Performance", "diet": "Keto", "allergies": "Gluten"},
+    {"id": 5, "name": "David W.", "goal": "Health", "diet": "Mediterranean", "allergies": "Shellfish"}
 ]
 
 # Mock recipe data
 recipes = [
-    {"id": 1, "name": "Grilled Chicken Salad", "calories": 350, "protein": 32, "carbs": 12, "fat": 18, "tags": ["low-carb", "high-protein", "gluten-free"]},
-    {"id": 2, "name": "Salmon with Quinoa", "calories": 420, "protein": 28, "carbs": 35, "fat": 15, "tags": ["balanced", "omega-3", "gluten-free"]},
-    {"id": 3, "name": "Vegetable Stir Fry", "calories": 280, "protein": 15, "carbs": 42, "fat": 8, "tags": ["vegan", "low-fat", "gluten-free"]},
-    {"id": 4, "name": "Greek Yogurt Parfait", "calories": 230, "protein": 18, "carbs": 25, "fat": 7, "tags": ["breakfast", "high-protein", "vegetarian"]},
-    {"id": 5, "name": "Spinach and Feta Omelette", "calories": 320, "protein": 22, "carbs": 8, "fat": 22, "tags": ["low-carb", "keto", "vegetarian"]},
-    {"id": 6, "name": "Beef and Vegetable Stew", "calories": 380, "protein": 25, "carbs": 30, "fat": 16, "tags": ["high-protein", "balanced", "meal-prep"]},
-    {"id": 7, "name": "Mediterranean Salad", "calories": 310, "protein": 14, "carbs": 20, "fat": 19, "tags": ["mediterranean", "low-carb", "vegetarian"]},
-    {"id": 8, "name": "Protein Smoothie", "calories": 290, "protein": 30, "carbs": 28, "fat": 5, "tags": ["breakfast", "high-protein", "quick"]}
+    {"id": 1, "name": "Grilled Chicken Salad", "calories": 350, "protein": 32, "carbs": 12, "fat": 18, "tags": "low-carb, high-protein, gluten-free"},
+    {"id": 2, "name": "Salmon with Quinoa", "calories": 420, "protein": 28, "carbs": 35, "fat": 15, "tags": "balanced, omega-3, gluten-free"},
+    {"id": 3, "name": "Vegetable Stir Fry", "calories": 280, "protein": 15, "carbs": 42, "fat": 8, "tags": "vegan, low-fat, gluten-free"},
+    {"id": 4, "name": "Greek Yogurt Parfait", "calories": 230, "protein": 18, "carbs": 25, "fat": 7, "tags": "breakfast, high-protein, vegetarian"},
+    {"id": 5, "name": "Spinach and Feta Omelette", "calories": 320, "protein": 22, "carbs": 8, "fat": 22, "tags": "low-carb, keto, vegetarian"},
+    {"id": 6, "name": "Beef and Vegetable Stew", "calories": 380, "protein": 25, "carbs": 30, "fat": 16, "tags": "high-protein, balanced, meal-prep"},
+    {"id": 7, "name": "Mediterranean Salad", "calories": 310, "protein": 14, "carbs": 20, "fat": 19, "tags": "mediterranean, low-carb, vegetarian"},
+    {"id": 8, "name": "Protein Smoothie", "calories": 290, "protein": 30, "carbs": 28, "fat": 5, "tags": "breakfast, high-protein, quick"}
 ]
-# Create different tabs
+
+# Convert to DataFrames for easy display
+clients_df = pd.DataFrame(clients)
+recipes_df = pd.DataFrame(recipes)
+
+# Create tabs for different functions
 tab1, tab2, tab3 = st.tabs(["Current Meal Plans", "Create New Plan", "Recipe Database"])
+
 # Current Meal Plans Tab
 with tab1:
-    st.subheader("Current Meal Plans")
+    st.header("Current Meal Plans")
     
-    meal_plans = get_meal_plans()
-    if not meal_plans:
-        meal_plans = [
-            {"meal_id": 1, "pc_id": 1, "recipe_id": 1, "quantity": 1, "recipe_name": "Grilled Chicken Salad"},
-            {"meal_id": 2, "pc_id": 1, "recipe_id": 4, "quantity": 1, "recipe_name": "Greek Yogurt Parfait"},
-            {"meal_id": 3, "pc_id": 2, "recipe_id": 2, "quantity": 1, "recipe_name": "Salmon with Quinoa"},
-            {"meal_id": 4, "pc_id": 2, "recipe_id": 6, "quantity": 1, "recipe_name": "Beef and Vegetable Stew"},
-            {"meal_id": 5, "pc_id": 3, "recipe_id": 3, "quantity": 1, "recipe_name": "Vegetable Stir Fry"},
-            {"meal_id": 6, "pc_id": 4, "recipe_id": 5, "quantity": 1, "recipe_name": "Spinach and Feta Omelette"},
-            {"meal_id": 7, "pc_id": 5, "recipe_id": 7, "quantity": 1, "recipe_name": "Mediterranean Salad"}
-        ]
+    # Mock meal plans
+    meal_plans = [
+        {"meal_id": 1, "client_id": 1, "client_name": "John D.", "recipe_id": 1, "recipe_name": "Grilled Chicken Salad", "quantity": 1},
+        {"meal_id": 2, "client_id": 1, "client_name": "John D.", "recipe_id": 4, "recipe_name": "Greek Yogurt Parfait", "quantity": 1},
+        {"meal_id": 3, "client_id": 2, "client_name": "Sarah M.", "recipe_id": 2, "recipe_name": "Salmon with Quinoa", "quantity": 1},
+        {"meal_id": 4, "client_id": 2, "client_name": "Sarah M.", "recipe_id": 6, "recipe_name": "Beef and Vegetable Stew", "quantity": 1},
+        {"meal_id": 5, "client_id": 3, "client_name": "Michael R.", "recipe_id": 3, "recipe_name": "Vegetable Stir Fry", "quantity": 1},
+        {"meal_id": 6, "client_id": 4, "client_name": "Emma L.", "recipe_id": 5, "recipe_name": "Spinach and Feta Omelette", "quantity": 1},
+        {"meal_id": 7, "client_id": 5, "client_name": "David W.", "recipe_id": 7, "recipe_name": "Mediterranean Salad", "quantity": 1}
+    ]
     
-    # Filter options for clients
-    client_names = ["All Clients"] + [client["name"] for client in clients]
-    selected_client = st.selectbox("Filter by client:", client_names)
+    # Create DataFrame for display
+    meal_plans_df = pd.DataFrame(meal_plans)
+    
+    # Filter options
+    selected_client = st.selectbox(
+        "Filter by client:",
+        ["All Clients"] + [client["name"] for client in clients]
+    )
     
     if selected_client != "All Clients":
-        client_id = next((client["id"] for client in clients if client["name"] == selected_client), None)
-        filtered_plans = [plan for plan in meal_plans if plan.get("pc_id") == client_id]
+        filtered_plans = meal_plans_df[meal_plans_df["client_name"] == selected_client]
     else:
-        filtered_plans = meal_plans
+        filtered_plans = meal_plans_df
     
-    # Display meal plans with actions
-    if filtered_plans:
-        for plan in filtered_plans:
-            with st.expander(f"{plan['recipe_name']} (Servings: {plan['quantity']})"):
-                # Identify client name
-                client_name = next((c["name"] for c in clients if c["id"] == plan.get("pc_id")), "Unknown")
-                st.write(f"**Client:** {client_name}")
-                
-                # Find corresponding recipe
-                recipe = next((r for r in recipes if r["id"] == plan.get("recipe_id")), None)
-                if recipe:
-                    st.write(f"**Calories:** {recipe['calories']} per serving")
-                    st.write(f"**Protein:** {recipe['protein']}g | **Carbs:** {recipe['carbs']}g | **Fat:** {recipe['fat']}g")
-                    st.write(f"**Tags:** {', '.join(recipe['tags'])}")
-                
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    if st.button("Edit", key=f"edit_{plan['meal_id']}"):
-                        st.session_state.edit_meal_id = plan['meal_id']
-                        st.session_state.edit_meal_data = plan
-                        st.rerun()
-                with col2:
-                    if st.button("Delete", key=f"delete_{plan['meal_id']}"):
-                        if delete_meal_plan(plan['meal_id']):
-                            st.success("Meal plan deleted successfully!")
-                            st.cache_data.clear()
-                            time.sleep(1)
-                            st.rerun()
-                with col3:
-                    if st.button("Print", key=f"print_{plan['meal_id']}"):
-                        with st.spinner("Generating printable version..."):
-                            time.sleep(2)
-                            st.success("Meal plan ready for printing!")
-                            printable_content = f"""
-                            # Meal Plan: {plan['recipe_name']}
-                            
-                            **Client:** {client_name}
-                            **Servings:** {plan['quantity']}
-                            
-                            ## Nutritional Information (per serving)
-                            - Calories: {recipe['calories'] if recipe else 'N/A'}
-                            - Protein: {recipe['protein'] if recipe else 'N/A'}g
-                            - Carbs: {recipe['carbs'] if recipe else 'N/A'}g
-                            - Fat: {recipe['fat'] if recipe else 'N/A'}g
-                            
-                            ## Preparation Instructions
-                            1. Step 1: Prepare ingredients
-                            2. Step 2: Cook according to recipe
-                            3. Step 3: Serve and enjoy!
-                            """
-                            st.download_button(
-                                label="Download Plan",
-                                data=printable_content,
-                                file_name=f"meal_plan_{plan['meal_id']}.txt",
-                                mime="text/plain"
-                            )
+    # Display meal plans table
+    if not filtered_plans.empty:
+        st.subheader(f"Showing {len(filtered_plans)} meal plans")
         
-        # Edit meal plan form
-        if 'edit_meal_id' in st.session_state and 'edit_meal_data' in st.session_state:
-            meal_id = st.session_state.edit_meal_id
-            meal_data = st.session_state.edit_meal_data
-            st.subheader(f"Edit Meal Plan: {meal_data['recipe_name']}")
-            
-            with st.form("edit_meal_form"):
-                new_quantity = st.number_input("Number of servings:", min_value=1, value=meal_data['quantity'])
-                submit_button = st.form_submit_button("Update Meal Plan")
-                if submit_button:
-                    update_data = {'quantity': new_quantity}
-                    if update_meal_plan(meal_id, update_data):
-                        st.success("Meal plan updated successfully!")
-                        st.cache_data.clear()
-                        del st.session_state.edit_meal_id
-                        del st.session_state.edit_meal_data
-                        time.sleep(1)
-                        st.rerun()
-            if st.button("Cancel Edit"):
-                del st.session_state.edit_meal_id
-                del st.session_state.edit_meal_data
-                st.rerun()
+        # Simplify the dataframe for display
+        display_df = filtered_plans[["client_name", "recipe_name", "quantity"]]
+        display_df.columns = ["Client", "Recipe", "Servings"]
+        
+        # Show as a table
+        st.table(display_df)
+        
+        # Simple edit option
+        st.subheader("Edit Meal Plan")
+        meal_id = st.number_input("Enter Meal ID to edit:", min_value=1, max_value=max(meal_plans_df["meal_id"]), step=1)
+        new_quantity = st.number_input("New quantity:", min_value=1, max_value=10, value=1)
+        
+        if st.button("Update Meal Plan"):
+            st.success(f"Meal plan {meal_id} updated to {new_quantity} servings!")
     else:
         st.info("No meal plans found. Create a new meal plan in the 'Create New Plan' tab.")
+
 # Create New Plan Tab
 with tab2:
-    st.subheader("Create New Meal Plan")
+    st.header("Create New Meal Plan")
     
-    with st.form("create_meal_form"):
-        # Client selection
-        client_options = [f"{client['name']} ({client['diet']})" for client in clients]
-        selected_client_option = st.selectbox("Select client:", client_options)
-        selected_client_index = client_options.index(selected_client_option)
-        selected_client_id = clients[selected_client_index]['id']
+    # Client selection
+    selected_client_name = st.selectbox("Select client:", [client["name"] for client in clients])
+    selected_client = next(client for client in clients if client["name"] == selected_client_name)
+    
+    # Recipe selection
+    selected_recipe_name = st.selectbox("Select recipe:", [recipe["name"] for recipe in recipes])
+    selected_recipe = next(recipe for recipe in recipes if recipe["name"] == selected_recipe_name)
+    
+    # Show recipe details
+    st.subheader("Recipe Details")
+    recipe_details = {
+        "Detail": ["Calories", "Protein", "Carbs", "Fat", "Tags"],
+        "Value": [
+            f"{selected_recipe['calories']} kcal",
+            f"{selected_recipe['protein']}g",
+            f"{selected_recipe['carbs']}g",
+            f"{selected_recipe['fat']}g",
+            selected_recipe['tags']
+        ]
+    }
+    
+    recipe_df = pd.DataFrame(recipe_details)
+    st.table(recipe_df)
+    
+    # Simple allergy check
+    if selected_client["allergies"] != "None":
+        allergies = [a.strip().lower() for a in selected_client["allergies"].split(",")]
+        tags = [t.strip().lower() for t in selected_recipe["tags"].split(",")]
         
-        # Recipe selection
-        recipe_options = [f"{recipe['name']} ({recipe['calories']} cal)" for recipe in recipes]
-        selected_recipe_option = st.selectbox("Select recipe:", recipe_options)
-        selected_recipe_index = recipe_options.index(selected_recipe_option)
-        selected_recipe_id = recipes[selected_recipe_index]['id']
+        for allergy in allergies:
+            if any(allergy in tag for tag in tags):
+                st.warning(f"⚠️ Warning: This recipe may contain {allergy}, which {selected_client_name} is allergic to.")
+    
+    # Servings and submit
+    servings = st.number_input("Number of servings:", min_value=1, max_value=10, value=1)
+    
+    if st.button("Create Meal Plan", type="primary"):
+        st.success(f"Meal plan created for {selected_client_name}!")
         
-        servings = st.number_input("Number of servings:", min_value=1, value=1)
-        
-        # Check for dietary restrictions and compatibility
-        selected_client = clients[selected_client_index]
-        selected_recipe = recipes[selected_recipe_index]
-        
-        allergy_warning = False
-        diet_mismatch = False
-        
-        if selected_client['allergies'] != "None":
-            allergy_list = selected_client['allergies'].lower().split(',')
-            for allergy in allergy_list:
-                if any(allergy.strip() in tag.lower() for tag in selected_recipe['tags']):
-                    allergy_warning = True
-                    break
-        
-        diet_mapping = {
-            "Low Carb": ["low-carb", "keto"],
-            "High Protein": ["high-protein"],
-            "Balanced": ["balanced"],
-            "Keto": ["keto", "low-carb"],
-            "Mediterranean": ["mediterranean"]
+        # Display summary of created plan
+        st.subheader("Created Meal Plan")
+        summary_data = {
+            "Detail": ["Client", "Recipe", "Servings", "Total Calories", "Total Protein", "Total Carbs", "Total Fat"],
+            "Value": [
+                selected_client_name,
+                selected_recipe_name,
+                servings,
+                f"{selected_recipe['calories'] * servings} kcal",
+                f"{selected_recipe['protein'] * servings}g",
+                f"{selected_recipe['carbs'] * servings}g",
+                f"{selected_recipe['fat'] * servings}g"
+            ]
         }
         
-        if selected_client['diet'] in diet_mapping:
-            compatible_tags = diet_mapping[selected_client['diet']]
-            if not any(tag in selected_recipe['tags'] for tag in compatible_tags):
-                diet_mismatch = True
-        
-        if allergy_warning:
-            st.warning(f"⚠️ Warning: This recipe may contain allergens that {selected_client['name']} is allergic to.")
-        if diet_mismatch:
-            st.warning(f"⚠️ Warning: This recipe may not be compatible with {selected_client['name']}'s {selected_client['diet']} diet.")
-        
-        with st.expander("Recipe Preview"):
-            st.write(f"**{selected_recipe['name']}**")
-            st.write(f"**Calories:** {selected_recipe['calories']} per serving")
-            st.write(f"**Protein:** {selected_recipe['protein']}g | **Carbs:** {selected_recipe['carbs']}g | **Fat:** {selected_recipe['fat']}g")
-            st.write(f"**Tags:** {', '.join(selected_recipe['tags'])}")
-        
-        submit_button = st.form_submit_button("Create Meal Plan")
-        if submit_button:
-            meal_plan_data = {
-                'pc_id': selected_client_id,
-                'recipe_id': selected_recipe_id,
-                'quantity': servings
-            }
-            result, success = create_meal_plan(meal_plan_data)
-            if success:
-                st.success(f"Meal plan created successfully for {selected_client['name']}!")
-                st.cache_data.clear()
-                time.sleep(1)
-                tab1.set_active(True)
-                st.rerun()
+        summary_df = pd.DataFrame(summary_data)
+        st.table(summary_df)
+
 # Recipe Database Tab
 with tab3:
-    st.subheader("Recipe Database")
+    st.header("Recipe Database")
     
-    search_term = st.text_input("Search recipes:", key="recipe_search")
+    # Simple search and filter
+    search_term = st.text_input("Search recipes:", placeholder="Enter recipe name...")
     
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        diet_options = ["All"] + list(set(tag for recipe in recipes for tag in recipe['tags']))
-        selected_diet = st.selectbox("Filter by diet:", diet_options)
-    with col2:
-        meal_type_options = ["All", "Breakfast", "Lunch", "Dinner", "Snack"]
-        selected_meal_type = st.selectbox("Filter by meal type:", meal_type_options)
-    with col3:
-        sort_options = ["Name", "Calories (Low to High)", "Calories (High to Low)", "Protein (High to Low)"]
-        sort_by = st.selectbox("Sort by:", sort_options)
+    diet_options = ["All", "low-carb", "high-protein", "balanced", "keto", "mediterranean", "vegan", "vegetarian"]
+    diet_filter = st.selectbox("Filter by diet:", diet_options)
     
-    filtered_recipes = recipes.copy()
+    # Filter recipes
+    filtered_recipes = recipes_df.copy()
     if search_term:
-        filtered_recipes = [r for r in filtered_recipes if search_term.lower() in r['name'].lower()]
-    if selected_diet != "All":
-        filtered_recipes = [r for r in filtered_recipes if selected_diet in r['tags']]
-    if selected_meal_type != "All":
-        filtered_recipes = [r for r in filtered_recipes if selected_meal_type.lower() in r['name'].lower() or selected_meal_type.lower() in " ".join(r['tags']).lower()]
-    if sort_by == "Calories (Low to High)":
-        filtered_recipes.sort(key=lambda x: x['calories'])
-    elif sort_by == "Calories (High to Low)":
-        filtered_recipes.sort(key=lambda x: x['calories'], reverse=True)
-    elif sort_by == "Protein (High to Low)":
-        filtered_recipes.sort(key=lambda x: x['protein'], reverse=True)
-    else:
-        filtered_recipes.sort(key=lambda x: x['name'])
+        filtered_recipes = filtered_recipes[filtered_recipes["name"].str.contains(search_term, case=False)]
     
-    if filtered_recipes:
-        for i in range(0, len(filtered_recipes), 2):
-            col1, col2 = st.columns(2)
-            with col1:
-                if i < len(filtered_recipes):
-                    recipe = filtered_recipes[i]
-                    st.subheader(recipe['name'])
-                    st.write(f"**Calories:** {recipe['calories']} | **Protein:** {recipe['protein']}g")
-                    st.write(f"**Carbs:** {recipe['carbs']}g | **Fat:** {recipe['fat']}g")
-                    st.write(f"**Tags:** {', '.join(recipe['tags'])}")
-                    if st.button("Add to Meal Plan", key=f"add_{recipe['id']}"):
-                        st.session_state.selected_recipe_id = recipe['id']
-                        tab2.set_active(True)
-                        st.rerun()
-            with col2:
-                if i + 1 < len(filtered_recipes):
-                    recipe = filtered_recipes[i + 1]
-                    st.subheader(recipe['name'])
-                    st.write(f"**Calories:** {recipe['calories']} | **Protein:** {recipe['protein']}g")
-                    st.write(f"**Carbs:** {recipe['carbs']}g | **Fat:** {recipe['fat']}g")
-                    st.write(f"**Tags:** {', '.join(recipe['tags'])}")
-                    if st.button("Add to Meal Plan", key=f"add_{recipe['id']}"):
-                        st.session_state.selected_recipe_id = recipe['id']
-                        tab2.set_active(True)
-                        st.rerun()
+    if diet_filter != "All":
+        filtered_recipes = filtered_recipes[filtered_recipes["tags"].str.contains(diet_filter, case=False)]
+    
+    # Show filtered recipes
+    if not filtered_recipes.empty:
+        st.subheader(f"Showing {len(filtered_recipes)} recipes")
+        
+        # Format for display
+        display_recipes = filtered_recipes[["name", "calories", "protein", "carbs", "fat", "tags"]]
+        display_recipes.columns = ["Recipe", "Calories", "Protein (g)", "Carbs (g)", "Fat (g)", "Tags"]
+        
+        st.table(display_recipes)
+        
+        # Option to add recipe to meal plan
+        st.subheader("Add to Meal Plan")
+        recipe_id = st.number_input("Enter Recipe ID to add:", min_value=1, max_value=max(recipes_df["id"]), step=1)
+        client_name = st.selectbox("Select client for meal plan:", [client["name"] for client in clients])
+        
+        if st.button("Add to Meal Plan"):
+            st.success(f"Added recipe to {client_name}'s meal plan!")
     else:
-        st.info("No recipes found matching your filters.")
+        st.info("No recipes found matching your criteria. Try adjusting your search or filter.")
 
-# Nutrition Resources Section
-st.markdown("---")
-st.subheader("📚 Nutrition Resources")
+# Nutrition Resources Section - Simple Table
+st.header("Nutrition Resources")
 
 resources = [
     {"title": "Diet-Specific Meal Planning Guide", "description": "Guidelines for creating meal plans for different diets (keto, vegan, paleo, etc.)"},
@@ -358,20 +199,6 @@ resources = [
     {"title": "Meal Prep Templates", "description": "Printable templates for clients to track their meal preparations"}
 ]
 
-col1, col2 = st.columns(2)
-with col1:
-    for i in range(0, len(resources), 2):
-        if i < len(resources):
-            with st.container():
-                st.markdown(f"**{resources[i]['title']}**")
-                st.write(resources[i]['description'])
-                st.button("Download", key=f"resource_{i}")
-                st.write("---")
-with col2:
-    for i in range(1, len(resources), 2):
-        if i < len(resources):
-            with st.container():
-                st.markdown(f"**{resources[i]['title']}**")
-                st.write(resources[i]['description'])
-                st.button("Download", key=f"resource_{i}")
-                st.write("---")
+# Convert to DataFrame
+resources_df = pd.DataFrame(resources)
+st.table(resources_df)
