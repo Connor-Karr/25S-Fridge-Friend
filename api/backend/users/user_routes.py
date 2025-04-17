@@ -417,3 +417,163 @@ def get_nutrition_summary(advisor_id):
         response = make_response(jsonify({"error": "Could not fetch nutrition summary"}))
         response.status_code = 500
         return response
+
+
+# Add this to user_routes.py
+
+@users.route('/client/<int:client_id>/workouts', methods=['GET'])
+def get_client_workouts(client_id):
+    """Get workouts for a specific client"""
+    cursor = db.get_db().cursor()
+    
+    try:
+        query = '''
+        SELECT w.workout_id, w.name, w.quantity, w.weight, w.calories_burnt
+        FROM Client_Workout cw
+        JOIN Workout w ON cw.workout_id = w.workout_id
+        WHERE cw.client_id = %s
+        ORDER BY w.workout_id
+        '''
+        
+        cursor.execute(query, (client_id,))
+        workouts = cursor.fetchall()
+        
+        response = make_response(jsonify(workouts))
+        response.status_code = 200
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error fetching client workouts: {str(e)}")
+        response = make_response(jsonify({"error": "Could not fetch workouts"}))
+        response.status_code = 500
+        return response
+
+
+
+# Add these routes to user_routes.py
+
+@users.route('/workouts', methods=['POST'])
+def create_workout():
+    """Create a new workout"""
+    data = request.json
+    
+    name = data.get('name')
+    quantity = data.get('quantity')  # Duration in minutes
+    weight = data.get('weight')      # Weight used if applicable
+    calories_burnt = data.get('calories_burnt')
+    
+    if not name:
+        response = make_response(jsonify({"error": "Workout name is required"}))
+        response.status_code = 400
+        return response
+
+    cursor = db.get_db().cursor()
+    try:
+        # Insert workout
+        cursor.execute(
+            'INSERT INTO Workout (name, quantity, weight, calories_burnt) VALUES (%s, %s, %s, %s)',
+            (name, quantity, weight, calories_burnt)
+        )
+        workout_id = cursor.lastrowid
+        
+        # Associate with client if client_id is provided
+        client_id = data.get('client_id')
+        if client_id:
+            cursor.execute(
+                'INSERT INTO Client_Workout (client_id, workout_id) VALUES (%s, %s)',
+                (client_id, workout_id)
+            )
+            
+        db.get_db().commit()
+        
+        response = make_response(jsonify({
+            "message": "Workout created successfully", 
+            "workout_id": workout_id
+        }))
+        response.status_code = 201
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error creating workout: {str(e)}")
+        response = make_response(jsonify({"error": "Could not create workout"}))
+        response.status_code = 500
+        return response
+
+@users.route('/workouts/<int:workout_id>', methods=['PUT'])
+def update_workout(workout_id):
+    """Update a workout"""
+    data = request.json
+    
+    cursor = db.get_db().cursor()
+    
+    # Check if workout exists
+    cursor.execute('SELECT * FROM Workout WHERE workout_id = %s', (workout_id,))
+    if not cursor.fetchone():
+        response = make_response(jsonify({"error": "Workout not found"}))
+        response.status_code = 404
+        return response
+    
+    # Build update query dynamically
+    update_fields = []
+    params = []
+    
+    if 'name' in data:
+        update_fields.append('name = %s')
+        params.append(data['name'])
+    
+    if 'quantity' in data:
+        update_fields.append('quantity = %s')
+        params.append(data['quantity'])
+    
+    if 'weight' in data:
+        update_fields.append('weight = %s')
+        params.append(data['weight'])
+    
+    if 'calories_burnt' in data:
+        update_fields.append('calories_burnt = %s')
+        params.append(data['calories_burnt'])
+    
+    if not update_fields:
+        response = make_response(jsonify({"error": "No fields to update"}))
+        response.status_code = 400
+        return response
+    
+    try:
+        query = f"UPDATE Workout SET {', '.join(update_fields)} WHERE workout_id = %s"
+        params.append(workout_id)
+        cursor.execute(query, params)
+        db.get_db().commit()
+        
+        response = make_response(jsonify({"message": "Workout updated successfully"}))
+        response.status_code = 200
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error updating workout: {str(e)}")
+        response = make_response(jsonify({"error": "Could not update workout"}))
+        response.status_code = 500
+        return response
+
+@users.route('/workouts/<int:workout_id>', methods=['DELETE'])
+def delete_workout(workout_id):
+    """Delete a workout"""
+    cursor = db.get_db().cursor()
+    
+    try:
+        # First delete from Client_Workout (foreign key constraint)
+        cursor.execute('DELETE FROM Client_Workout WHERE workout_id = %s', (workout_id,))
+        
+        # Then delete the workout
+        cursor.execute('DELETE FROM Workout WHERE workout_id = %s', (workout_id,))
+        db.get_db().commit()
+        
+        if cursor.rowcount == 0:
+            response = make_response(jsonify({"error": "Workout not found"}))
+            response.status_code = 404
+            return response
+        
+        response = make_response(jsonify({"message": "Workout deleted successfully"}))
+        response.status_code = 200
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error deleting workout: {str(e)}")
+        response = make_response(jsonify({"error": "Could not delete workout"}))
+        response.status_code = 500
+        return response

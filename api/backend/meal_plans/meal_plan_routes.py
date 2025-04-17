@@ -168,3 +168,23 @@ def delete_outdated_meal_plans(recipe_id):
         response = make_response(jsonify({"error": "Could not delete meal plans"}))
         response.status_code = 500
         return response
+
+
+@meal_plans.route('/recipes', methods=['GET'])
+def get_all_recipes():
+    """Get all recipes"""
+    cursor = db.get_db().cursor()
+    
+    try:
+        query = 'SELECT * FROM Recipe'
+        cursor.execute(query)
+        recipes = cursor.fetchall()
+        
+        response = make_response(jsonify(recipes))
+        response.status_code = 200
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error fetching recipes: {str(e)}")
+        response = make_response(jsonify({"error": "Could not fetch recipes"}))
+        response.status_code = 500
+        return response
