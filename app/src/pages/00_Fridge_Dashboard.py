@@ -1,10 +1,10 @@
 import streamlit as st
 import pandas as pd
 import requests
-import time
 from datetime import datetime
 from modules.nav import SideBarLinks
 
+# Add sidebar navigation
 SideBarLinks(st.session_state.role)
 
 # Authentication check
@@ -12,145 +12,119 @@ if not st.session_state.get('authenticated', False) or st.session_state.role != 
     st.warning("Please log in as Ben to access this page")
     st.stop()
 
-st.title(f"Welcome, {st.session_state.first_name}! 👋")
+# Get user's client ID (assuming it's stored in session state or using default 1)
+CLIENT_ID = st.session_state.get('user_id', 1)
+
+# Try localhost instead of container name since they're port-mapped
+API_BASE_URL = "http://localhost:4000"
+
+# Page title
+st.title(f"Welcome, {st.session_state.first_name}!")
 st.write("Manage your fridge, plan meals, and stay on budget!")
 
-col1, col2 = st.columns(2)
+# Expiring Soon section
+st.subheader("Expiring Soon")
 
-with col1:
-    st.subheader("⚠️ Expiring Soon")
-
-    @st.cache_data(ttl=300)
-    def get_expiring_items():
-        try:
-            response = requests.get("http://web-api:4000/fridge?client_id=1")
-            if response.status_code != 200:
-                st.error(f"Error fetching data: {response.status_code}")
-                return []
-
-            data = response.json()
-            today = datetime.now().date()
-            expiring_soon = []
-
-            for item in data:
-                if item.get('expiration_date'):
+# Get data directly from the fridge endpoint with client_id
+try:
+    # The fridge route takes client_id as a query parameter
+    response = requests.get(f"{API_BASE_URL}/fridge/?client_id={CLIENT_ID}")
+    
+    if response.status_code == 200:
+        fridge_items = response.json()
+        
+        # Process items to find those expiring soon
+        expiring_items = []
+        today = datetime.now().date()
+        
+        for item in fridge_items:
+            # Check if item has expiration date and is not expired
+            if item.get('expiration_date') and not item.get('is_expired'):
+                try:
                     exp_date = datetime.strptime(item['expiration_date'], '%Y-%m-%d').date()
                     days_left = (exp_date - today).days
-
-                    if 0 <= days_left <= 5 and not item.get('is_expired', False):
-                        expiring_soon.append({
-                            'name': item['name'],
-                            'days_left': days_left,
-                            'quantity': item.get('quantity', 1)
+                    
+                    # Only add if it's expiring within 5 days
+                    if 0 <= days_left <= 5:
+                        expiring_items.append({
+                            "Item": item['name'],
+                            "Days Left": days_left,
+                            "Quantity": item['quantity']
                         })
-            return expiring_soon
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-            return []
-
-    expiring_items = get_expiring_items()
-
-    if expiring_items:
-        for item in expiring_items:
-            msg = f"{item['name']} - Expires in {item['days_left']} days ({item['quantity']} remaining)"
-            if item['days_left'] == 0:
-                st.error(f"⚠️ {item['name']} - Expires today! ({item['quantity']} remaining)")
-            elif item['days_left'] == 1:
-                st.warning(f"⚠️ {item['name']} - Expires tomorrow ({item['quantity']} remaining)")
-            else:
-                st.info(f"ℹ️ {msg}")
+                except:
+                    pass
+        
+        # Show expiring items
+        if expiring_items:
+            # Sort by days left (most urgent first)
+            expiring_items.sort(key=lambda x: x['Days Left'])
+            st.table(pd.DataFrame(expiring_items))
+        else:
+            st.success("No items expiring soon! Your fridge is in good shape.")
     else:
-        st.success("No items expiring soon! Your fridge is in good shape.")
+        st.error(f"Error fetching data: {response.status_code}")
+except Exception as e:
+    st.error(f"Error fetching data: {str(e)}")
 
-    if st.button("Update Expired Status"):
-        try:
-            response = requests.put("http://web-api:4000/fridge/expired")
-            if response.status_code == 200:
-                st.success("Updated expired item status!")
-                st.cache_data.clear()
-                time.sleep(1)
-                st.rerun()
-            else:
-                st.error(f"Error updating expired status: {response.status_code}")
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
+# Update expired status button
+if st.button("Update Expired Status"):
+    try:
+        # The route to update expired status is a PUT to /fridge/expired
+        response = requests.put(f"{API_BASE_URL}/fridge/expired")
+        
+        if response.status_code == 200:
+            st.success("Updated expired item status!")
+            st.rerun()
+        else:
+            st.error(f"Error updating status: {response.status_code}")
+    except Exception as e:
+        st.error(f"Error updating status: {str(e)}")
 
-with col2:
-    st.subheader("🍲 Quick Meal Ideas")
+# Meal Suggestions section
+st.subheader("Quick Meal Ideas")
 
-    @st.cache_data(ttl=300)
-    def get_meal_suggestions():
-        try:
-            response = requests.get("http://web-api:4000/meal-plans?client_id=1")
-            if response.status_code != 200:
-                st.error(f"Error fetching meal suggestions: {response.status_code}")
-                return []
-            data = response.json()
-            return [
-                {
-                    'name': meal.get('recipe_name', 'Unknown Recipe'),
-                    'meal_id': meal.get('meal_id'),
-                    'quantity': meal.get('quantity', 1)
-                } for meal in data
-            ]
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-            return []
-
-    meal_suggestions = get_meal_suggestions()
-
-    if meal_suggestions:
-        for i, meal in enumerate(meal_suggestions[:3]):
-            st.write(f"**{meal['name']}** (makes {meal['quantity']} servings)")
-            col1a, col1b = st.columns([3, 1])
-
-            with col1a:
-                if st.button(f"See Recipe #{i+1}", key=f"recipe_{i}"):
-                    st.session_state.selected_meal_id = meal['meal_id']
-                    st.switch_page("pages/02_Meal_Suggestions.py")
-
-            with col1b:
-                if st.button(f"Save as Leftover #{i+1}", key=f"leftover_{i}"):
-                    try:
-                        leftover_data = {'recipe_id': meal['meal_id'], 'quantity': 1}
-                        response = requests.post("http://web-api:4000/leftovers", json=leftover_data)
-
-                        if response.status_code == 201:
-                            st.success(f"Saved {meal['name']} as leftover!")
-                            time.sleep(1)
-                            st.rerun()
-                        else:
-                            st.error(f"Error saving leftover: {response.status_code}")
-                    except Exception as e:
-                        st.error(f"Error: {str(e)}")
+try:
+    # The meal_plans route takes client_id as a query parameter
+    response = requests.get(f"{API_BASE_URL}/meal_plans/?client_id={CLIENT_ID}")
+    
+    if response.status_code == 200:
+        meal_plans = response.json()
+        
+        # Display meal suggestions
+        if meal_plans:
+            # Show top 3 meal suggestions
+            meal_suggestions = []
+            for meal in meal_plans[:3]:
+                meal_suggestions.append({
+                    "Meal": meal.get('recipe_name', 'Unknown Recipe'),
+                    "Servings": meal.get('quantity', 1),
+                    "ID": meal.get('meal_id')
+                })
+            
+            st.table(pd.DataFrame(meal_suggestions))
+        else:
+            st.info("No meal suggestions available. Add ingredients to your fridge!")
     else:
-        st.info("No meal suggestions available. Add ingredients to your fridge!")
+        st.error(f"Error fetching meal suggestions: {response.status_code}")
+except Exception as e:
+    st.error(f"Error fetching meal suggestions: {str(e)}")
 
-    if st.button("See All Meal Suggestions"):
-        st.switch_page("pages/02_Meal_Suggestions.py")
+# Button to see all meal suggestions
+if st.button("See All Meal Suggestions"):
+    st.switch_page("pages/02_Meal_Suggestions.py")
 
-st.markdown("---")
-st.subheader("💰 Budget Overview")
+# Budget Overview section
+st.subheader("Budget Overview")
 
-budget_total = 100
-budget_used = 62.35
-budget_remaining = budget_total - budget_used
-budget_percent = (budget_used / budget_total) * 100
+# Budget data with calculation
+total_budget = 100.00
+used_budget = 62.35
+remaining_budget = total_budget - used_budget
 
-col1, col2, col3 = st.columns(3)
+budget_data = [
+    {"Category": "Total Budget", "Amount": f"${total_budget:.2f}"},
+    {"Category": "Used", "Amount": f"${used_budget:.2f}"},
+    {"Category": "Remaining", "Amount": f"${remaining_budget:.2f}"}
+]
 
-with col1:
-    st.metric("Total Budget", f"${budget_total:.2f}")
-with col2:
-    st.metric("Used", f"${budget_used:.2f}", f"-{budget_percent:.1f}%")
-with col3:
-    st.metric("Remaining", f"${budget_remaining:.2f}")
-
-st.progress(budget_percent / 100)
-
-if budget_percent > 100:
-    st.error("You've exceeded your budget for this period.")
-elif budget_percent > 80:
-    st.warning("You're near your budget limit! Consider budget-friendly recipes.")
-else:
-    st.info(f"You're on track with your budget! {budget_percent:.1f}% used so far.")
+st.table(pd.DataFrame(budget_data))
