@@ -40,10 +40,11 @@ def _add_student_links():
     """Add links for the Student role (Ben)"""
     st.sidebar.markdown("### Student Navigation")
     
-    st.sidebar.page_link("pages/00_Fridge_Dashboard.py", label="📊 Dashboard")
-    st.sidebar.page_link("pages/01_Fridge_Inventory.py", label="🧊 Fridge Inventory")
-    st.sidebar.page_link("pages/02_Meal_Suggestions.py", label="🍲 Meal Suggestions")
-    st.sidebar.page_link("pages/03_Leftovers_Tracker.py", label="🥡 Leftovers Tracker")
+    st.sidebar.page_link("pages/00_Dashboard_Overview.py", label="Dashboard Overview")
+    st.sidebar.page_link("pages/01_Manage_Ingredients.py", label="Manage Ingredients")
+    st.sidebar.page_link("pages/02_Macronutrient_Stats.py", label="Macronutrient Stats")
+    st.sidebar.page_link("pages/03_Leftovers_Overview.py", label="Leftovers Overview")
+
 
 def _add_admin_links():
     """Add links for the Admin role (Alvin)"""
