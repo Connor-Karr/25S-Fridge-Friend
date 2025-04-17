@@ -1,17 +1,21 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
+import requests
 from datetime import datetime, timedelta
 import plotly.express as px
 from modules.nav import SideBarLinks
+import os
 
-# Authentication check
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:4000")
+
+# Auth check 
 if not st.session_state.get('authenticated', False) or st.session_state.role != "athlete":
     st.warning("Please log in as Riley to access this page")
     st.stop()
 
-# Set up navigation
+# Sidebar
 SideBarLinks(st.session_state.role)
+
 # Page header
 st.title("📈 Performance Analytics")
 st.write("Track your workouts and nutrition")
@@ -55,10 +59,10 @@ def create_sample_data():
 # Get data
 data = create_sample_data()
 
-# Create tabs
+# Tabs 
 tab1, tab2, tab3 = st.tabs(["Workouts", "Nutrition", "Performance"])
 
-# Tab 1: Workouts
+# Workouts 
 with tab1:
     st.header("Workout Summary")
     
@@ -97,9 +101,9 @@ with tab1:
     
     st.plotly_chart(fig)
 
-# Tab 2: Nutrition
+# Nutrition 
 with tab2:
-    st.header("Nutrition Overview")
+    st.header("Nutrition Overview")
 
     # Show average nutrition
     col1, col2, col3 = st.columns(3)
@@ -147,7 +151,7 @@ with tab2:
     )
     st.plotly_chart(carbs_fig)
 
-# Tab 3: Performance
+# Performance 
 with tab3:
     st.header("Performance Metrics")
     
