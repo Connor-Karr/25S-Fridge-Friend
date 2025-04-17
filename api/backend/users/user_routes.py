@@ -272,7 +272,7 @@ def get_health_auth(health_id):
     query = '''
     SELECT u.user_id, u.f_name as firstName, u.l_name as lastName, ha.advisor_id
     FROM User u
-    JOIN Health_Advisor ha ON u.user_id = ha.client_id
+    JOIN Health_Advisor ha ON u.user_id = ha.user_id
     WHERE ha.advisor_id = %s
     '''
     

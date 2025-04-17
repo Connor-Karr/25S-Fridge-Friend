@@ -113,7 +113,7 @@ except Exception as e:
 
 try:
     # Nutritionist (Nancy) data
-    nutritionist_response = requests.get(f"{API_BASE_URL}/users/auth/health/20")
+    nutritionist_response = requests.get(f"{API_BASE_URL}/users/auth/health/2")
     if nutritionist_response.status_code == 200:
         nutritionist_data = nutritionist_response.json()
         nutritionist_firstname = nutritionist_data["data"][0]["firstName"]
@@ -134,7 +134,7 @@ except Exception as e:
 
 try:
     # Athlete (Riley) data
-    athlete_response = requests.get(f"{API_BASE_URL}/users/auth/health/21")
+    athlete_response = requests.get(f"{API_BASE_URL}/users/auth/health/1")
     if athlete_response.status_code == 200:
         athlete_data = athlete_response.json()
         athlete_firstname = athlete_data["data"][0]["firstName"]
