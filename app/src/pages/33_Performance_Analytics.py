@@ -94,57 +94,95 @@ with tab2:
     st.header("Nutrition Overview")
 
     # Show average nutrition
-    avg_calories = int(data['Calories'].mean())
-    avg_protein = int(data['Protein'].mean())
+    col1, col2, col3 = st.columns(3)
     
-    st.metric("Average Daily Calories", avg_calories)
-    st.metric("Average Daily Protein", f"{avg_protein}g")
+    with col1:
+        avg_calories = int(data['Calories'].mean())
+        st.metric("Average Daily Calories", avg_calories)
+    
+    with col2:
+        avg_protein = int(data['Protein'].mean())
+        st.metric("Average Daily Protein", f"{avg_protein}g")
+        
+    with col3:
+        avg_carbs = int(data['Carbs'].mean())
+        st.metric("Average Daily Carbs", f"{avg_carbs}g")
 
-    # Show nutrition chart
-    st.subheader("Nutrition Tracking")
-    nutrient = st.radio(
-        "Select nutrient:",
-        ["Calories", "Protein", "Carbs"]
-    )
-
-    fig = px.line(
+    # Show nutrition charts - one for each metric instead of using radio buttons
+    st.subheader("Daily Calories")
+    calories_fig = px.line(
         data,
         x='Date',
-        y=nutrient,
+        y='Calories',
         markers=True,
-        title=f"Daily {nutrient}"
+        title="Daily Calories"
     )
-    st.plotly_chart(fig)
+    st.plotly_chart(calories_fig)
+    
+    st.subheader("Daily Protein")
+    protein_fig = px.line(
+        data,
+        x='Date',
+        y='Protein',
+        markers=True,
+        title="Daily Protein (g)"
+    )
+    st.plotly_chart(protein_fig)
+    
+    st.subheader("Daily Carbs")
+    carbs_fig = px.line(
+        data,
+        x='Date',
+        y='Carbs',
+        markers=True,
+        title="Daily Carbs (g)"
+    )
+    st.plotly_chart(carbs_fig)
 
 # Tab 3: Performance
 with tab3:
     st.header("Performance Metrics")
     
-    # Show performance chart
-    st.subheader("Performance Over Time")
-    metric = st.radio(
-        "Select metric:",
-        ["Energy", "Recovery", "Sleep"]
-    )
-    
-    fig = px.line(
+    # Show all performance metrics instead of using radio buttons
+    st.subheader("Energy Levels")
+    energy_fig = px.line(
         data,
         x='Date',
-        y=metric,
+        y='Energy',
         markers=True,
-        title=f"Daily {metric} Levels"
+        title="Daily Energy Levels"
     )
-    st.plotly_chart(fig)
+    st.plotly_chart(energy_fig)
     
-    # Show performance by workout
-    st.subheader("Performance by Workout Type")
-    avg_by_workout = data.groupby('Workout')[metric].mean().reset_index()
+    st.subheader("Recovery Quality")
+    recovery_fig = px.line(
+        data,
+        x='Date',
+        y='Recovery',
+        markers=True,
+        title="Daily Recovery Quality"
+    )
+    st.plotly_chart(recovery_fig)
     
-    fig = px.bar(
+    st.subheader("Sleep Quality")
+    sleep_fig = px.line(
+        data,
+        x='Date',
+        y='Sleep',
+        markers=True,
+        title="Daily Sleep Quality"
+    )
+    st.plotly_chart(sleep_fig)
+    
+    # Show one performance by workout type chart for Energy
+    st.subheader("Energy by Workout Type")
+    avg_by_workout = data.groupby('Workout')['Energy'].mean().reset_index()
+    
+    workout_fig = px.bar(
         avg_by_workout,
         x='Workout',
-        y=metric,
+        y='Energy',
         color='Workout',
-        title=f"{metric} Levels by Workout Type"
+        title="Energy Levels by Workout Type"
     )
-    st.plotly_chart(fig)
+    st.plotly_chart(workout_fig)
