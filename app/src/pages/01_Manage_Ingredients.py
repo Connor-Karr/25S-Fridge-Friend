@@ -296,24 +296,6 @@ with tab2:
    else:
        st.warning("Unable to fetch ingredients list.")
   
-   # Custom ingredient form
-   st.markdown("---")
-  
-   with st.form("custom_ingredient_form"):
-       st.subheader("Add Custom Ingredient")
-      
-       new_name = st.text_input("Ingredient name:")
-       expiration_date = st.date_input(
-           "Expiration date:",
-           value=datetime.now().date() + timedelta(days=7)
-       )
-       new_quantity = st.number_input(
-           "Quantity:",
-           min_value=0.1,
-           value=1.0,
-           step=0.1
-       )
-
 
 
 # Remove Expired Tab
