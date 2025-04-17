@@ -187,3 +187,30 @@ def remove_expired_leftovers():
         response = make_response(jsonify({"error": "Could not remove expired leftovers"}))
         response.status_code = 500
         return response
+    
+@leftovers.route('/expired', methods=['PUT'])
+def update_expired_leftovers():
+    """Update expired status of leftovers based on the current date"""
+    cursor = db.get_db().cursor()
+
+    try:
+        # Update leftovers as expired based on associated recipes' ingredients
+        cursor.execute('''
+            UPDATE Leftover l
+            JOIN Recipe r ON l.recipe_id = r.recipe_id
+            JOIN Recipe_Ingredient ri ON r.recipe_id = ri.recipe_id
+            JOIN Ingredient i ON ri.ingredient_id = i.ingredient_id
+            SET l.is_expired = TRUE
+            WHERE i.expiration_date < CURDATE() AND l.is_expired = FALSE
+        ''')
+        db.get_db().commit()
+        
+        count = cursor.rowcount
+        response = make_response(jsonify({"message": f"{count} leftovers marked as expired"}))
+        response.status_code = 200
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error updating expired leftovers: {str(e)}")
+        response = make_response(jsonify({"error": "Could not update expired leftovers"}))
+        response.status_code = 500
+        return response

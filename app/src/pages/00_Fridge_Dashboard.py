@@ -1,130 +1,221 @@
 import streamlit as st
 import pandas as pd
 import requests
+import time
 from datetime import datetime
 from modules.nav import SideBarLinks
 
-# Add sidebar navigation
-SideBarLinks(st.session_state.role)
+# API base URL
+API_BASE_URL = "http://web-api:4000"
 
 # Authentication check
 if not st.session_state.get('authenticated', False) or st.session_state.role != "busy_student":
-    st.warning("Please log in as Ben to access this page")
+    st.warning("Please log in as a student to access this page")
     st.stop()
 
-# Get user's client ID (assuming it's stored in session state or using default 1)
-CLIENT_ID = st.session_state.get('user_id', 1)
+# Set up navigation
+SideBarLinks(st.session_state.role)
 
-# Try localhost instead of container name since they're port-mapped
-API_BASE_URL = "http://localhost:4000"
+# Page header
+st.title(f"Welcome, {st.session_state.first_name}! 👋")
+st.write("Manage your fridge, plan meals, and track ingredients")
 
-# Page title
-st.title(f"Welcome, {st.session_state.first_name}!")
-st.write("Manage your fridge, plan meals, and stay on budget!")
+# API helper functions
+def get_api_data(endpoint):
+    try:
+        response = requests.get(f"{API_BASE_URL}/{endpoint}")
+        return response.json() if response.status_code == 200 else []
+    except Exception as e:
+        st.error(f"Error: {str(e)}")
+        return []
 
-# Expiring Soon section
-st.subheader("Expiring Soon")
+def api_request(method, endpoint, data=None):
+    try:
+        if method == "PUT":
+            response = requests.put(f"{API_BASE_URL}/{endpoint}")
+        elif method == "DELETE":
+            response = requests.delete(f"{API_BASE_URL}/{endpoint}")
+        elif method == "POST":
+            response = requests.post(f"{API_BASE_URL}/{endpoint}", json=data)
+        else:
+            return None, False
+            
+        success = response.status_code in [200, 201]
+        return response.json() if success else None, success
+    except Exception as e:
+        st.error(f"Error: {str(e)}")
+        return None, False
 
-# Get data directly from the fridge endpoint with client_id
-try:
-    # The fridge route takes client_id as a query parameter
-    response = requests.get(f"{API_BASE_URL}/fridge/?client_id={CLIENT_ID}")
+# Parse dates safely
+def parse_date(date_str):
+    if not date_str:
+        return None
     
-    if response.status_code == 200:
-        fridge_items = response.json()
-        
-        # Process items to find those expiring soon
-        expiring_items = []
+    formats = ['%Y-%m-%d', '%a, %d %b %Y %H:%M:%S GMT']
+    for fmt in formats:
+        try:
+            return datetime.strptime(date_str, fmt).date()
+        except ValueError:
+            continue
+    return None
+
+# Create columns for dashboard widgets
+col1, col2 = st.columns(2)
+
+# Fridge Inventory Widget
+with col1:
+    st.subheader("🧊 Fridge Inventory")
+    
+    fridge_inventory = get_api_data("fridge?client_id=1")
+    
+    if fridge_inventory:
+        # Create DataFrame and calculate days until expiration
+        df = pd.DataFrame(fridge_inventory)
         today = datetime.now().date()
         
-        for item in fridge_items:
-            # Check if item has expiration date and is not expired
-            if item.get('expiration_date') and not item.get('is_expired'):
-                try:
-                    exp_date = datetime.strptime(item['expiration_date'], '%Y-%m-%d').date()
-                    days_left = (exp_date - today).days
-                    
-                    # Only add if it's expiring within 5 days
-                    if 0 <= days_left <= 5:
-                        expiring_items.append({
-                            "Item": item['name'],
-                            "Days Left": days_left,
-                            "Quantity": item['quantity']
-                        })
-                except:
-                    pass
-        
-        # Show expiring items
-        if expiring_items:
-            # Sort by days left (most urgent first)
-            expiring_items.sort(key=lambda x: x['Days Left'])
-            st.table(pd.DataFrame(expiring_items))
-        else:
-            st.success("No items expiring soon! Your fridge is in good shape.")
-    else:
-        st.error(f"Error fetching data: {response.status_code}")
-except Exception as e:
-    st.error(f"Error fetching data: {str(e)}")
-
-# Update expired status button
-if st.button("Update Expired Status"):
-    try:
-        # The route to update expired status is a PUT to /fridge/expired
-        response = requests.put(f"{API_BASE_URL}/fridge/expired")
-        
-        if response.status_code == 200:
-            st.success("Updated expired item status!")
-            st.rerun()
-        else:
-            st.error(f"Error updating status: {response.status_code}")
-    except Exception as e:
-        st.error(f"Error updating status: {str(e)}")
-
-# Meal Suggestions section
-st.subheader("Quick Meal Ideas")
-
-try:
-    # The meal_plans route takes client_id as a query parameter
-    response = requests.get(f"{API_BASE_URL}/meal_plans/?client_id={CLIENT_ID}")
-    
-    if response.status_code == 200:
-        meal_plans = response.json()
-        
-        # Display meal suggestions
-        if meal_plans:
-            # Show top 3 meal suggestions
-            meal_suggestions = []
-            for meal in meal_plans[:3]:
-                meal_suggestions.append({
-                    "Meal": meal.get('recipe_name', 'Unknown Recipe'),
-                    "Servings": meal.get('quantity', 1),
-                    "ID": meal.get('meal_id')
-                })
+        # Add expiration info
+        if 'is_expired' in df.columns:
+            df['Expired'] = df['is_expired'].apply(lambda x: "Yes" if x else "No")
             
-            st.table(pd.DataFrame(meal_suggestions))
+        # Calculate days until expiration
+        df['days_left'] = None
+        for i, item in df.iterrows():
+            if 'expiration_date' in item and item['expiration_date']:
+                exp_date = parse_date(item['expiration_date'])
+                if exp_date:
+                    df.at[i, 'days_left'] = (exp_date - today).days
+        
+        # Display inventory table
+        display_cols = [col for col in ['name', 'quantity', 'days_left', 'Expired'] if col in df.columns]
+        if display_cols:
+            rename_map = {'name': 'Ingredient', 'quantity': 'Quantity', 'days_left': 'Days Left'}
+            st.dataframe(
+                df[display_cols].rename(columns=rename_map), 
+                use_container_width=True
+            )
+            
+            # Show expiring items
+            if 'days_left' in df.columns:
+                expiring_items = df[(df['days_left'] >= 0) & (df['days_left'] <= 5) & (~df['is_expired'])]
+                
+                if not expiring_items.empty:
+                    st.subheader("⚠️ Items Expiring Soon")
+                    for _, item in expiring_items.iterrows():
+                        if item['days_left'] <= 0:
+                            st.error(f"⚠️ {item['name']} - Expires today! ({item['quantity']} remaining)")
+                        elif item['days_left'] == 1:
+                            st.warning(f"⚠️ {item['name']} - Expires tomorrow ({item['quantity']} remaining)")
+                        else:
+                            st.info(f"ℹ️ {item['name']} - Expires in {int(item['days_left'])} days ({item['quantity']} remaining)")
+                else:
+                    st.success("No items expiring soon! Your fridge is in good shape.")
         else:
-            st.info("No meal suggestions available. Add ingredients to your fridge!")
+            st.dataframe(df, use_container_width=True)
     else:
-        st.error(f"Error fetching meal suggestions: {response.status_code}")
-except Exception as e:
-    st.error(f"Error fetching meal suggestions: {str(e)}")
+        st.info("No items in your fridge inventory.")
+    
+    # Update expired status button
+    if st.button("Update Expired Status", key="update_expired"):
+        result, success = api_request("PUT", "fridge/expired")
+        if success:
+            st.success("Updated expired item status!")
+            time.sleep(1)
+            st.rerun()
 
-# Button to see all meal suggestions
-if st.button("See All Meal Suggestions"):
-    st.switch_page("pages/02_Meal_Suggestions.py")
+# Meal Suggestions Widget
+with col2:
+    st.subheader("🍲 Meal Suggestions")
+    
+    meal_plans = get_api_data("meal-plans?client_id=1")
+    
+    if meal_plans:
+        # Display meal plans table
+        meal_df = pd.DataFrame(meal_plans)
+        display_cols = [col for col in ['recipe_name', 'quantity'] if col in meal_df.columns]
+        
+        if display_cols:
+            rename_map = {'recipe_name': 'Recipe', 'quantity': 'Servings'}
+            st.dataframe(
+                meal_df[display_cols].rename(columns=rename_map),
+                use_container_width=True
+            )
+            
+            # Add meal selection
+            if 'recipe_name' in meal_df.columns and 'meal_id' in meal_df.columns and 'recipe_id' in meal_df.columns:
+                meal_dict = dict(zip(meal_df['recipe_name'], meal_df['meal_id']))
+                recipe_dict = dict(zip(meal_df['recipe_name'], meal_df['recipe_id']))
+                
+                selected_meal = st.selectbox("Select a meal:", meal_dict.keys())
+                selected_id = meal_dict.get(selected_meal)
+                recipe_id = recipe_dict.get(selected_meal)
+                
+                # Action buttons
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("View Recipe Details", key="view_recipe"):
+                        st.session_state.selected_meal_id = selected_id
+                        st.switch_page("pages/02_Meal_Suggestions.py")
+                
+                with col2:
+                    if st.button("Save as Leftover", key="save_leftover"):
+                        if recipe_id:
+                            result, success = api_request("POST", "leftovers", 
+                                                         {"recipe_id": recipe_id, "quantity": 1})
+                            if success:
+                                st.success(f"Saved {selected_meal} as leftover!")
+                                time.sleep(1)
+                                st.rerun()
+        else:
+            st.dataframe(meal_df, use_container_width=True)
+    else:
+        st.info("No meal suggestions available.")
+    
+    # See all meal suggestions
+    if st.button("See All Meal Suggestions", key="see_all_meals"):
+        st.switch_page("pages/02_Meal_Suggestions.py")
 
-# Budget Overview section
-st.subheader("Budget Overview")
+# Leftovers Section
+st.markdown("---")
+st.subheader("🥡 Leftovers")
 
-# Budget data with calculation
-total_budget = 100.00
-used_budget = 62.35
-remaining_budget = total_budget - used_budget
+leftovers_data = get_api_data("leftovers")
 
-budget_data = [
-    {"Category": "Total Budget", "Amount": f"${total_budget:.2f}"},
-    {"Category": "Used", "Amount": f"${used_budget:.2f}"},
-    {"Category": "Remaining", "Amount": f"${remaining_budget:.2f}"}
-]
+if leftovers_data:
+    # Display leftovers table
+    leftovers_df = pd.DataFrame(leftovers_data)
+    display_cols = [col for col in ['recipe_name', 'quantity', 'is_expired'] if col in leftovers_df.columns]
+    
+    if display_cols:
+        rename_map = {'recipe_name': 'Recipe', 'quantity': 'Servings', 'is_expired': 'Expired'}
+        leftover_display = leftovers_df[display_cols].rename(columns=rename_map)
+        
+        if 'Expired' in leftover_display.columns:
+            leftover_display['Expired'] = leftover_display['Expired'].apply(lambda x: "Yes" if x else "No")
+        
+        st.dataframe(leftover_display, use_container_width=True)
+        
+        # Leftovers action buttons
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Update Expired Status", key="update_expired_leftovers"):
+                result, success = api_request("PUT", "leftovers/expired")
+                if success:
+                    st.success("Updated expired leftovers status!")
+                    time.sleep(1)
+                    st.rerun()
+        
+        with col2:
+            if st.button("Remove Expired Leftovers", key="remove_expired_leftovers"):
+                result, success = api_request("DELETE", "leftovers/expired")
+                if success:
+                    st.success("Removed expired leftovers!")
+                    time.sleep(1)
+                    st.rerun()
+    else:
+        st.dataframe(leftovers_df, use_container_width=True)
+else:
+    st.info("No leftovers available.")
 
-st.table(pd.DataFrame(budget_data))
+# Refresh button
+if st.button("Refresh Data", key="refresh"):
+    st.rerun()
