@@ -10,7 +10,7 @@ API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:4000")
 
 # Auth check 
 if not st.session_state.get('authenticated', False) or st.session_state.role != "athlete":
-    st.warning("Please log in as Riley to access this page")
+    st.warning("Please log in as an athlete to access this page")
     st.stop()
 
 # Sidebar
@@ -20,44 +20,41 @@ SideBarLinks(st.session_state.role)
 st.title("📈 Performance Analytics")
 st.write("Track your workouts and nutrition")
 
-# Create simple sample data
-def create_sample_data():
-    # Create 30 days of data
-    dates = [(datetime.now() - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(30, 0, -1)]
-    
-    # Create simple workout data
-    workouts = ["Easy Run", "Tempo Run", "Long Run", "Rest"]
-    workout_types = [np.random.choice(workouts) for _ in dates]
-    
-    # Distance depends on workout type
-    distances = []
-    for workout in workout_types:
-        if workout == "Long Run":
-            distances.append(round(np.random.uniform(8, 12), 1))
-        elif workout == "Tempo Run":
-            distances.append(round(np.random.uniform(5, 7), 1))
-        elif workout == "Easy Run":
-            distances.append(round(np.random.uniform(3, 5), 1))
-        else:  # Rest
-            distances.append(0)
-    
-    # Simple nutrition and performance data
-    data = pd.DataFrame({
-        'Date': dates,
-        'Workout': workout_types,
-        'Distance': distances,
-        'Calories': [round(np.random.uniform(1800, 2500)) for _ in dates],
-        'Protein': [round(np.random.uniform(80, 150)) for _ in dates],
-        'Carbs': [round(np.random.uniform(150, 300)) for _ in dates],
-        'Energy': [round(np.random.uniform(3, 9), 1) for _ in dates],
-        'Recovery': [round(np.random.uniform(4, 9), 1) for _ in dates],
-        'Sleep': [round(np.random.uniform(5, 9), 1) for _ in dates]
-    })
-    
-    return data
+client_id = st.session_state.get("user_id")
+if not client_id:
+    st.warning("User ID not found.")
+    st.stop()
 
-# Get data
-data = create_sample_data()
+# Load nutrition + workout logs 
+try:
+    nutri_res = requests.get(f"{API_BASE_URL}/logs/nutrition/{client_id}")
+    nutri_res.raise_for_status()
+    nutri_df = pd.DataFrame(nutri_res.json())
+
+    workout_res = requests.get(f"{API_BASE_URL}/logs/workouts/{client_id}")
+    workout_res.raise_for_status()
+    workout_df = pd.DataFrame(workout_res.json())
+except Exception as e:
+    st.error(f"Error loading data: {e}")
+    st.stop()
+
+# Clean/standardize nutrition
+if not nutri_df.empty:
+    nutri_df['date'] = pd.to_datetime(nutri_df.get('date', pd.Timestamp.now()))
+    for col in ['protein', 'carbs', 'fat', 'calories']:
+        if col in nutri_df.columns:
+            nutri_df[col] = pd.to_numeric(nutri_df[col], errors="coerce")
+
+# Clean/standardize workouts
+if not workout_df.empty:
+    workout_df['date'] = pd.to_datetime(workout_df.get('date', pd.Timestamp.now()))
+    for col in ['distance', 'energy', 'recovery', 'sleep']:
+        if col in workout_df.columns:
+            workout_df[col] = pd.to_numeric(workout_df[col], errors="coerce")
+
+# Merge data 
+df = pd.merge(nutri_df, workout_df, on='date', how='outer').sort_values(by='date', ascending=True)
+df.fillna(0, inplace=True)
 
 # Tabs 
 tab1, tab2, tab3 = st.tabs(["Workouts", "Nutrition", "Performance"])
@@ -65,136 +62,75 @@ tab1, tab2, tab3 = st.tabs(["Workouts", "Nutrition", "Performance"])
 # Workouts 
 with tab1:
     st.header("Workout Summary")
-    
-    # Show total workouts and distance
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        total_workouts = len(data[data['Workout'] != 'Rest'])
-        st.metric("Total Workouts", total_workouts)
-    
-    with col2:
-        total_distance = data['Distance'].sum()
-        st.metric("Total Distance", f"{total_distance:.1f} miles")
-    
-    # Show workout types
-    st.subheader("Workout Types")
-    workout_counts = data['Workout'].value_counts()
-    
-    fig = px.pie(
-        values=workout_counts.values,
-        names=workout_counts.index,
-        title="Workout Distribution"
-    )
-    
-    st.plotly_chart(fig)
-    
-    # Show distance chart
-    st.subheader("Running Distance")
-    fig = px.bar(
-        data,
-        x='Date',
-        y='Distance',
-        color='Workout',
-        title="Daily Distance"
-    )
-    
-    st.plotly_chart(fig)
+
+    if "workout" in df.columns and "distance" in df.columns:
+        col1, col2 = st.columns(2)
+        with col1:
+            total_workouts = len(df[df["workout"].str.lower() != "rest"])
+            st.metric("Total Workouts", total_workouts)
+
+        with col2:
+            total_distance = df["distance"].sum()
+            st.metric("Total Distance", f"{total_distance:.1f} km")
+
+        st.subheader("Workout Types")
+        workout_counts = df["workout"].value_counts()
+        fig = px.pie(
+            values=workout_counts.values,
+            names=workout_counts.index,
+            title="Workout Distribution"
+        )
+        st.plotly_chart(fig)
+
+        st.subheader("Running Distance Over Time")
+        fig = px.bar(df, x='date', y='distance', color='workout', title="Daily Distance")
+        st.plotly_chart(fig)
+    else:
+        st.info("No workout data available.")
 
 # Nutrition 
 with tab2:
-    st.header("Nutrition Overview")
+    st.header("Nutrition Overview")
 
-    # Show average nutrition
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        avg_calories = int(data['Calories'].mean())
-        st.metric("Average Daily Calories", avg_calories)
-    
-    with col2:
-        avg_protein = int(data['Protein'].mean())
-        st.metric("Average Daily Protein", f"{avg_protein}g")
-        
-    with col3:
-        avg_carbs = int(data['Carbs'].mean())
-        st.metric("Average Daily Carbs", f"{avg_carbs}g")
+    if not nutri_df.empty:
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Avg Calories", int(nutri_df["calories"].mean()))
+        with col2:
+            st.metric("Avg Protein", f"{int(nutri_df['protein'].mean())}g")
+        with col3:
+            st.metric("Avg Carbs", f"{int(nutri_df['carbs'].mean())}g")
 
-    # Show nutrition charts - one for each metric instead of using radio buttons
-    st.subheader("Daily Calories")
-    calories_fig = px.line(
-        data,
-        x='Date',
-        y='Calories',
-        markers=True,
-        title="Daily Calories"
-    )
-    st.plotly_chart(calories_fig)
-    
-    st.subheader("Daily Protein")
-    protein_fig = px.line(
-        data,
-        x='Date',
-        y='Protein',
-        markers=True,
-        title="Daily Protein (g)"
-    )
-    st.plotly_chart(protein_fig)
-    
-    st.subheader("Daily Carbs")
-    carbs_fig = px.line(
-        data,
-        x='Date',
-        y='Carbs',
-        markers=True,
-        title="Daily Carbs (g)"
-    )
-    st.plotly_chart(carbs_fig)
+        st.subheader("Daily Calories")
+        st.plotly_chart(px.line(df, x='date', y='calories', markers=True, title="Calories"))
+
+        st.subheader("Daily Protein")
+        st.plotly_chart(px.line(df, x='date', y='protein', markers=True, title="Protein (g)"))
+
+        st.subheader("Daily Carbs")
+        st.plotly_chart(px.line(df, x='date', y='carbs', markers=True, title="Carbs (g)"))
+    else:
+        st.info("No nutrition data available.")
 
 # Performance 
 with tab3:
     st.header("Performance Metrics")
-    
-    # Show all performance metrics instead of using radio buttons
-    st.subheader("Energy Levels")
-    energy_fig = px.line(
-        data,
-        x='Date',
-        y='Energy',
-        markers=True,
-        title="Daily Energy Levels"
-    )
-    st.plotly_chart(energy_fig)
-    
-    st.subheader("Recovery Quality")
-    recovery_fig = px.line(
-        data,
-        x='Date',
-        y='Recovery',
-        markers=True,
-        title="Daily Recovery Quality"
-    )
-    st.plotly_chart(recovery_fig)
-    
-    st.subheader("Sleep Quality")
-    sleep_fig = px.line(
-        data,
-        x='Date',
-        y='Sleep',
-        markers=True,
-        title="Daily Sleep Quality"
-    )
-    st.plotly_chart(sleep_fig)
-    
-    # Show one performance by workout type chart for Energy
-    st.subheader("Energy by Workout Type")
-    avg_by_workout = data.groupby('Workout')['Energy'].mean().reset_index()
-    
-    workout_fig = px.bar(
-        avg_by_workout,
-        x='Workout',
-        y='Energy',
-        color='Workout',
-        title="Energy Levels by Workout Type"
-    )
-    st.plotly_chart(workout_fig)
+
+    if 'energy' in df.columns:
+        st.subheader("Energy Levels")
+        st.plotly_chart(px.line(df, x='date', y='energy', markers=True, title="Daily Energy"))
+
+    if 'recovery' in df.columns:
+        st.subheader("Recovery Quality")
+        st.plotly_chart(px.line(df, x='date', y='recovery', markers=True, title="Daily Recovery"))
+
+    if 'sleep' in df.columns:
+        st.subheader("Sleep Duration")
+        st.plotly_chart(px.line(df, x='date', y='sleep', markers=True, title="Sleep (hrs)"))
+
+    if "workout" in df.columns and "energy" in df.columns:
+        avg_by_type = df.groupby("workout")["energy"].mean().reset_index()
+        st.subheader("Energy by Workout Type")
+        st.plotly_chart(px.bar(avg_by_type, x='workout', y='energy', color='workout', title="Energy per Workout Type"))
+    else:
+        st.info("Insufficient performance data.")
