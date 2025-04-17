@@ -13,7 +13,7 @@ SideBarLinks(st.session_state.role)
 st.title("🍽️ Athlete Meal Plans")
 st.write("Optimize your nutrition with targeted meal plans for different training phases")
 
-API_BASE_URL = "http://localhost:4000"
+API_BASE_URL = "http://web-api:4000"
 CLIENT_ID = st.session_state.get("client_id", 11)  # Default to Riley if missing
 
 # Fetch Data from API

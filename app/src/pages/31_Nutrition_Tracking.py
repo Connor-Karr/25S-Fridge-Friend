@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from modules.nav import SideBarLinks
 import os
 
+# Base URL defaults to local Flask if environment variable not set
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:4000")
 
 # --- Auth Check ---
