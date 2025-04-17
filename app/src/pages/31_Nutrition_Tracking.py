@@ -8,7 +8,7 @@ import os
 # Base URL defaults to local Flask if environment variable not set
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:4000")
 
-# --- Auth Check ---
+# Auth Check 
 if not st.session_state.get('authenticated', False) or st.session_state.role != "athlete":
     st.warning("Please log in as an athlete to access this page")
     st.stop()
@@ -18,13 +18,13 @@ SideBarLinks(st.session_state.role)
 st.title("Nutrition Tracking")
 st.write("Track and analyze your nutrition based on logged intake")
 
-# --- Identify User ---
+# Identify User 
 client_id = st.session_state.get("user_id")
 if not client_id:
     st.warning("User ID not found in session.")
     st.stop()
 
-# --- Fetch Logs ---
+# Fetch Logs 
 try:
     response = requests.get(f"{API_BASE_URL}/logs/nutrition/{client_id}")
     response.raise_for_status()
@@ -34,12 +34,12 @@ except Exception as e:
     st.error(f"Failed to fetch nutrition logs: {e}")
     st.stop()
 
-# --- If empty, initialize columns ---
+# If empty, initialize columns 
 if df.empty:
     st.info("No nutrition tracking data available.")
     df = pd.DataFrame(columns=["date", "protein", "carbs", "fat", "calories", "fiber", "sodium"])
 
-# --- Normalize columns ---
+# Normalize columns 
 numeric_cols = ["protein", "carbs", "fat", "calories", "fiber", "sodium"]
 for col in numeric_cols:
     if col in df.columns:
@@ -48,7 +48,7 @@ for col in numeric_cols:
 df['date'] = pd.to_datetime(df.get('date', pd.Timestamp.now()))
 df = df.sort_values(by='date', ascending=False)
 
-# --- Log a New Entry ---
+# Log a New Entry 
 st.markdown("## Log New Nutrition Entry")
 with st.form("log_form"):
     col1, col2, col3 = st.columns(3)
@@ -79,7 +79,7 @@ with st.form("log_form"):
         except Exception as e:
             st.error(f"Failed to add log: {e}")
 
-# --- Most Recent Entry ---
+# Most Recent Entry
 st.markdown("## Most Recent Entry")
 if not df.empty:
     latest = df.iloc[0]
@@ -87,12 +87,12 @@ if not df.empty:
     nutrient_df = pd.DataFrame.from_dict(nutrients, orient='index', columns=["Consumed"])
     st.dataframe(nutrient_df)
 
-# --- Log History ---
+# Log History
 st.markdown("## Recent Nutrition Logs")
 display_cols = ["date"] + [col for col in numeric_cols if col in df.columns]
 st.dataframe(df[display_cols], use_container_width=True)
 
-# --- Weekly Summary ---
+#  Weekly Summary 
 st.markdown("## Weekly Summary (Last 7 Days)")
 last_7_days = df[df['date'] >= (datetime.now() - timedelta(days=7))]
 if not last_7_days.empty:
