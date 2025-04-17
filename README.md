@@ -18,6 +18,11 @@ Aarushi Attray, Harshini Gaddam, Jessica Jain, Connor Karr, Sneha Kondru
 4. Then run docker-compose down --volumes (only if there is an old version of the container in docker)
 5. Then run docker-compose up --build
 
+### Running Instructions:
+
+Frontend: http://localhost:8501
+Backend: http://localhost:4000
+
 ### Video Demo
 
 --
