@@ -3,7 +3,15 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 import plotly.express as px
+from modules.nav import SideBarLinks
 
+# Authentication check
+if not st.session_state.get('authenticated', False) or st.session_state.role != "athlete":
+    st.warning("Please log in as Riley to access this page")
+    st.stop()
+
+# Set up navigation
+SideBarLinks(st.session_state.role)
 # Page header
 st.title("📈 Performance Analytics")
 st.write("Track your workouts and nutrition")
