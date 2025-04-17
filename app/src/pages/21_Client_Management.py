@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import requests
 from datetime import datetime, timedelta
 from modules.nav import SideBarLinks
 
@@ -10,85 +11,75 @@ if not st.session_state.get('authenticated', False) or st.session_state.role != 
 
 SideBarLinks(st.session_state.role)
 
-# Mock client data
-clients = [
-    {
-        "id": 1, 
-        "name": "John D.", 
-        "age": 27, 
-        "goal": "Weight Loss", 
-        "diet": "Low Carb", 
-        "allergies": "Peanuts",
-        "email": "john.d@example.com",
-        "phone": "555-123-4567",
-        "height": "5'10\"",
-        "weight": "185 lbs",
-        "status": "On Track"
-    },
-    {
-        "id": 2, 
-        "name": "Sarah M.", 
-        "age": 34, 
-        "goal": "Muscle Gain", 
-        "diet": "High Protein", 
-        "allergies": "Dairy",
-        "email": "sarah.m@example.com",
-        "phone": "555-234-5678",
-        "height": "5'6\"",
-        "weight": "145 lbs",
-        "status": "Needs Review"
-    },
-    {
-        "id": 3, 
-        "name": "Michael R.", 
-        "age": 42, 
-        "goal": "Maintenance", 
-        "diet": "Balanced", 
-        "allergies": "None",
-        "email": "michael.r@example.com",
-        "phone": "555-345-6789",
-        "height": "6'0\"",
-        "weight": "190 lbs",
-        "status": "On Track"
-    },
-    {
-        "id": 4, 
-        "name": "Emma L.", 
-        "age": 19, 
-        "goal": "Performance", 
-        "diet": "Keto", 
-        "allergies": "Gluten",
-        "email": "emma.l@example.com",
-        "phone": "555-456-7890",
-        "height": "5'4\"",
-        "weight": "128 lbs",
-        "status": "Needs Review"
-    },
-    {
-        "id": 5, 
-        "name": "David W.", 
-        "age": 55, 
-        "goal": "Health", 
-        "diet": "Mediterranean", 
-        "allergies": "Shellfish",
-        "email": "david.w@example.com",
-        "phone": "555-567-8901",
-        "height": "5'11\"",
-        "weight": "205 lbs",
-        "status": "On Track"
-    }
-]
+# Define API endpoints
+API_BASE_URL = "http://web-api:4000"
+USERS_ENDPOINT = f"{API_BASE_URL}/users"
+MEAL_PLANS_ENDPOINT = f"{API_BASE_URL}/meal_plans"
+MACROS_ENDPOINT = f"{API_BASE_URL}/macros"
+CONSTRAINTS_ENDPOINT = f"{API_BASE_URL}/users/constraints"
 
 # Get selected client ID from session state
 selected_client_id = st.session_state.get('selected_client_id', None)
 
+# Function to get user data
+def get_user(user_id):
+    try:
+        response = requests.get(f"{USERS_ENDPOINT}/{user_id}")
+        if response.status_code == 200:
+            return response.json()
+        else:
+            st.error(f"Error fetching user: {response.status_code}")
+            return None
+    except Exception as e:
+        st.error(f"API connection error: {str(e)}")
+        return None
+
+# Function to get user constraints
+def get_user_constraints(pc_id):
+    try:
+        response = requests.get(f"{CONSTRAINTS_ENDPOINT}/{pc_id}")
+        if response.status_code == 200:
+            return response.json()
+        else:
+            st.error(f"Error fetching constraints: {response.status_code}")
+            return None
+    except Exception as e:
+        st.error(f"API connection error: {str(e)}")
+        return None
+
+# Function to get all users
+def get_all_users():
+    try:
+        response = requests.get(USERS_ENDPOINT)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            st.error(f"Error fetching users: {response.status_code}")
+            return []
+    except Exception as e:
+        st.error(f"API connection error: {str(e)}")
+        return []
+
+# Function to get meal plans for client
+def get_client_meal_plans(client_id):
+    try:
+        response = requests.get(f"{MEAL_PLANS_ENDPOINT}?client_id={client_id}")
+        if response.status_code == 200:
+            return response.json()
+        else:
+            st.error(f"Error fetching meal plans: {response.status_code}")
+            return []
+    except Exception as e:
+        st.error(f"API connection error: {str(e)}")
+        return []
+
 # Main page content
 if selected_client_id:
-    # Find the selected client in our mock data
-    client = next((c for c in clients if c["id"] == selected_client_id), None)
+    # Get client data from API
+    client = get_user(selected_client_id)
     
     if client:
-        st.title(f"Client Profile: {client['name']}")
+        st.title(f"Client Profile: {client.get('f_name', '')} {client.get('l_name', '')}")
         
         # Create tabs for different sections
         tab1, tab2, tab3 = st.tabs(["Basic Info", "Nutrition Plan", "Progress"])
@@ -97,153 +88,153 @@ if selected_client_id:
         with tab1:
             st.header("Client Information")
             
+            # Get constraints for this client
+            constraints = None
+            if 'pc_id' in client:
+                constraints = get_user_constraints(client['pc_id'])
+            
             # Create a simple table with client details
             client_info = {
-                "Field": ["Age", "Email", "Phone", "Height", "Weight", "Goal", "Diet Type", "Allergies", "Status"],
+                "Field": ["Email", "Username", "Dietary Restrictions", "Diet Type", "Age Group", "Budget"],
                 "Value": [
-                    client['age'],
-                    client['email'],
-                    client['phone'],
-                    client['height'],
-                    client['weight'],
-                    client['goal'],
-                    client['diet'],
-                    client['allergies'],
-                    client['status']
+                    client.get('email', 'N/A'),
+                    client.get('username', 'N/A'),
+                    constraints.get('dietary_restrictions', 'N/A') if constraints else 'N/A',
+                    constraints.get('personal_diet', 'N/A') if constraints else 'N/A',
+                    constraints.get('age_group', 'N/A') if constraints else 'N/A',
+                    f"${constraints.get('budget', 'N/A')}" if constraints else 'N/A'
                 ]
             }
             
             client_df = pd.DataFrame(client_info)
             st.table(client_df)
             
-            # Calculate basic nutrition targets
-            weight_lbs = float(client['weight'].split()[0])
-            weight_kg = weight_lbs * 0.453592
-            
-            # Simple calculation based on weight and goal
-            if client['goal'] == "Weight Loss":
-                calorie_target = int(weight_kg * 30)
-                protein_target = int(weight_kg * 2.0)
-                carb_target = int(weight_kg * 2.5)
-                fat_target = int(weight_kg * 1.0)
-            elif client['goal'] == "Muscle Gain":
-                calorie_target = int(weight_kg * 35)
-                protein_target = int(weight_kg * 2.5)
-                carb_target = int(weight_kg * 4.0)
-                fat_target = int(weight_kg * 1.0)
-            else:
-                calorie_target = int(weight_kg * 33)
-                protein_target = int(weight_kg * 1.8)
-                carb_target = int(weight_kg * 3.5)
-                fat_target = int(weight_kg * 1.0)
-            
-            # Display nutrition targets
-            st.header("Nutrition Targets")
-            targets_data = {
-                "Target": ["Calories", "Protein", "Carbohydrates", "Fat"],
-                "Daily Amount": [
-                    f"{calorie_target} kcal",
-                    f"{protein_target} g",
-                    f"{carb_target} g",
-                    f"{fat_target} g"
-                ]
-            }
-            
-            targets_df = pd.DataFrame(targets_data)
-            st.table(targets_df)
+            # Calculate basic nutrition targets based on constraints
+            if constraints:
+                # Simple calculation based on diet type
+                diet_type = constraints.get('personal_diet', 'balanced').lower()
+                age_group = constraints.get('age_group', 'adult').lower()
+                
+                # Set base values
+                calorie_target = 2000
+                protein_target = 100
+                carb_target = 250
+                fat_target = 65
+                
+                # Adjust based on diet type
+                if 'low-carb' in diet_type:
+                    carb_target = 100
+                    fat_target = 85
+                elif 'high-protein' in diet_type:
+                    protein_target = 150
+                    carb_target = 200
+                elif 'keto' in diet_type:
+                    carb_target = 50
+                    fat_target = 120
+                
+                # Adjust based on age group
+                if age_group == 'teen':
+                    calorie_target += 200
+                elif age_group == 'child':
+                    calorie_target -= 400
+                    protein_target = int(protein_target * 0.7)
+                elif age_group == 'older-adult':
+                    calorie_target -= 200
+                
+                # Display nutrition targets
+                st.header("Nutrition Targets")
+                targets_data = {
+                    "Target": ["Calories", "Protein", "Carbohydrates", "Fat"],
+                    "Daily Amount": [
+                        f"{calorie_target} kcal",
+                        f"{protein_target} g",
+                        f"{carb_target} g",
+                        f"{fat_target} g"
+                    ]
+                }
+                
+                targets_df = pd.DataFrame(targets_data)
+                st.table(targets_df)
         
         # Nutrition Plan Tab
         with tab2:
             st.header("Daily Meal Plan")
             
-            # Mock meal plan data
-            meals = [
-                {"name": "Breakfast", "description": "Greek yogurt with berries and granola", "calories": 350, "protein": 20, "carbs": 40, "fat": 10},
-                {"name": "Snack", "description": "Apple with almond butter", "calories": 200, "protein": 5, "carbs": 25, "fat": 10},
-                {"name": "Lunch", "description": "Grilled chicken salad with olive oil dressing", "calories": 450, "protein": 35, "carbs": 20, "fat": 25},
-                {"name": "Snack", "description": "Protein shake with banana", "calories": 250, "protein": 25, "carbs": 30, "fat": 3},
-                {"name": "Dinner", "description": "Salmon with quinoa and roasted vegetables", "calories": 550, "protein": 40, "carbs": 45, "fat": 22}
-            ]
+            # Get meal plans for this client
+            meal_plans = get_client_meal_plans(selected_client_id)
             
-            # Create a table for the meal plan
-            meal_data = []
-            for meal in meals:
-                meal_data.append({
-                    "Meal": meal["name"],
-                    "Description": meal["description"],
-                    "Calories": meal["calories"],
-                    "Protein (g)": meal["protein"],
-                    "Carbs (g)": meal["carbs"],
-                    "Fat (g)": meal["fat"]
-                })
-            
-            meal_df = pd.DataFrame(meal_data)
-            st.table(meal_df)
-            
-            # Calculate daily totals
-            total_calories = sum(meal["calories"] for meal in meals)
-            total_protein = sum(meal["protein"] for meal in meals)
-            total_carbs = sum(meal["carbs"] for meal in meals)
-            total_fat = sum(meal["fat"] for meal in meals)
-            
-            st.subheader("Daily Totals")
-            totals_data = {
-                "Nutrient": ["Calories", "Protein", "Carbohydrates", "Fat"],
-                "Amount": [
-                    f"{total_calories} kcal",
-                    f"{total_protein} g",
-                    f"{total_carbs} g",
-                    f"{total_fat} g"
-                ],
-                "% of Target": [
-                    f"{int(total_calories / calorie_target * 100)}%",
-                    f"{int(total_protein / protein_target * 100)}%",
-                    f"{int(total_carbs / carb_target * 100)}%",
-                    f"{int(total_fat / fat_target * 100)}%"
-                ]
-            }
-            
-            totals_df = pd.DataFrame(totals_data)
-            st.table(totals_df)
-            
-            # Check for allergies in meals
-            if client["allergies"] != "None":
-                st.subheader("Allergy Check")
-                st.info(f"Remember to check meals for {client['allergies']} allergens.")
+            if meal_plans:
+                # Create a table for the meal plan
+                meal_data = []
+                for meal in meal_plans:
+                    meal_data.append({
+                        "Meal": f"Meal {meal.get('meal_id', '')}",
+                        "Recipe": meal.get('recipe_name', 'Unknown Recipe'),
+                        "Quantity": meal.get('quantity', 1),
+                        "Instructions": meal.get('instructions', '')[:50] + "..." if meal.get('instructions', '') else "N/A"
+                    })
+                
+                meal_df = pd.DataFrame(meal_data)
+                st.table(meal_df)
+                
+                # Show meal plan details
+                for meal in meal_plans:
+                    with st.expander(f"Details for {meal.get('recipe_name', 'Meal')}"):
+                        st.write(f"Recipe ID: {meal.get('recipe_id', 'N/A')}")
+                        st.write(f"Quantity: {meal.get('quantity', 'N/A')}")
+                        if meal.get('instructions'):
+                            st.write("**Instructions:**")
+                            st.write(meal.get('instructions'))
+            else:
+                st.info("No meal plans found. Create a new plan for this client.")
+                if st.button("Create Meal Plan"):
+                    st.switch_page("pages/22_Meal_Planning.py")
         
         # Progress Tab
         with tab3:
             st.header("Client Progress")
             
-            # Create mock weekly progress data
+            # In a real app, we would fetch nutrition tracking data from an API
+            # For now, create example data for the past 6 weeks
             progress_data = []
             
             # Start date (6 weeks ago)
             start_date = datetime.now() - timedelta(weeks=6)
             
-            # Generate weekly data
+            # Generate weekly data based on constraints if available
             for i in range(6):
                 week_date = (start_date + timedelta(weeks=i)).strftime('%Y-%m-%d')
                 
-                # Set weight based on client goal
-                start_weight = float(client['weight'].split()[0])
-                if client['goal'] == "Weight Loss":
-                    weight = start_weight - (i * 1.2)
-                elif client['goal'] == "Muscle Gain":
-                    weight = start_weight + (i * 0.5)
+                # Set metrics based on diet type if constraints exist
+                if constraints:
+                    diet_type = constraints.get('personal_diet', 'balanced').lower()
+                    if 'low-carb' in diet_type:
+                        carbs = f"{100 + i * 5}g"
+                        compliance = f"{75 + i * 3}%"
+                    elif 'high-protein' in diet_type:
+                        carbs = f"{200 + i * 5}g"
+                        compliance = f"{80 + i * 3}%"
+                    elif 'keto' in diet_type:
+                        carbs = f"{50 + i * 2}g"
+                        compliance = f"{70 + i * 4}%"
+                    else:  # balanced
+                        carbs = f"{250 + i * 5}g"
+                        compliance = f"{85 + i * 2}%"
                 else:
-                    weight = start_weight + (i * 0.1) - (i * 0.1)  # Small fluctuations
+                    carbs = f"{200 + i * 5}g"
+                    compliance = f"{80 + i * 3}%"
                 
                 progress_data.append({
                     "Week": week_date,
-                    "Weight (lbs)": round(weight, 1),
-                    "Plan Adherence": f"{80 + i * 3}%",
+                    "Protein": f"{100 + i * 5}g",
+                    "Carbs": carbs,
+                    "Plan Adherence": compliance,
                     "Notes": [
                         "Started program",
-                        "Adjusted protein intake",
+                        "Adjusted meal timing",
                         "Increased water consumption",
-                        "Added strength training",
-                        "Improved meal timing",
+                        "Added meal prep",
+                        "Improved portion control",
                         "Meeting all targets"
                     ][i]
                 })
@@ -254,9 +245,7 @@ if selected_client_id:
             
             # Current stats
             st.subheader("Current Status")
-            st.info(f"Current weight: {progress_data[-1]['Weight (lbs)']} lbs")
-            st.info(f"Plan adherence: {progress_data[-1]['Plan Adherence']}")
-            st.info(f"Total weight change: {round(progress_data[-1]['Weight (lbs)'] - progress_data[0]['Weight (lbs)'], 1)} lbs")
+            st.info(f"Plan adherence trend: Improving (from {progress_data[0]['Plan Adherence']} to {progress_data[-1]['Plan Adherence']})")
         
         # Go back to client list button
         if st.button("← Back to Client List"):
@@ -266,42 +255,54 @@ else:
     # Display the client list
     st.title("Client Management")
     
-    # Simple client search
-    search_term = st.text_input("Search by name:", placeholder="Enter client name...")
+    # Get all users
+    users = get_all_users()
     
-    # Apply search filter
-    filtered_clients = clients.copy()
-    if search_term:
-        filtered_clients = [c for c in filtered_clients if search_term.lower() in c['name'].lower()]
+    # Simple client search
+    search_term = st.text_input("Search by name or email:", placeholder="Enter search term...")
+    
+    # Filter users based on search term
+    if search_term and users:
+        filtered_users = [
+            user for user in users
+            if search_term.lower() in user.get('f_name', '').lower() or
+               search_term.lower() in user.get('l_name', '').lower() or
+               search_term.lower() in user.get('email', '').lower()
+        ]
+    else:
+        filtered_users = users
     
     # Show filtered client list
-    if filtered_clients:
-        st.subheader(f"Showing {len(filtered_clients)} clients")
+    if filtered_users:
+        st.subheader(f"Showing {len(filtered_users)} clients")
         
         # Convert clients to DataFrame for table display
         clients_for_display = []
-        for client in filtered_clients:
+        for user in filtered_users:
             clients_for_display.append({
-                "ID": client["id"],
-                "Name": client["name"],
-                "Age": client["age"],
-                "Goal": client["goal"],
-                "Diet": client["diet"],
-                "Status": client["status"]
+                "ID": user.get("user_id", ""),
+                "Name": f"{user.get('f_name', '')} {user.get('l_name', '')}",
+                "Email": user.get("email", ""),
+                "Username": user.get("username", "")
             })
         
         clients_df = pd.DataFrame(clients_for_display)
         st.table(clients_df)
         
         # Client selection input
-        selected_id = st.selectbox(
-            "Select Client to View:",
-            options=[client["id"] for client in filtered_clients],
-            format_func=lambda x: next((client["name"] for client in filtered_clients if client["id"] == x), "")
-        )
-        
-        if st.button("View Client"):
-            st.session_state.selected_client_id = selected_id
-            st.rerun()
+        if filtered_users:
+            selected_id = st.selectbox(
+                "Select Client to View:",
+                options=[user.get("user_id") for user in filtered_users],
+                format_func=lambda x: next((
+                    f"{user.get('f_name', '')} {user.get('l_name', '')}" 
+                    for user in filtered_users 
+                    if user.get("user_id") == x
+                ), "")
+            )
+            
+            if st.button("View Client"):
+                st.session_state.selected_client_id = selected_id
+                st.rerun()
     else:
-        st.info("No clients match your search criteria.")
+        st.info("No clients found. Please check your API connection or add new clients.")

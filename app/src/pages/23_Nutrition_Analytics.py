@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import requests
 from datetime import datetime, timedelta
 from modules.nav import SideBarLinks
 
@@ -10,9 +11,18 @@ if not st.session_state.get('authenticated', False) or st.session_state.role != 
 
 SideBarLinks(st.session_state.role)
 
+# Define API endpoints
+API_BASE_URL = "http://web-api:4000"
+USERS_ENDPOINT = f"{API_BASE_URL}/users"
+MEAL_PLANS_ENDPOINT = f"{API_BASE_URL}/meal_plans"
+INGREDIENTS_ENDPOINT = f"{API_BASE_URL}/ingredients"
+MACROS_ENDPOINT = f"{API_BASE_URL}/macros"
+CONSTRAINTS_ENDPOINT = f"{API_BASE_URL}/users/constraints"
+NUTRITION_TRACKING_ENDPOINT = f"{API_BASE_URL}/logs/nutrition"
+
 # Page header
 st.title("Nutrition Analytics")
-st.write("Analyze nutritional data across clients and identify trends")
+st.write("Analyze client nutrition data and identify trends")
 
 # Simple time period selection
 time_period = st.selectbox(
@@ -20,341 +30,333 @@ time_period = st.selectbox(
     ["Last 30 Days", "Last 3 Months", "Last 6 Months", "Year to Date"]
 )
 
-# Create tabs for different analysis views
-tab1, tab2, tab3, tab4 = st.tabs(["Diet Compliance", "Nutrient Analysis", "Client Comparisons", "Allergies"])
+# Calculate date range based on selection
+if time_period == "Last 30 Days":
+    days = 30
+elif time_period == "Last 3 Months":
+    days = 90
+elif time_period == "Last 6 Months":
+    days = 180
+else:  # Year to Date
+    start_of_year = datetime(datetime.now().year, 1, 1).date()
+    days = (datetime.now().date() - start_of_year).days
+
+start_date = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d')
+end_date = datetime.now().strftime('%Y-%m-%d')
+
+# Function to get all users
+def get_all_users():
+    try:
+        response = requests.get(USERS_ENDPOINT)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            st.error(f"Error fetching users: {response.status_code}")
+            return []
+    except Exception as e:
+        st.error(f"API connection error: {str(e)}")
+        return []
+
+# Function to get user constraints
+def get_user_constraints(pc_id):
+    try:
+        response = requests.get(f"{CONSTRAINTS_ENDPOINT}/{pc_id}")
+        if response.status_code == 200:
+            return response.json()
+        else:
+            st.error(f"Error fetching constraints: {response.status_code}")
+            return None
+    except Exception as e:
+        st.error(f"API connection error: {str(e)}")
+        return None
+
+# Function to get nutrition tracking data
+def get_nutrition_data(client_id=None):
+    try:
+        endpoint = NUTRITION_TRACKING_ENDPOINT
+        if client_id:
+            endpoint += f"/{client_id}"
+        response = requests.get(endpoint)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            st.error(f"Error fetching nutrition data: {response.status_code}")
+            return []
+    except Exception as e:
+        st.error(f"API connection error: {str(e)}")
+        return []
+
+# Get users from API
+users = get_all_users()
+
+# Create tabs for different analysis types
+tab1, tab2, tab3 = st.tabs(["Diet Compliance", "Nutrient Analysis", "Allergies"])
 
 # Diet Compliance Tab
 with tab1:
     st.header("Diet Compliance Analysis")
     
-    # Simple filter options
-    col1, col2 = st.columns(2)
-    with col1:
-        goal_filter = st.multiselect(
-            "Filter by goal:",
-            ["Weight Loss", "Muscle Gain", "Maintenance", "Performance", "Health"],
-            default=["Weight Loss", "Muscle Gain"]
-        )
-    with col2:
-        diet_filter = st.multiselect(
-            "Filter by diet type:",
-            ["Low Carb", "High Protein", "Balanced", "Keto", "Mediterranean"],
-            default=["Low Carb", "High Protein"]
-        )
+    # Simple filter for diet type
+    diet_filter = st.selectbox(
+        "Filter by diet type:",
+        ["All Diets", "low-carb", "high-protein", "balanced", "keto", "mediterranean"]
+    )
     
-    # Mock compliance data
-    compliance_data = [
-        {"Client": "John D.", "Diet Type": "Low Carb", "Goal": "Weight Loss", "Compliance (%)": 85},
-        {"Client": "Sarah M.", "Diet Type": "High Protein", "Goal": "Muscle Gain", "Compliance (%)": 92},
-        {"Client": "Michael R.", "Diet Type": "Balanced", "Goal": "Maintenance", "Compliance (%)": 78},
-        {"Client": "Emma L.", "Diet Type": "Keto", "Goal": "Performance", "Compliance (%)": 88},
-        {"Client": "David W.", "Diet Type": "Mediterranean", "Goal": "Health", "Compliance (%)": 76}
-    ]
+    # Get constraints for all users to determine diet types
+    compliance_data = []
     
-    # Filter based on selections
-    filtered_data = []
-    for client in compliance_data:
-        if (not goal_filter or client["Goal"] in goal_filter) and (not diet_filter or client["Diet Type"] in diet_filter):
-            filtered_data.append(client)
+    for user in users:
+        pc_id = user.get("pc_id")
+        if pc_id:
+            # Get user constraints to determine diet type
+            constraints = get_user_constraints(pc_id)
+            if constraints:
+                diet_type = constraints.get("personal_diet", "Not specified")
+                
+                # Get nutrition data for compliance calculation
+                nutrition_data = get_nutrition_data(user.get("user_id"))
+                
+                # Calculate compliance based on diet type and nutrition data
+                # In a real app, this would be a complex calculation based on actual tracking data
+                compliance = 0
+                if nutrition_data:
+                    # Simple placeholder calculation
+                    # In a real app, this would analyze if the user met their macro targets
+                    compliance = 80  # Default placeholder value
+                else:
+                    # No nutrition data, assume medium compliance
+                    compliance = 70
+                
+                # Only include if it matches the filter
+                if diet_filter == "All Diets" or diet_filter.lower() in diet_type.lower():
+                    compliance_data.append({
+                        "Client": f"{user.get('f_name', '')} {user.get('l_name', '')}",
+                        "Diet Type": diet_type,
+                        "Compliance (%)": compliance,
+                        "Status": "On Track" if compliance >= 80 else "Needs Attention"
+                    })
     
-    # Display as a table
-    if filtered_data:
-        st.subheader("Client Compliance Table")
-        compliance_df = pd.DataFrame(filtered_data)
+    # Create DataFrame and display
+    if compliance_data:
+        compliance_df = pd.DataFrame(compliance_data)
         st.table(compliance_df)
         
         # Calculate and show average compliance
-        avg_compliance = sum(client["Compliance (%)"] for client in filtered_data) / len(filtered_data)
-        st.success(f"Average compliance: {avg_compliance:.1f}%")
+        avg_compliance = sum(item["Compliance (%)"] for item in compliance_data) / len(compliance_data)
+        st.info(f"Average compliance: {avg_compliance:.1f}%")
     else:
-        st.info("No clients match the selected filters.")
+        st.info(f"No clients found with {diet_filter if diet_filter != 'All Diets' else 'any'} diet plan.")
     
-    # Compliance factors table
+    # Key factors affecting compliance
     st.subheader("Key Compliance Factors")
     
-    factors_data = [
-        {"Factor": "Meal Tracking Frequency", "Adherence (%)": 85},
-        {"Factor": "Using Recommended Foods", "Adherence (%)": 72},
-        {"Factor": "Following Portion Sizes", "Adherence (%)": 68},
-        {"Factor": "Meal Timing Adherence", "Adherence (%)": 76},
-        {"Factor": "Following Macronutrient Ratios", "Adherence (%)": 64}
-    ]
+    factors_data = {
+        "Factor": ["Meal Tracking Frequency", "Using Recommended Foods", "Following Portion Sizes", "Meal Timing", "Following Macronutrient Ratios"],
+        "Adherence (%)": [85, 72, 68, 76, 64]
+    }
     
     factors_df = pd.DataFrame(factors_data)
     st.table(factors_df)
+    
+    # Simple recommendations based on data
+    st.subheader("Recommendations to Improve Compliance")
+    st.write("1. Simplify meal plans for clients struggling with adherence")
+    st.write("2. Focus on portion control education - this is a common challenge area")
+    st.write("3. Provide visual guides for macronutrient ratios")
+    st.write("4. Encourage use of meal tracking app with reminders")
 
 # Nutrient Analysis Tab
 with tab2:
     st.header("Nutrient Analysis")
     
-    # Simplified controls
-    control_col1, control_col2 = st.columns(2)
+    # Nutrient selection
+    nutrient = st.selectbox(
+        "Select nutrient to analyze:",
+        ["Protein", "Carbohydrates", "Fat", "Fiber", "Sodium", "Calories"]
+    )
     
-    with control_col1:
-        nutrient = st.selectbox(
-            "Select nutrient:",
-            ["Protein", "Carbs", "Fat", "Fiber", "Sodium", "Vitamin D"]
-        )
+    # Group by selection
+    group_by = st.selectbox(
+        "Group analysis by:",
+        ["Diet Type", "Age Group"]
+    )
     
-    with control_col2:
-        grouping = st.selectbox(
-            "Group by:",
-            ["Diet Type", "Goal", "Age Group", "Individual"]
-        )
+    # Get nutrition data
+    all_nutrition_data = []
+    for user in users:
+        user_id = user.get("user_id")
+        if user_id:
+            # Get user's nutrition tracking data
+            user_nutrition = get_nutrition_data(user_id)
+            
+            # Get user's constraints to determine diet type and age group
+            pc_id = user.get("pc_id")
+            constraints = None
+            if pc_id:
+                constraints = get_user_constraints(pc_id)
+            
+            # Add to collection with grouping info
+            if user_nutrition and constraints:
+                for entry in user_nutrition:
+                    entry["user_name"] = f"{user.get('f_name', '')} {user.get('l_name', '')}"
+                    entry["diet_type"] = constraints.get("personal_diet", "Not specified")
+                    entry["age_group"] = constraints.get("age_group", "adult")
+                    all_nutrition_data.append(entry)
     
-    # Mock nutrient data based on selection
-    if grouping == "Diet Type":
-        nutrient_data = [
-            {"Group": "Low Carb", "Value": 120, "Target": 100, "% of Target": 120},
-            {"Group": "High Protein", "Value": 155, "Target": 130, "% of Target": 119},
-            {"Group": "Balanced", "Value": 90, "Target": 100, "% of Target": 90},
-            {"Group": "Keto", "Value": 130, "Target": 110, "% of Target": 118},
-            {"Group": "Mediterranean", "Value": 85, "Target": 100, "% of Target": 85}
-        ]
-    elif grouping == "Goal":
-        nutrient_data = [
-            {"Group": "Weight Loss", "Value": 110, "Target": 100, "% of Target": 110},
-            {"Group": "Muscle Gain", "Value": 150, "Target": 140, "% of Target": 107},
-            {"Group": "Maintenance", "Value": 95, "Target": 100, "% of Target": 95},
-            {"Group": "Performance", "Value": 125, "Target": 120, "% of Target": 104},
-            {"Group": "Health", "Value": 90, "Target": 100, "% of Target": 90}
-        ]
-    elif grouping == "Age Group":
-        nutrient_data = [
-            {"Group": "18-24", "Value": 105, "Target": 100, "% of Target": 105},
-            {"Group": "25-34", "Value": 115, "Target": 100, "% of Target": 115},
-            {"Group": "35-44", "Value": 95, "Target": 100, "% of Target": 95},
-            {"Group": "45-54", "Value": 85, "Target": 100, "% of Target": 85},
-            {"Group": "55+", "Value": 80, "Target": 100, "% of Target": 80}
-        ]
-    else:  # Individual
-        nutrient_data = [
-            {"Group": "John D.", "Value": 125, "Target": 100, "% of Target": 125},
-            {"Group": "Sarah M.", "Value": 145, "Target": 130, "% of Target": 112},
-            {"Group": "Michael R.", "Value": 98, "Target": 100, "% of Target": 98},
-            {"Group": "Emma L.", "Value": 115, "Target": 110, "% of Target": 105},
-            {"Group": "David W.", "Value": 85, "Target": 100, "% of Target": 85}
-        ]
+    # Process nutrition data based on grouping
+    if all_nutrition_data:
+        # Analyze based on selected nutrient and grouping
+        nutrient_to_key = {
+            "Protein": "protein",
+            "Carbohydrates": "carbs", 
+            "Fat": "fat",
+            "Fiber": "fiber",
+            "Sodium": "sodium",
+            "Calories": "calories"
+        }
+        
+        nutrient_key = nutrient_to_key.get(nutrient, "protein")
+        
+        # Group data
+        grouped_data = {}
+        for entry in all_nutrition_data:
+            group = entry.get("diet_type" if group_by == "Diet Type" else "age_group", "Unknown")
+            if group not in grouped_data:
+                grouped_data[group] = []
+            
+            # Add nutrient value to the group
+            value = entry.get(nutrient_key, 0)
+            if value is not None:
+                grouped_data[group].append(value)
+        
+        # Calculate averages for each group
+        analysis_data = []
+        for group, values in grouped_data.items():
+            if values:
+                avg_value = sum(values) / len(values)
+                # Determine target based on group
+                target = 0
+                if nutrient == "Protein":
+                    target = 100 if group == "high-protein" else 80
+                elif nutrient == "Carbohydrates":
+                    target = 100 if group == "low-carb" else 250
+                elif nutrient == "Fat":
+                    target = 50 if group == "low-fat" else 70
+                elif nutrient == "Fiber":
+                    target = 25
+                elif nutrient == "Sodium":
+                    target = 2300
+                elif nutrient == "Calories":
+                    target = 2000
+                
+                # Calculate percentage of target
+                pct_of_target = (avg_value / target * 100) if target > 0 else 0
+                
+                analysis_data.append({
+                    "Group": group,
+                    "Current Intake": round(avg_value, 1),
+                    "Target Intake": target,
+                    "% of Target": round(pct_of_target, 1)
+                })
+        
+        # Create DataFrame and display
+        if analysis_data:
+            nutrient_df = pd.DataFrame(analysis_data)
+            st.subheader(f"{nutrient} Analysis by {group_by}")
+            st.table(nutrient_df)
+        else:
+            st.info(f"No nutrition data available for {nutrient} analysis.")
+    else:
+        st.info("No nutrition tracking data available. Please check your API connection.")
     
-    # Convert to DataFrame and display as table
-    nutrient_df = pd.DataFrame(nutrient_data)
-    st.subheader(f"{nutrient} Analysis by {grouping}")
-    st.table(nutrient_df)
-    
-    # Add insights based on selected nutrient
+    # Show insights based on nutrient
     st.subheader("Nutrient Insights")
     
     if nutrient == "Protein":
-        st.info("High-protein diet clients are consistently meeting protein targets (94% compliance), while low-carb dieters show more variability.")
-    elif nutrient == "Carbs":
-        st.warning("Keto diet clients occasionally exceed their carb limits on weekends, leading to a 23% drop in compliance.")
+        st.info("• High-protein diet clients are typically meeting protein targets")
+        st.info("• Most clients need additional protein education for optimal intake")
+    elif nutrient == "Carbohydrates":
+        st.info("• Low-carb diet clients are generally staying within their carb limits")
+        st.info("• Reminder: weekend carb intake is often higher than weekdays")
     elif nutrient == "Fat":
-        st.info("Mediterranean diet clients have the most consistent healthy fat intake, achieving 92% compliance.")
+        st.info("• Most clients need education on healthy fat sources")
+        st.info("• Mediterranean diet followers typically have better fat quality intake")
     elif nutrient == "Fiber":
-        st.warning("Fiber intake is below target for 72% of clients, regardless of diet type.")
-    else:
-        st.info("Select different nutrients to view specific insights.")
-
-# Client Comparisons Tab
-with tab3:
-    st.header("Client Comparisons")
-    
-    # Client selection
-    selected_clients = st.multiselect(
-        "Select clients to compare:",
-        ["John D.", "Sarah M.", "Michael R.", "Emma L.", "David W."],
-        default=["John D.", "Sarah M."]
-    )
-    
-    # Metrics selection
-    selected_metrics = st.multiselect(
-        "Select metrics to compare:",
-        ["Calories", "Protein", "Carbs", "Fat", "Diet Compliance", "Meal Logging", "Progress Rate"],
-        default=["Calories", "Protein", "Diet Compliance"]
-    )
-    
-    # Create comparison table if selections are made
-    if selected_clients and selected_metrics:
-        # Mock data for comparison
-        comparison_data = []
-        
-        for client in selected_clients:
-            client_row = {"Client": client}
-            
-            # Add mock data for each selected metric
-            if "Calories" in selected_metrics:
-                if client == "John D.":
-                    client_row["Calories"] = 1850
-                elif client == "Sarah M.":
-                    client_row["Calories"] = 2100
-                elif client == "Michael R.":
-                    client_row["Calories"] = 2300
-                elif client == "Emma L.":
-                    client_row["Calories"] = 1950
-                else:
-                    client_row["Calories"] = 2050
-            
-            if "Protein" in selected_metrics:
-                if client == "John D.":
-                    client_row["Protein"] = 120
-                elif client == "Sarah M.":
-                    client_row["Protein"] = 140
-                elif client == "Michael R.":
-                    client_row["Protein"] = 110
-                elif client == "Emma L.":
-                    client_row["Protein"] = 105
-                else:
-                    client_row["Protein"] = 95
-            
-            if "Carbs" in selected_metrics:
-                if client == "John D.":
-                    client_row["Carbs"] = 150
-                elif client == "Sarah M.":
-                    client_row["Carbs"] = 190
-                elif client == "Michael R.":
-                    client_row["Carbs"] = 240
-                elif client == "Emma L.":
-                    client_row["Carbs"] = 120
-                else:
-                    client_row["Carbs"] = 220
-            
-            if "Fat" in selected_metrics:
-                if client == "John D.":
-                    client_row["Fat"] = 65
-                elif client == "Sarah M.":
-                    client_row["Fat"] = 60
-                elif client == "Michael R.":
-                    client_row["Fat"] = 75
-                elif client == "Emma L.":
-                    client_row["Fat"] = 95
-                else:
-                    client_row["Fat"] = 70
-            
-            if "Diet Compliance" in selected_metrics:
-                if client == "John D.":
-                    client_row["Diet Compliance"] = 85
-                elif client == "Sarah M.":
-                    client_row["Diet Compliance"] = 92
-                elif client == "Michael R.":
-                    client_row["Diet Compliance"] = 78
-                elif client == "Emma L.":
-                    client_row["Diet Compliance"] = 88
-                else:
-                    client_row["Diet Compliance"] = 76
-            
-            if "Meal Logging" in selected_metrics:
-                if client == "John D.":
-                    client_row["Meal Logging"] = 92
-                elif client == "Sarah M.":
-                    client_row["Meal Logging"] = 85
-                elif client == "Michael R.":
-                    client_row["Meal Logging"] = 65
-                elif client == "Emma L.":
-                    client_row["Meal Logging"] = 94
-                else:
-                    client_row["Meal Logging"] = 72
-            
-            if "Progress Rate" in selected_metrics:
-                if client == "John D.":
-                    client_row["Progress Rate"] = 78
-                elif client == "Sarah M.":
-                    client_row["Progress Rate"] = 86
-                elif client == "Michael R.":
-                    client_row["Progress Rate"] = 72
-                elif client == "Emma L.":
-                    client_row["Progress Rate"] = 82
-                else:
-                    client_row["Progress Rate"] = 70
-            
-            comparison_data.append(client_row)
-        
-        # Convert to DataFrame and display as table
-        comparison_df = pd.DataFrame(comparison_data)
-        st.subheader("Client Comparison")
-        st.table(comparison_df)
-        
-        # Add simple analysis
-        if len(selected_clients) >= 2 and len(selected_metrics) >= 1:
-            st.subheader("Key Insights")
-            
-            # Find biggest difference
-            for metric in selected_metrics:
-                if metric in comparison_df.columns:
-                    max_val = comparison_df[metric].max()
-                    min_val = comparison_df[metric].min()
-                    max_client = comparison_df.loc[comparison_df[metric].idxmax(), "Client"]
-                    min_client = comparison_df.loc[comparison_df[metric].idxmin(), "Client"]
-                    
-                    if max_val - min_val > 0:
-                        st.info(f"**{metric}:** {max_client} has the highest value ({max_val}) and {min_client} has the lowest ({min_val}). Difference: {max_val - min_val}.")
-    else:
-        st.info("Please select at least one client and one metric to compare.")
+        st.warning("• Fiber intake is below target for most clients")
+        st.info("• Recommend increasing vegetable and whole grain consumption")
+    elif nutrient == "Sodium":
+        st.warning("• Sodium intake often exceeds recommendations")
+        st.info("• Focus on reducing processed food consumption")
+    else:  # Calories
+        st.info("• Calorie targets are generally being met by most clients")
+        st.info("• Adjust individual targets based on activity level and goals")
 
 # Allergies Tab
-with tab4:
-    st.header("Allergy & Restriction Analysis")
+with tab3:
+    st.header("Allergy & Dietary Restriction Analysis")
     
-    # Mock allergy data
-    allergy_data = [
-        {"Allergen": "Dairy", "Count": 28, "Percentage": "28%"},
-        {"Allergen": "Gluten", "Count": 22, "Percentage": "22%"},
-        {"Allergen": "Nuts", "Count": 18, "Percentage": "18%"},
-        {"Allergen": "Shellfish", "Count": 12, "Percentage": "12%"},
-        {"Allergen": "Eggs", "Count": 10, "Percentage": "10%"},
-        {"Allergen": "Soy", "Count": 8, "Percentage": "8%"},
-        {"Allergen": "Fish", "Count": 5, "Percentage": "5%"},
-        {"Allergen": "Other", "Count": 15, "Percentage": "15%"}
-    ]
+    # Get dietary restrictions from all user constraints
+    allergies_count = {}
     
-    # Display as table
-    allergy_df = pd.DataFrame(allergy_data)
-    st.subheader("Common Allergens")
-    st.table(allergy_df)
+    for user in users:
+        pc_id = user.get("pc_id")
+        if pc_id:
+            constraints = get_user_constraints(pc_id)
+            if constraints and constraints.get("dietary_restrictions"):
+                restrictions = constraints.get("dietary_restrictions").lower().split(",")
+                for restriction in restrictions:
+                    restriction = restriction.strip()
+                    if restriction and restriction != "none":
+                        allergies_count[restriction] = allergies_count.get(restriction, 0) + 1
     
-    # Substitution compliance
-    st.subheader("Substitution Compliance")
+    # Create table of allergies
+    if allergies_count:
+        total_users = sum(allergies_count.values())
+        allergy_data = []
+        for allergen, count in allergies_count.items():
+            allergy_data.append({
+                "Allergen": allergen.capitalize(),
+                "Client Count": count,
+                "Percentage": f"{round(count / len(users) * 100)}%"
+            })
+        
+        allergy_df = pd.DataFrame(allergy_data)
+        st.table(allergy_df)
+    else:
+        st.info("No dietary restrictions or allergies found among clients.")
     
-    substitution_data = [
-        {"Substitution": "Dairy to Plant Milk", "Compliance (%)": 85},
-        {"Substitution": "Gluten to GF Grains", "Compliance (%)": 72},
-        {"Substitution": "Eggs to Flax Eggs", "Compliance (%)": 64},
-        {"Substitution": "Nuts to Seeds", "Compliance (%)": 78},
-        {"Substitution": "Wheat to Almond Flour", "Compliance (%)": 62}
-    ]
+    # Substitution recommendations
+    st.subheader("Common Substitutions")
+    
+    substitution_data = {
+        "Allergen": ["Dairy", "Dairy", "Gluten", "Gluten", "Nuts", "Eggs", "Soy"],
+        "Food Item": ["Milk", "Cheese", "Wheat Flour", "Bread", "Peanut Butter", "Eggs in Baking", "Soy Sauce"],
+        "Substitution": ["Almond Milk", "Nutritional Yeast", "Rice Flour", "Gluten-Free Bread", "Sunflower Seed Butter", "Flax Egg", "Coconut Aminos"]
+    }
     
     substitution_df = pd.DataFrame(substitution_data)
     st.table(substitution_df)
     
-    # Nutritional impact
+    # Impact of allergies on nutrition
     st.subheader("Nutritional Impact of Allergies")
     
-    impact_data = [
-        {"Allergen": "Dairy Allergy", "Nutrient": "Calcium", "Impact (%)": -35},
-        {"Allergen": "Dairy Allergy", "Nutrient": "Vitamin D", "Impact (%)": -28},
-        {"Allergen": "Dairy Allergy", "Nutrient": "Protein", "Impact (%)": -12},
-        {"Allergen": "Gluten Allergy", "Nutrient": "Fiber", "Impact (%)": -25},
-        {"Allergen": "Gluten Allergy", "Nutrient": "B Vitamins", "Impact (%)": -30},
-        {"Allergen": "Gluten Allergy", "Nutrient": "Calories", "Impact (%)": -15},
-        {"Allergen": "Nut Allergy", "Nutrient": "Healthy Fats", "Impact (%)": -32},
-        {"Allergen": "Nut Allergy", "Nutrient": "Protein", "Impact (%)": -15},
-        {"Allergen": "Nut Allergy", "Nutrient": "Fiber", "Impact (%)": -18}
-    ]
+    impact_data = {
+        "Allergen": ["Dairy", "Dairy", "Gluten", "Gluten", "Nuts"],
+        "Affected Nutrient": ["Calcium", "Vitamin D", "Fiber", "B Vitamins", "Healthy Fats"],
+        "Impact": ["High", "High", "Medium", "Medium", "Medium"],
+        "Alternative Sources": ["Fortified Plant Milks, Leafy Greens", "Supplements, Sunlight", "Vegetables, Fruits", "Supplements, Meat", "Avocado, Seeds, Olive Oil"]
+    }
     
     impact_df = pd.DataFrame(impact_data)
     st.table(impact_df)
     
-    # Recommendations
+    # Recommendations section
     st.subheader("Key Recommendations")
     
-    recommendations = [
-        "1. **Dairy Allergies**: Focus on non-dairy calcium sources (fortified plant milks, leafy greens) and consider vitamin D supplementation.",
-        "2. **Gluten Allergies**: Increase fiber from non-grain sources (vegetables, fruits) and consider B vitamin supplementation.",
-        "3. **Nut Allergies**: Incorporate more seeds and avocados for healthy fats.",
-        "4. **Overall Strategy**: Create specialized meal plans for common allergen combinations."
-    ]
-    
-    for recommendation in recommendations:
-        st.write(recommendation)
+    st.write("1. **Dairy Allergies**: Focus on non-dairy calcium sources (fortified plant milks, leafy greens) and consider vitamin D supplementation.")
+    st.write("2. **Gluten Allergies**: Increase fiber from non-grain sources (vegetables, fruits) and consider B vitamin supplementation.")
+    st.write("3. **Nut Allergies**: Incorporate more seeds and avocados for healthy fats.")
+    st.write("4. **Overall Strategy**: Create specialized meal plans for clients with specific allergens.")
 
 # Report Generation Section
 st.header("Generate Nutrition Reports")
@@ -365,17 +367,19 @@ with st.form("generate_report_form"):
     with col1:
         report_type = st.selectbox(
             "Report Type:",
-            ["Client Summary", "Diet Compliance", "Nutrition Analysis", "Allergy Management"]
+            ["Client Summary", "Diet Compliance", "Nutrition Analysis"]
         )
         
+        # Client selection from actual users
+        client_options = [f"{user.get('f_name', '')} {user.get('l_name', '')}" for user in users]
         client_selection = st.multiselect(
             "Select clients:",
-            ["John D.", "Sarah M.", "Michael R.", "Emma L.", "David W."],
-            default=["John D."]
+            client_options,
+            default=[client_options[0]] if client_options else []
         )
     
     with col2:
-        include_charts = st.checkbox("Include tables", value=True)
+        include_tables = st.checkbox("Include tables", value=True)
         include_recommendations = st.checkbox("Include recommendations", value=True)
         report_format = st.selectbox(
             "Report format:",
@@ -397,11 +401,11 @@ with st.form("generate_report_form"):
             {', '.join(client_selection)}
             
             ## Summary
-            This report provides a detailed analysis of nutritional data for the selected clients over the specified time period.
+            This report provides analysis of nutritional data for the selected clients over the {time_period}.
             
             ## Key Findings
-            - Diet compliance averages 78% across all clients
-            - Protein intake is consistently below target for 60% of clients
+            - Diet compliance analysis shows varying levels of adherence across clients
+            - Key areas for improvement include portion control and meal timing
             """
             
             st.download_button(
@@ -410,3 +414,5 @@ with st.form("generate_report_form"):
                 file_name=f"nutrition_report_{datetime.now().strftime('%Y%m%d')}.txt",
                 mime="text/plain"
             )
+        else:
+            st.warning("Please select at least one client for the report.")

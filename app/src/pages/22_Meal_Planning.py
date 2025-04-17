@@ -1,204 +1,414 @@
 import streamlit as st
 import pandas as pd
+import requests
 from modules.nav import SideBarLinks
 
+# Authentication check
 if not st.session_state.get('authenticated', False) or st.session_state.role != "nutritionist":
     st.warning("Please log in as Nancy to access this page")
     st.stop()
 
 SideBarLinks(st.session_state.role)
 
+# Define API endpoints
+API_BASE_URL = "http://web-api:4000"
+USERS_ENDPOINT = f"{API_BASE_URL}/users"
+MEAL_PLANS_ENDPOINT = f"{API_BASE_URL}/meal_plans"
+INGREDIENTS_ENDPOINT = f"{API_BASE_URL}/ingredients"
+MACROS_ENDPOINT = f"{API_BASE_URL}/macros"
+CONSTRAINTS_ENDPOINT = f"{API_BASE_URL}/users/constraints"
+
 # Page header
 st.title("Meal Planning")
 st.write("Create and manage personalized meal plans for your clients")
 
-# Mock client data
-clients = [
-    {"id": 1, "name": "John D.", "goal": "Weight Loss", "diet": "Low Carb", "allergies": "Peanuts"},
-    {"id": 2, "name": "Sarah M.", "goal": "Muscle Gain", "diet": "High Protein", "allergies": "Dairy"},
-    {"id": 3, "name": "Michael R.", "goal": "Maintenance", "diet": "Balanced", "allergies": "None"},
-    {"id": 4, "name": "Emma L.", "goal": "Performance", "diet": "Keto", "allergies": "Gluten"},
-    {"id": 5, "name": "David W.", "goal": "Health", "diet": "Mediterranean", "allergies": "Shellfish"}
-]
+# Function to get all users
+def get_all_users():
+    try:
+        response = requests.get(USERS_ENDPOINT)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            st.error(f"Error fetching users: {response.status_code}")
+            return []
+    except Exception as e:
+        st.error(f"API connection error: {str(e)}")
+        return []
 
-# Mock recipe data
-recipes = [
-    {"id": 1, "name": "Grilled Chicken Salad", "calories": 350, "protein": 32, "carbs": 12, "fat": 18, "tags": "low-carb, high-protein, gluten-free"},
-    {"id": 2, "name": "Salmon with Quinoa", "calories": 420, "protein": 28, "carbs": 35, "fat": 15, "tags": "balanced, omega-3, gluten-free"},
-    {"id": 3, "name": "Vegetable Stir Fry", "calories": 280, "protein": 15, "carbs": 42, "fat": 8, "tags": "vegan, low-fat, gluten-free"},
-    {"id": 4, "name": "Greek Yogurt Parfait", "calories": 230, "protein": 18, "carbs": 25, "fat": 7, "tags": "breakfast, high-protein, vegetarian"},
-    {"id": 5, "name": "Spinach and Feta Omelette", "calories": 320, "protein": 22, "carbs": 8, "fat": 22, "tags": "low-carb, keto, vegetarian"},
-    {"id": 6, "name": "Beef and Vegetable Stew", "calories": 380, "protein": 25, "carbs": 30, "fat": 16, "tags": "high-protein, balanced, meal-prep"},
-    {"id": 7, "name": "Mediterranean Salad", "calories": 310, "protein": 14, "carbs": 20, "fat": 19, "tags": "mediterranean, low-carb, vegetarian"},
-    {"id": 8, "name": "Protein Smoothie", "calories": 290, "protein": 30, "carbs": 28, "fat": 5, "tags": "breakfast, high-protein, quick"}
-]
+# Function to get user constraints
+def get_user_constraints(pc_id):
+    try:
+        response = requests.get(f"{CONSTRAINTS_ENDPOINT}/{pc_id}")
+        if response.status_code == 200:
+            return response.json()
+        else:
+            st.error(f"Error fetching constraints: {response.status_code}")
+            return None
+    except Exception as e:
+        st.error(f"API connection error: {str(e)}")
+        return None
 
-# Convert to DataFrames for easy display
-clients_df = pd.DataFrame(clients)
-recipes_df = pd.DataFrame(recipes)
+# Function to get all meal plans
+def get_meal_plans(client_id=None):
+    try:
+        endpoint = MEAL_PLANS_ENDPOINT
+        if client_id:
+            endpoint += f"?client_id={client_id}"
+        response = requests.get(endpoint)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            st.error(f"Error fetching meal plans: {response.status_code}")
+            return []
+    except Exception as e:
+        st.error(f"API connection error: {str(e)}")
+        return []
+
+# Function to get ingredients
+def get_ingredients():
+    try:
+        response = requests.get(INGREDIENTS_ENDPOINT)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            st.error(f"Error fetching ingredients: {response.status_code}")
+            return []
+    except Exception as e:
+        st.error(f"API connection error: {str(e)}")
+        return []
+
+# Function to get ingredient details with macronutrients
+def get_ingredient_details(ingredient_id):
+    try:
+        response = requests.get(f"{INGREDIENTS_ENDPOINT}/{ingredient_id}")
+        if response.status_code == 200:
+            return response.json()
+        else:
+            st.error(f"Error fetching ingredient: {response.status_code}")
+            return None
+    except Exception as e:
+        st.error(f"API connection error: {str(e)}")
+        return None
+
+# Function to create a new meal plan
+def create_meal_plan(data):
+    try:
+        response = requests.post(MEAL_PLANS_ENDPOINT, json=data)
+        if response.status_code == 201:
+            return response.json(), True
+        else:
+            st.error(f"Error creating meal plan: {response.status_code}")
+            return None, False
+    except Exception as e:
+        st.error(f"API connection error: {str(e)}")
+        return None, False
+
+# Get users from API
+users = get_all_users()
 
 # Create tabs for different functions
-tab1, tab2, tab3 = st.tabs(["Current Meal Plans", "Create New Plan", "Recipe Database"])
+tab1, tab2, tab3 = st.tabs(["Current Meal Plans", "Create New Plan", "Ingredients"])
 
 # Current Meal Plans Tab
 with tab1:
     st.header("Current Meal Plans")
     
-    # Mock meal plans
-    meal_plans = [
-        {"meal_id": 1, "client_id": 1, "client_name": "John D.", "recipe_id": 1, "recipe_name": "Grilled Chicken Salad", "quantity": 1},
-        {"meal_id": 2, "client_id": 1, "client_name": "John D.", "recipe_id": 4, "recipe_name": "Greek Yogurt Parfait", "quantity": 1},
-        {"meal_id": 3, "client_id": 2, "client_name": "Sarah M.", "recipe_id": 2, "recipe_name": "Salmon with Quinoa", "quantity": 1},
-        {"meal_id": 4, "client_id": 2, "client_name": "Sarah M.", "recipe_id": 6, "recipe_name": "Beef and Vegetable Stew", "quantity": 1},
-        {"meal_id": 5, "client_id": 3, "client_name": "Michael R.", "recipe_id": 3, "recipe_name": "Vegetable Stir Fry", "quantity": 1},
-        {"meal_id": 6, "client_id": 4, "client_name": "Emma L.", "recipe_id": 5, "recipe_name": "Spinach and Feta Omelette", "quantity": 1},
-        {"meal_id": 7, "client_id": 5, "client_name": "David W.", "recipe_id": 7, "recipe_name": "Mediterranean Salad", "quantity": 1}
-    ]
-    
-    # Create DataFrame for display
-    meal_plans_df = pd.DataFrame(meal_plans)
-    
-    # Filter options
-    selected_client = st.selectbox(
+    # Filter dropdown
+    client_filter = st.selectbox(
         "Filter by client:",
-        ["All Clients"] + [client["name"] for client in clients]
+        ["All Clients"] + [f"{user.get('f_name', '')} {user.get('l_name', '')}" for user in users]
     )
     
-    if selected_client != "All Clients":
-        filtered_plans = meal_plans_df[meal_plans_df["client_name"] == selected_client]
-    else:
-        filtered_plans = meal_plans_df
+    # Get all meal plans
+    meal_plans = get_meal_plans()
     
-    # Display meal plans table
-    if not filtered_plans.empty:
-        st.subheader(f"Showing {len(filtered_plans)} meal plans")
+    # Apply client filter
+    if client_filter != "All Clients":
+        # Find client ID based on name
+        client_id = None
+        for user in users:
+            full_name = f"{user.get('f_name', '')} {user.get('l_name', '')}"
+            if full_name == client_filter:
+                client_id = user.get('user_id')
+                break
         
-        # Simplify the dataframe for display
-        display_df = filtered_plans[["client_name", "recipe_name", "quantity"]]
-        display_df.columns = ["Client", "Recipe", "Servings"]
-        
-        # Show as a table
-        st.table(display_df)
-        
-        # Simple edit option
-        st.subheader("Edit Meal Plan")
-        meal_id = st.number_input("Enter Meal ID to edit:", min_value=1, max_value=max(meal_plans_df["meal_id"]), step=1)
-        new_quantity = st.number_input("New quantity:", min_value=1, max_value=10, value=1)
-        
-        if st.button("Update Meal Plan"):
-            st.success(f"Meal plan {meal_id} updated to {new_quantity} servings!")
+        if client_id:
+            # Try to get client's constraints to find pc_id
+            filtered_plans = [plan for plan in meal_plans if plan.get("pc_id") == client_id]
+        else:
+            filtered_plans = []
     else:
-        st.info("No meal plans found. Create a new meal plan in the 'Create New Plan' tab.")
+        filtered_plans = meal_plans
+    
+    # Display plans in a table
+    if filtered_plans:
+        # Create a DataFrame for display
+        plans_df = pd.DataFrame({
+            "ID": [plan.get("meal_id") for plan in filtered_plans],
+            "Personal Constraints ID": [plan.get("pc_id") for plan in filtered_plans],
+            "Recipe ID": [plan.get("recipe_id") for plan in filtered_plans],
+            "Recipe": [plan.get("recipe_name", "Unknown Recipe") for plan in filtered_plans],
+            "Servings": [plan.get("quantity", 1) for plan in filtered_plans]
+        })
+        
+        st.table(plans_df)
+    else:
+        st.info(f"No meal plans found for {client_filter if client_filter != 'All Clients' else 'any client'}.")
+    
+    # View details option
+    if filtered_plans:
+        st.subheader("View Plan Details")
+        plan_id = st.selectbox(
+            "Select a plan to view details:",
+            options=[plan.get("meal_id") for plan in filtered_plans],
+            format_func=lambda x: next((f"{plan.get('recipe_name', 'Unknown Recipe')}" for plan in filtered_plans if plan.get("meal_id") == x), "")
+        )
+        
+        if st.button("View Details"):
+            # Find selected plan
+            selected_plan = next((plan for plan in filtered_plans if plan.get("meal_id") == plan_id), None)
+            if selected_plan:
+                st.success(f"Details for meal plan {plan_id}")
+                
+                # Display recipe details in a table
+                details = {
+                    "Detail": ["Meal ID", "Personal Constraints ID", "Recipe ID", "Recipe Name", "Servings", "Instructions"],
+                    "Value": [
+                        selected_plan.get("meal_id", "N/A"),
+                        selected_plan.get("pc_id", "N/A"),
+                        selected_plan.get("recipe_id", "N/A"),
+                        selected_plan.get("recipe_name", "N/A"),
+                        selected_plan.get("quantity", 1),
+                        selected_plan.get("instructions", "No instructions available.")
+                    ]
+                }
+                
+                details_df = pd.DataFrame(details)
+                st.table(details_df)
 
 # Create New Plan Tab
 with tab2:
     st.header("Create New Meal Plan")
     
     # Client selection
-    selected_client_name = st.selectbox("Select client:", [client["name"] for client in clients])
-    selected_client = next(client for client in clients if client["name"] == selected_client_name)
-    
-    # Recipe selection
-    selected_recipe_name = st.selectbox("Select recipe:", [recipe["name"] for recipe in recipes])
-    selected_recipe = next(recipe for recipe in recipes if recipe["name"] == selected_recipe_name)
-    
-    # Show recipe details
-    st.subheader("Recipe Details")
-    recipe_details = {
-        "Detail": ["Calories", "Protein", "Carbs", "Fat", "Tags"],
-        "Value": [
-            f"{selected_recipe['calories']} kcal",
-            f"{selected_recipe['protein']}g",
-            f"{selected_recipe['carbs']}g",
-            f"{selected_recipe['fat']}g",
-            selected_recipe['tags']
-        ]
-    }
-    
-    recipe_df = pd.DataFrame(recipe_details)
-    st.table(recipe_df)
-    
-    # Simple allergy check
-    if selected_client["allergies"] != "None":
-        allergies = [a.strip().lower() for a in selected_client["allergies"].split(",")]
-        tags = [t.strip().lower() for t in selected_recipe["tags"].split(",")]
+    client_names = [f"{user.get('f_name', '')} {user.get('l_name', '')}" for user in users]
+    if client_names:
+        client_name = st.selectbox(
+            "Select client:",
+            client_names
+        )
         
-        for allergy in allergies:
-            if any(allergy in tag for tag in tags):
-                st.warning(f"⚠️ Warning: This recipe may contain {allergy}, which {selected_client_name} is allergic to.")
-    
-    # Servings and submit
-    servings = st.number_input("Number of servings:", min_value=1, max_value=10, value=1)
-    
-    if st.button("Create Meal Plan", type="primary"):
-        st.success(f"Meal plan created for {selected_client_name}!")
+        # Find selected user and their personal constraints ID
+        selected_user = None
+        for user in users:
+            full_name = f"{user.get('f_name', '')} {user.get('l_name', '')}"
+            if full_name == client_name:
+                selected_user = user
+                break
         
-        # Display summary of created plan
-        st.subheader("Created Meal Plan")
-        summary_data = {
-            "Detail": ["Client", "Recipe", "Servings", "Total Calories", "Total Protein", "Total Carbs", "Total Fat"],
-            "Value": [
-                selected_client_name,
-                selected_recipe_name,
-                servings,
-                f"{selected_recipe['calories'] * servings} kcal",
-                f"{selected_recipe['protein'] * servings}g",
-                f"{selected_recipe['carbs'] * servings}g",
-                f"{selected_recipe['fat'] * servings}g"
-            ]
-        }
-        
-        summary_df = pd.DataFrame(summary_data)
-        st.table(summary_df)
-
-# Recipe Database Tab
-with tab3:
-    st.header("Recipe Database")
-    
-    # Simple search and filter
-    search_term = st.text_input("Search recipes:", placeholder="Enter recipe name...")
-    
-    diet_options = ["All", "low-carb", "high-protein", "balanced", "keto", "mediterranean", "vegan", "vegetarian"]
-    diet_filter = st.selectbox("Filter by diet:", diet_options)
-    
-    # Filter recipes
-    filtered_recipes = recipes_df.copy()
-    if search_term:
-        filtered_recipes = filtered_recipes[filtered_recipes["name"].str.contains(search_term, case=False)]
-    
-    if diet_filter != "All":
-        filtered_recipes = filtered_recipes[filtered_recipes["tags"].str.contains(diet_filter, case=False)]
-    
-    # Show filtered recipes
-    if not filtered_recipes.empty:
-        st.subheader(f"Showing {len(filtered_recipes)} recipes")
-        
-        # Format for display
-        display_recipes = filtered_recipes[["name", "calories", "protein", "carbs", "fat", "tags"]]
-        display_recipes.columns = ["Recipe", "Calories", "Protein (g)", "Carbs (g)", "Fat (g)", "Tags"]
-        
-        st.table(display_recipes)
-        
-        # Option to add recipe to meal plan
-        st.subheader("Add to Meal Plan")
-        recipe_id = st.number_input("Enter Recipe ID to add:", min_value=1, max_value=max(recipes_df["id"]), step=1)
-        client_name = st.selectbox("Select client for meal plan:", [client["name"] for client in clients])
-        
-        if st.button("Add to Meal Plan"):
-            st.success(f"Added recipe to {client_name}'s meal plan!")
+        if selected_user:
+            # Get user's personal constraints
+            pc_id = selected_user.get("pc_id")
+            constraints = None
+            if pc_id:
+                constraints = get_user_constraints(pc_id)
+            
+            # Get all ingredients for recipes
+            ingredients = get_ingredients()
+            
+            if ingredients:
+                # Recipe creation
+                st.subheader("Create Recipe")
+                
+                recipe_name = st.text_input("Recipe name:")
+                
+                # Select ingredients for recipe
+                ingredient_options = [ingredient.get("name", f"Ingredient {ingredient.get('ingredient_id')}") for ingredient in ingredients]
+                selected_ingredient_names = st.multiselect("Select ingredients:", ingredient_options)
+                
+                # Find ingredient IDs for selected names
+                selected_ingredients = []
+                for ing_name in selected_ingredient_names:
+                    ing = next((i for i in ingredients if i.get("name") == ing_name), None)
+                    if ing:
+                        selected_ingredients.append(ing)
+                
+                # Instructions
+                instructions = st.text_area("Recipe instructions:")
+                
+                # Servings
+                servings = st.number_input("Number of servings:", min_value=1, max_value=10, value=1, step=1)
+                
+                # Analyze selected ingredients if any
+                if selected_ingredients:
+                    st.subheader("Recipe Nutritional Analysis")
+                    
+                    # Try to get macronutrient information for each ingredient
+                    nutrition_data = []
+                    for ingredient in selected_ingredients:
+                        # Get ingredient details with macros
+                        details = get_ingredient_details(ingredient.get("ingredient_id"))
+                        
+                        if details and "macronutrients" in details:
+                            macros = details.get("macronutrients", {})
+                            nutrition_data.append({
+                                "Ingredient": ingredient.get("name", f"Ingredient {ingredient.get('ingredient_id')}"),
+                                "Protein (g)": macros.get("protein", 0),
+                                "Carbs (g)": macros.get("carbs", 0),
+                                "Fat (g)": macros.get("fat", 0),
+                                "Calories": macros.get("calories", 0)
+                            })
+                        else:
+                            # If no macros available, add with zeros
+                            nutrition_data.append({
+                                "Ingredient": ingredient.get("name", f"Ingredient {ingredient.get('ingredient_id')}"),
+                                "Protein (g)": 0,
+                                "Carbs (g)": 0,
+                                "Fat (g)": 0,
+                                "Calories": 0
+                            })
+                    
+                    # Display ingredients nutritional info
+                    nutrition_df = pd.DataFrame(nutrition_data)
+                    st.table(nutrition_df)
+                    
+                    # Total nutrition for recipe
+                    total_protein = sum(item.get("Protein (g)", 0) for item in nutrition_data)
+                    total_carbs = sum(item.get("Carbs (g)", 0) for item in nutrition_data)
+                    total_fat = sum(item.get("Fat (g)", 0) for item in nutrition_data)
+                    total_calories = sum(item.get("Calories", 0) for item in nutrition_data)
+                    
+                    st.subheader("Total Recipe Nutrition (per serving)")
+                    recipe_nutrition = {
+                        "Nutrient": ["Protein", "Carbs", "Fat", "Calories"],
+                        "Amount": [
+                            f"{total_protein/servings:.1f} g",
+                            f"{total_carbs/servings:.1f} g",
+                            f"{total_fat/servings:.1f} g",
+                            f"{total_calories/servings:.1f} kcal"
+                        ]
+                    }
+                    
+                    st.table(pd.DataFrame(recipe_nutrition))
+                
+                # Display dietary restrictions if available
+                if constraints:
+                    st.subheader("Client Dietary Information")
+                    st.info(f"Diet type: {constraints.get('personal_diet', 'Not specified')}")
+                    st.info(f"Restrictions: {constraints.get('dietary_restrictions', 'None')}")
+                    
+                    # Check if any ingredients conflict with restrictions
+                    if constraints.get('dietary_restrictions'):
+                        restrictions = constraints.get('dietary_restrictions').lower().split(',')
+                        for ingredient in selected_ingredients:
+                            ing_name = ingredient.get("name", "").lower()
+                            for restriction in restrictions:
+                                if restriction.strip() in ing_name:
+                                    st.warning(f"⚠️ Warning: {ingredient.get('name')} may conflict with {client_name}'s dietary restrictions.")
+                
+                # Create meal plan button
+                if st.button("Create Meal Plan") and recipe_name and selected_ingredients:
+                    # In a real app, this would first create a recipe and then a meal plan
+                    # Here we'll simulate it with the data we have
+                    
+                    # Prepare data for creating meal plan
+                    meal_plan_data = {
+                        "pc_id": pc_id,
+                        "recipe_id": selected_ingredients[0].get("ingredient_id"),  # Using first ingredient as mock recipe ID
+                        "quantity": servings
+                    }
+                    
+                    # Make API call to create meal plan
+                    result, success = create_meal_plan(meal_plan_data)
+                    
+                    if success:
+                        st.success(f"Meal plan created successfully for {client_name}!")
+                        meal_id = result.get("meal_id")
+                        st.info(f"Meal plan ID: {meal_id}")
+                    else:
+                        st.error("Failed to create meal plan. Please check API connection.")
+            else:
+                st.warning("No ingredients found. Please check your API connection.")
+        else:
+            st.error("Selected client not found.")
     else:
-        st.info("No recipes found matching your criteria. Try adjusting your search or filter.")
+        st.warning("No clients found. Please check your API connection.")
 
-# Nutrition Resources Section - Simple Table
-st.header("Nutrition Resources")
-
-resources = [
-    {"title": "Diet-Specific Meal Planning Guide", "description": "Guidelines for creating meal plans for different diets (keto, vegan, paleo, etc.)"},
-    {"title": "Allergen Substitution Chart", "description": "Reference for allergen-free substitutes in recipes"},
-    {"title": "Nutrient Timing for Athletes", "description": "Optimal timing of nutrients for athletic performance"},
-    {"title": "Meal Prep Templates", "description": "Printable templates for clients to track their meal preparations"}
-]
-
-# Convert to DataFrame
-resources_df = pd.DataFrame(resources)
-st.table(resources_df)
+# Ingredients Tab
+with tab3:
+    st.header("Ingredient Database")
+    
+    # Get all ingredients
+    ingredients = get_ingredients()
+    
+    # Simple search for ingredients
+    search = st.text_input("Search ingredients:", placeholder="Enter ingredient name...")
+    
+    # Filter based on search
+    if search and ingredients:
+        filtered_ingredients = [i for i in ingredients if search.lower() in i.get("name", "").lower()]
+    else:
+        filtered_ingredients = ingredients
+    
+    # Display ingredients
+    if filtered_ingredients:
+        # Create DataFrame for display
+        ingredients_df = pd.DataFrame({
+            "ID": [i.get("ingredient_id") for i in filtered_ingredients],
+            "Name": [i.get("name") for i in filtered_ingredients],
+            "Expiration Date": [i.get("expiration_date") for i in filtered_ingredients]
+        })
+        
+        st.table(ingredients_df)
+        
+        # View ingredient details
+        st.subheader("View Ingredient Details")
+        ingredient_id = st.selectbox(
+            "Select ingredient to view details:",
+            options=[i.get("ingredient_id") for i in filtered_ingredients],
+            format_func=lambda x: next((i.get("name", f"Ingredient {x}") for i in filtered_ingredients if i.get("ingredient_id") == x), "")
+        )
+        
+        if st.button("View Details"):
+            selected_ingredient = get_ingredient_details(ingredient_id)
+            
+            if selected_ingredient:
+                st.success(f"Details for {selected_ingredient.get('ingredient', {}).get('name', 'Ingredient')}")
+                
+                # Display ingredient information
+                ingredient_data = selected_ingredient.get('ingredient', {})
+                macros_data = selected_ingredient.get('macronutrients', {})
+                
+                # Basic info
+                st.subheader("Basic Information")
+                basic_info = {
+                    "Property": ["ID", "Name", "Expiration Date"],
+                    "Value": [
+                        ingredient_data.get("ingredient_id", "N/A"),
+                        ingredient_data.get("name", "N/A"),
+                        ingredient_data.get("expiration_date", "N/A")
+                    ]
+                }
+                
+                st.table(pd.DataFrame(basic_info))
+                
+                # Macronutrient info if available
+                if macros_data:
+                    st.subheader("Macronutrients")
+                    macros_info = {
+                        "Nutrient": ["Protein", "Carbs", "Fat", "Fiber", "Sodium", "Calories"],
+                        "Value": [
+                            f"{macros_data.get('protein', 0)} g",
+                            f"{macros_data.get('carbs', 0)} g",
+                            f"{macros_data.get('fat', 0)} g",
+                            f"{macros_data.get('fiber', 0)} g",
+                            f"{macros_data.get('sodium', 0)} mg",
+                            f"{macros_data.get('calories', 0)} kcal"
+                        ]
+                    }
+                    
+                    st.table(pd.DataFrame(macros_info))
+                else:
+                    st.info("No macronutrient data available for this ingredient.")
+    else:
+        st.info("No ingredients found. Please check your API connection or adjust your search.")
