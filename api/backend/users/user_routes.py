@@ -263,12 +263,12 @@ def get_admin_auth(admin_id):
     response.status_code = 200
     return response
 
-@users.route('/auth/nutritionist/<int:nutritionist_id>', methods=['GET'])
-def get_nutritionist_auth(nutritionist_id):
-    """Get nutritionist details"""
+@users.route('/auth/health/<int:health_id>', methods=['GET'])
+def get_health_auth(health_id):
+    """Get health advisor details"""
     cursor = db.get_db().cursor()
     
-    # Join User table with Health_Advisor table (assuming nutritionists are health advisors)
+    # Join User table with Health_Advisor table
     query = '''
     SELECT u.user_id, u.f_name as firstName, u.l_name as lastName, ha.advisor_id
     FROM User u
@@ -276,31 +276,10 @@ def get_nutritionist_auth(nutritionist_id):
     WHERE ha.advisor_id = %s
     '''
     
-    cursor.execute(query, (nutritionist_id,))
+    cursor.execute(query, (health_id,))
     result = cursor.fetchall()
     
     response = make_response(jsonify({"data": result}))
     response.status_code = 200
     return response
 
-@users.route('/auth/athlete/<int:athlete_id>', methods=['GET'])
-def get_athlete_auth(athlete_id):
-    """Get athlete details"""
-    cursor = db.get_db().cursor()
-
-    # Join User table with Client table and Client_Workout to identify athletes
-    query = '''
-    SELECT DISTINCT u.user_id, u.f_name as firstName, u.l_name as lastName, 
-            c.client_id
-    FROM User u
-    JOIN Client c ON u.user_id = c.user_id
-    JOIN Client_Workout cw ON c.client_id = cw.client_id
-    WHERE c.client_id = %s
-    '''
-    
-    cursor.execute(query, (athlete_id,))
-    result = cursor.fetchall()
-    
-    response = make_response(jsonify({"data": result}))
-    response.status_code = 200
-    return response

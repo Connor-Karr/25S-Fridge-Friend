@@ -78,15 +78,15 @@ try:
         st.error(f"Error: {student_response.status_code}")
         st.code(student_response.text)
         # Fallback data if API call fails
-        student_firstname = "Bob"
-        student_lastname = "Student"
+        student_firstname = "Busy"
+        student_lastname = "Ben."
         student_dietary_preferences = "Budget-friendly"
         student_id = 1
 except Exception as e:
     logger.error(f"Failed to fetch student data: {str(e)}")
     # Fallback data if API call fails
-    student_firstname = "Bob"
-    student_lastname = "Student"
+    student_firstname = "Busy"
+    student_lastname = "Ben."
     student_dietary_preferences = "Budget-friendly"
     student_id = 1
 
@@ -102,18 +102,18 @@ try:
         logger.error(f"Admin API Error: {admin_response.status_code}")
         # Fallback data
         admin_firstname = "Alvin"
-        admin_lastname = "Admin"
+        admin_lastname = "Admin."
         admin_id = 1
 except Exception as e:
     logger.error(f"Failed to fetch admin data: {str(e)}")
     # Fallback data
     admin_firstname = "Alvin"
-    admin_lastname = "Admin"
+    admin_lastname = "Admin."
     admin_id = 1
 
 try:
     # Nutritionist (Nancy) data
-    nutritionist_response = requests.get(f"{API_BASE_URL}/users/auth/nutritionist/1")
+    nutritionist_response = requests.get(f"{API_BASE_URL}/users/auth/health/20")
     if nutritionist_response.status_code == 200:
         nutritionist_data = nutritionist_response.json()
         nutritionist_firstname = nutritionist_data["data"][0]["firstName"]
@@ -123,18 +123,18 @@ try:
         logger.error(f"Nutritionist API Error: {nutritionist_response.status_code}")
         # Fallback data
         nutritionist_firstname = "Nancy"
-        nutritionist_lastname = "Nutritionist"
+        nutritionist_lastname = "Nutritionist."
         nutritionist_id = 1
 except Exception as e:
     logger.error(f"Failed to fetch nutritionist data: {str(e)}")
     # Fallback data
     nutritionist_firstname = "Nancy"
-    nutritionist_lastname = "Nutritionist"
+    nutritionist_lastname = "Nutritionist."
     nutritionist_id = 1
 
 try:
     # Athlete (Riley) data
-    athlete_response = requests.get(f"{API_BASE_URL}/users/auth/athlete/1")
+    athlete_response = requests.get(f"{API_BASE_URL}/users/auth/health/21")
     if athlete_response.status_code == 200:
         athlete_data = athlete_response.json()
         athlete_firstname = athlete_data["data"][0]["firstName"]
@@ -144,13 +144,13 @@ try:
         logger.error(f"Athlete API Error: {athlete_response.status_code}")
         # Fallback data
         athlete_firstname = "Riley"
-        athlete_lastname = "Athlete"
+        athlete_lastname = "Runner."
         athlete_id = 1
 except Exception as e:
     logger.error(f"Failed to fetch athlete data: {str(e)}")
     # Fallback data
     athlete_firstname = "Riley"
-    athlete_lastname = "Athlete"
+    athlete_lastname = "Runner."
     athlete_id = 1
     
 # User selection section  

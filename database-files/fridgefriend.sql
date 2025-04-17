@@ -197,8 +197,8 @@ CREATE TABLE Nutrition_Tracking (
 CREATE TABLE Health_Advisor (
    advisor_id INT AUTO_INCREMENT PRIMARY KEY,
    experience_years INT,
-   client_id INT,
-   FOREIGN KEY (client_id) REFERENCES Client(client_id)
+   user_id INT,
+   FOREIGN KEY (user_id) REFERENCES User(user_id)
 );
 
 
@@ -576,27 +576,27 @@ INSERT INTO Client (user_id, pc_id, fridge_id, list_id, log_id, flag) VALUES
     (49, 19, 19, 19, 9, 0),
     (50, 20, 20, 20, 10, 1);
 
-INSERT INTO Health_Advisor (advisor_id, experience_years, client_id) VALUES
-    (1, 7, 1),  -- Riley Runner for Busy Ben
-    (2, 11, 2), -- Nancy Nutritionist for Nicholas Miller
-    (3, 10, 3),
-    (4, 7, 4),
-    (5, 3, 5),
-    (6, 9, 6),
-    (7, 13, 7),
-    (8, 2, 8),
-    (9, 4, 9),
-    (10, 17, 10),
-    (11, 5, 11),
-    (12, 8, 12),
-    (13, 12, 13),
-    (14, 6, 14),
-    (15, 9, 15),
-    (16, 14, 16),
-    (17, 3, 17),
-    (18, 10, 18),
-    (19, 7, 19),
-    (20, 15, 20);
+INSERT INTO Health_Advisor (advisor_id, experience_years, user_id) VALUES 
+    (1, 7, 21),  -- Riley Runner (user_id 21)
+    (2, 11, 22), -- Nancy Nutritionist (user_id 22)
+    (3, 10, 23),
+    (4, 7, 24),
+    (5, 3, 25),
+    (6, 9, 26),
+    (7, 13, 27),
+    (8, 2, 28),
+    (9, 4, 29),
+    (10, 17, 30),
+    (11, 5, 31),
+    (12, 8, 32),
+    (13, 12, 33),
+    (14, 6, 34),
+    (15, 9, 35),
+    (16, 14, 36),
+    (17, 3, 37),
+    (18, 10, 38),
+    (19, 7, 39),
+    (20, 15, 40);
 
 INSERT INTO Recipe_Ingredient (
     recipe_id, ingredient_id, quantity, unit
@@ -1135,7 +1135,7 @@ INSERT INTO Client_Health_Advisor (client_id, advisor_id) VALUES
     -- Busy Ben with Riley Runner as primary advisor
     (1, 1),  -- Busy Ben with Riley Runner
     (2, 2),  -- Nicholas with Nancy Nutritionist
-
+    
     -- Create many-to-many relationships (125+ rows)
     (1, 2),  -- Busy Ben also with Nancy Nutritionist
     (1, 3),
