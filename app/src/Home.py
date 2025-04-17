@@ -163,7 +163,7 @@ col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.markdown("#### 🧑‍🎓 Student")
     st.write(f"**Name:** {student_firstname} {student_lastname}")
-    st.write("**Focus:** Quick meals & budget tracking")
+    st.write("**Focus:** Staying on top of food, nutrition, budget, and leftovers")
     st.write(f"**Preferences:** {student_dietary_preferences}")
     
     if st.button("Login as Ben", key="student", use_container_width=True):
@@ -173,7 +173,7 @@ with col1:
         st.session_state.user_id = student_id
         logger.info("Logging in as a Student")
             
-        st.switch_page("pages/00_Fridge_Dashboard.py")
+        st.switch_page("pages/00_Dashboard_Overview.py")
 
 # Alvin (Admin)
 with col2:
