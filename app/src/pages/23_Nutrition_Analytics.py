@@ -55,16 +55,6 @@ def get_nutrition_summary(advisor_id=2):
 clients = get_clients()
 nutrition_summary = get_nutrition_summary()
 
-# Simple time period selector for analysis context
-st.subheader("Analysis Period")
-time_period = st.selectbox(
-    "Select time period:",
-    ["Last 30 Days", "Last 3 Months", "Last 6 Months", "Year to Date"]
-)
-
-# Main content in two sections
-st.markdown("---")
-
 # Section 1: Nutrition Summary by Diet Type
 st.subheader("Nutrition Summary by Diet Type")
 

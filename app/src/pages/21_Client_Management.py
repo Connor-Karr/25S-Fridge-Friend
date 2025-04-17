@@ -51,6 +51,25 @@ def update_constraints(pc_id, data):
         st.error(f"Error updating constraints: {str(e)}")
         return False
 
+# Function to create user constraints silently
+def create_constraints(client_id):
+    try:
+        default_constraints = {
+            "budget": 100,
+            "dietary_restrictions": "none",
+            "personal_diet": "balanced",
+            "age_group": "adult",
+            "client_id": client_id
+        }
+        
+        response = requests.post(f"{API_BASE_URL}/users/constraints", json=default_constraints)
+        if response.status_code == 201:
+            result = response.json()
+            return result.get("pc_id")
+        return None
+    except Exception as e:
+        return None
+
 # Get all clients
 clients = get_clients(advisor_id)
 
@@ -133,6 +152,10 @@ if client_options:
     if selected_client_id:
         st.markdown(f"**Updating information for: {client_names[selected_index]}**")
         
+        # Silently create constraints if needed
+        if not selected_pc_id:
+            selected_pc_id = create_constraints(selected_client_id)
+        
         # Create sections for different types of updates, all visible by default
         st.markdown("### Update Dietary Preferences")
         with st.form("update_diet_form"):
@@ -147,7 +170,7 @@ if client_options:
             
             update_diet_button = st.form_submit_button("Update Diet")
             
-            if update_diet_button:
+            if update_diet_button and selected_pc_id:
                 # Prepare data for update
                 diet_data = {
                     "personal_diet": new_diet,
@@ -155,15 +178,12 @@ if client_options:
                 }
                 
                 # Update constraints
-                if selected_pc_id:
-                    success = update_constraints(selected_pc_id, diet_data)
-                    
-                    if success:
-                        st.success("Dietary preferences updated successfully!")
-                    else:
-                        st.error("Failed to update dietary preferences.")
+                success = update_constraints(selected_pc_id, diet_data)
+                
+                if success:
+                    st.success("Dietary preferences updated successfully!")
                 else:
-                    st.error("No personal constraints ID found for this client.")
+                    st.error("Failed to update dietary preferences.")
         
         st.markdown("### Log Nutrition Data")
         with st.form("log_nutrition_form"):
@@ -242,21 +262,18 @@ if client_options:
             
             update_budget_button = st.form_submit_button("Update Budget")
             
-            if update_budget_button:
+            if update_budget_button and selected_pc_id:
                 # Prepare data for update
                 budget_data = {
                     "budget": new_budget
                 }
                 
                 # Update constraints
-                if selected_pc_id:
-                    success = update_constraints(selected_pc_id, budget_data)
-                    
-                    if success:
-                        st.success("Budget updated successfully!")
-                    else:
-                        st.error("Failed to update budget.")
+                success = update_constraints(selected_pc_id, budget_data)
+                
+                if success:
+                    st.success("Budget updated successfully!")
                 else:
-                    st.error("No personal constraints ID found for this client.")
+                    st.error("Failed to update budget.")
 else:
     st.info("No clients available to update.")
