@@ -341,3 +341,116 @@ def get_advisor_suggestions(client_id):
         response = make_response(jsonify({"error": "Could not fetch advisor suggestions"}))
         response.status_code = 500
         return response
+    
+    #------------------------------------------------------------
+# Nutritionist (Health Advisor) routes
+#------------------------------------------------------------
+
+@users.route('/nutritionist/<int:advisor_id>/clients', methods=['GET'])
+def get_nutritionist_clients(advisor_id):
+    """Get all clients assigned to a health advisor (nutritionist)"""
+    cursor = db.get_db().cursor()
+    
+    try:
+        query = '''
+        SELECT c.client_id, u.f_name, u.l_name, pc.age_group, 
+               pc.dietary_restrictions, pc.personal_diet, pc.budget
+        FROM Client_Health_Advisor cha
+        JOIN Client c ON cha.client_id = c.client_id
+        JOIN User u ON c.user_id = u.user_id
+        LEFT JOIN Personal_Constraints pc ON c.pc_id = pc.pc_id
+        WHERE cha.advisor_id = %s
+        ORDER BY u.l_name, u.f_name
+        '''
+        
+        cursor.execute(query, (advisor_id,))
+        clients = cursor.fetchall()
+        
+        response = make_response(jsonify(clients))
+        response.status_code = 200
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error fetching nutritionist clients: {str(e)}")
+        response = make_response(jsonify({"error": "Could not fetch clients"}))
+        response.status_code = 500
+        return response
+
+@users.route('/nutritionist/<int:advisor_id>/dietary-alerts', methods=['GET'])
+def get_dietary_alerts(advisor_id):
+    """Get dietary alerts for clients of a health advisor"""
+    cursor = db.get_db().cursor()
+    
+    try:
+        # This query identifies clients with nutrition tracking issues
+        query = '''
+        SELECT c.client_id, u.f_name, u.l_name, 
+               CASE 
+                   WHEN nt.sodium > 2300 THEN 'High sodium intake detected'
+                   WHEN nt.protein < 50 THEN 'Low protein intake detected'
+                   WHEN nt.calories < 1500 THEN 'Low calorie intake detected'
+                   ELSE 'Unknown alert'
+               END as alert_message,
+               CASE 
+                   WHEN nt.sodium > 2300 THEN 'Medium'
+                   WHEN nt.protein < 50 THEN 'High'
+                   WHEN nt.calories < 1500 THEN 'Medium'
+                   ELSE 'Low'
+               END as priority
+        FROM Client_Health_Advisor cha
+        JOIN Client c ON cha.client_id = c.client_id
+        JOIN User u ON c.user_id = u.user_id
+        JOIN Nutrition_Tracking nt ON c.client_id = nt.client_id
+        WHERE cha.advisor_id = %s
+        AND (nt.sodium > 2300 OR nt.protein < 50 OR nt.calories < 1500)
+        ORDER BY 
+            CASE priority
+                WHEN 'High' THEN 1
+                WHEN 'Medium' THEN 2
+                WHEN 'Low' THEN 3
+                ELSE 4
+            END
+        '''
+        
+        cursor.execute(query, (advisor_id,))
+        alerts = cursor.fetchall()
+        
+        response = make_response(jsonify(alerts))
+        response.status_code = 200
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error fetching dietary alerts: {str(e)}")
+        response = make_response(jsonify({"error": "Could not fetch dietary alerts"}))
+        response.status_code = 500
+        return response
+
+@users.route('/nutritionist/<int:advisor_id>/nutrition-summary', methods=['GET'])
+def get_nutrition_summary(advisor_id):
+    """Get nutrition tracking summary for a health advisor's clients"""
+    cursor = db.get_db().cursor()
+    
+    try:
+        query = '''
+        SELECT 
+            pc.personal_diet as diet_type,
+            AVG(nt.protein) as avg_protein,
+            AVG(nt.carbs) as avg_carbs,
+            AVG(nt.fat) as avg_fat
+        FROM Client_Health_Advisor cha
+        JOIN Client c ON cha.client_id = c.client_id
+        JOIN Personal_Constraints pc ON c.pc_id = pc.pc_id
+        JOIN Nutrition_Tracking nt ON c.client_id = nt.client_id
+        WHERE cha.advisor_id = %s
+        GROUP BY pc.personal_diet
+        '''
+        
+        cursor.execute(query, (advisor_id,))
+        nutrition_summary = cursor.fetchall()
+        
+        response = make_response(jsonify(nutrition_summary))
+        response.status_code = 200
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error fetching nutrition summary: {str(e)}")
+        response = make_response(jsonify({"error": "Could not fetch nutrition summary"}))
+        response.status_code = 500
+        return response
