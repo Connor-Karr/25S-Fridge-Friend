@@ -237,8 +237,6 @@ with col1:
 with col2:
     st.caption("Northeastern University")
 
-with col3:
-    st.caption("Version 2.3.1 | Last Updated: April 12, 2025")
 
 
     
