@@ -16,7 +16,7 @@ st.write("Optimize your nutrition with targeted meal plans for different trainin
 API_BASE_URL = "http://localhost:4000"
 CLIENT_ID = st.session_state.get("client_id", 11)  # Default to Riley if missing
 
-# --- Fetch Data from API ---
+# Fetch Data from API
 def get_data(endpoint, params=None):
     try:
         res = requests.get(f"{API_BASE_URL}/{endpoint}", params=params)
@@ -54,12 +54,12 @@ if not leftovers_data:
 # Tabs
 tab1, tab2 = st.tabs(["Current Plans", "Leftovers"])
 
-# === Tab 1: Current Plans ===
+# Tab 1: Current Plans
 with tab1:
     st.subheader("Current Meal Plans")
     st.dataframe(pd.DataFrame(meal_plans_data))
 
-# === Tab 2: Leftovers ===
+# Tab 2: Leftovers 
 with tab2:
     st.subheader("Available Leftovers")
     st.dataframe(pd.DataFrame(leftovers_data))
